@@ -98,7 +98,50 @@ Structural conclusions that hold regardless of image coverage:
   some 3.0 and CC0. Attribution records must carry the per-entry license (the §4.1 enum
   already covers 3.0/4.0; CC0 added).
 
-## 3. Impact on the milestone plan
+## 3. Catalog media: what the two frames per exercise actually contain
+
+Measured 2026-07-25 across the built catalog (108 exercises), because the M2 session
+screen needs to know whether the two frames can be shown as a movement rather than stacked.
+Metric: mean per-pixel difference between frame 0 and frame 1, each reduced to 64×64
+greyscale, on a 0–255 scale.
+
+| Statistic | Value |
+|---|---:|
+| Median difference | 21.1 |
+| 10th percentile | 7.6 |
+| 90th percentile | 60.7 |
+| Range | 0.0 – 72.7 |
+
+**Three pairs were the same photograph twice** (difference exactly 0.0): One Arm Against Wall,
+Seated Floor Hamstring Stretch, The Straddle. The build script now fingerprints each converted
+frame and skips re-used ones, so those exercises ship a single image instead of rendering the
+same picture twice. Nine more pairs score under 8 and differ only marginally.
+
+**Difference magnitude does not mean "shows the movement".** Median by category:
+
+| Category | Median difference |
+|---|---:|
+| stretch | 39.0 |
+| mobility | 24.6 |
+| strength | 18.4 |
+| core | 15.3 |
+| cardio | 11.0 |
+
+This ordering is the reverse of how much the body moves in each category, which is the tell:
+the number is dominated by changes in framing, not posture. Confirmed by inspection of the
+highest-scoring pair, `chair_lower_back_stretch` (72.7) — frame 0 is a tight crop of the
+side bend, frame 1 is a wide shot of the neutral seated position, shot at a different zoom.
+
+Two consequences, both now recorded in SPEC §7:
+
+- Automatic animation between frames is rejected for the session screen. Tap-to-swap instead.
+- **Frame order is not semantic.** The captions previously emitted ("Start" for frame 0,
+  "End" for frame 1) were inferred from array order, and `chair_lower_back_stretch` proves the
+  order can be reversed. The source labels nothing, so the build script no longer writes
+  captions at all. `MediaAsset.caption` now means "the source labelled this frame", and stays
+  empty until a source or hand-authored entry provides one.
+
+## 4. Impact on the milestone plan
 
 1. **M0's headline risk is retired, and replaced.** "Media sourcing fails" was the premise
    risk; in fact 188 bodyweight exercises ship with 2 images each, and the M0 exit criterion

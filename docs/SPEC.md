@@ -165,7 +165,7 @@ interface Exercise {
 interface MediaAsset {
   kind: 'image' | 'video';
   path: string;                       // "/media/push_up/0.webp"
-  caption?: string;                   // typically "Start" / "End"
+  caption?: string;                   // only if the source labels the frame; never inferred from order
   width: number;
   height: number;                     // known up front to avoid layout shift
 }
@@ -436,6 +436,18 @@ stateDiagram-v2
 
 - **Manual advance only.** No auto-progression through exercises. The user presses to continue.
 - Current screen shows: exercise media (large, primary visual element), name, target for this set (`Set 2 of 3 - 45 s per side`), the cue instructions collapsed behind a tap, and the log control.
+
+#### Media on the session screen
+
+Decided 2026-07-25, measured against the real catalog (see `docs/M0-findings.md` §3). The browse and detail screens stack an exercise's frames vertically, which is right where vertical space is cheap. The session screen cannot afford that: the set numbers and countdown must be the largest things on screen (§12).
+
+**Show one frame large, with a tap to swap to the other. Do not animate between them automatically.** Three reasons, in order of weight:
+
+1. The frames are not a fixed-camera sequence. The pairs that differ *most* differ because the photographer moved: `chair_lower_back_stretch` scores highest in the catalog because frame 0 is a tight crop and frame 1 is a wide shot. Cycling those is a jump cut, not a demonstration — actively disorienting at 1 m while out of breath.
+2. Frame difference cannot be used to decide automatically. Stretches have the highest median difference and cardio the lowest, the opposite of how much the body actually moves, which shows the metric mostly tracks framing changes. Any auto-animation would need a hand-tagged "this pair is a real sequence" flag per exercise.
+3. §12 reserves motion for the rest countdown and set completion. A looping image during a set competes with the rep count for attention.
+
+A tap-to-swap control degrades correctly for the exercises that have only one frame, needs no new catalog field, and still reclaims the vertical space.
 - Log control: a number stepper prefilled with the target reps, or a count-down for duration targets. One tap to accept the target as performed. Editing to a different number is two taps. Optional RPE is behind a secondary control and never blocks progress.
 - Unilateral exercises log left and right as separate `SetEntry` rows.
 - **Rest timer:** starts automatically after logging when `restSeconds > 0`. Large countdown, skip button, and `+15 s` / `-15 s` adjust. Audible beep at zero.

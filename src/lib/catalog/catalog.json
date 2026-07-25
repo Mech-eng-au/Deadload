@@ -25,14 +25,12 @@
 			{
 				"kind": "image",
 				"path": "/media/90_90_hamstring/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/90_90_hamstring/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -67,14 +65,12 @@
 			{
 				"kind": "image",
 				"path": "/media/air_bike/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/air_bike/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -106,14 +102,12 @@
 			{
 				"kind": "image",
 				"path": "/media/all_fours_quad_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/all_fours_quad_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -145,14 +139,12 @@
 			{
 				"kind": "image",
 				"path": "/media/alternate_heel_touchers/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/alternate_heel_touchers/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -182,14 +174,12 @@
 			{
 				"kind": "image",
 				"path": "/media/ankle_circles/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/ankle_circles/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -221,14 +211,12 @@
 			{
 				"kind": "image",
 				"path": "/media/ankle_on_the_knee/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/ankle_on_the_knee/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -260,14 +248,12 @@
 			{
 				"kind": "image",
 				"path": "/media/arm_circles/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/arm_circles/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -303,14 +289,12 @@
 			{
 				"kind": "image",
 				"path": "/media/bench_dips/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/bench_dips/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -342,14 +326,12 @@
 			{
 				"kind": "image",
 				"path": "/media/bent_knee_hip_raise/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/bent_knee_hip_raise/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -383,14 +365,12 @@
 			{
 				"kind": "image",
 				"path": "/media/body_up/0.webp",
-				"caption": "Start",
 				"width": 750,
 				"height": 500
 			},
 			{
 				"kind": "image",
 				"path": "/media/body_up/1.webp",
-				"caption": "End",
 				"width": 750,
 				"height": 500
 			}
@@ -423,14 +403,12 @@
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_mid_row/0.webp",
-				"caption": "Start",
 				"width": 500,
 				"height": 750
 			},
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_mid_row/1.webp",
-				"caption": "End",
 				"width": 500,
 				"height": 750
 			}
@@ -465,14 +443,12 @@
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_squat/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_squat/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -509,14 +485,12 @@
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_walking_lunge/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/bodyweight_walking_lunge/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -551,14 +525,12 @@
 			{
 				"kind": "image",
 				"path": "/media/butt_lift_bridge/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/butt_lift_bridge/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -593,14 +565,12 @@
 			{
 				"kind": "image",
 				"path": "/media/cat_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/cat_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -632,14 +602,12 @@
 			{
 				"kind": "image",
 				"path": "/media/chair_lower_back_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/chair_lower_back_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -674,14 +642,12 @@
 			{
 				"kind": "image",
 				"path": "/media/childs_pose/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/childs_pose/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -712,14 +678,12 @@
 			{
 				"kind": "image",
 				"path": "/media/chin_to_chest_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/chin_to_chest_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -756,14 +720,12 @@
 			{
 				"kind": "image",
 				"path": "/media/chin_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/chin_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -795,14 +757,12 @@
 			{
 				"kind": "image",
 				"path": "/media/cross_body_crunch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/cross_body_crunch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -835,14 +795,12 @@
 			{
 				"kind": "image",
 				"path": "/media/crunches/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/crunches/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -877,14 +835,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dancers_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/dancers_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -919,14 +875,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dead_bug/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 450
 			},
 			{
 				"kind": "image",
 				"path": "/media/dead_bug/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 450
 			}
@@ -960,14 +914,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dips_chest_version/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/dips_chest_version/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1003,14 +955,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dips_triceps_version/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/dips_triceps_version/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1047,14 +997,12 @@
 			{
 				"kind": "image",
 				"path": "/media/double_leg_butt_kick/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/double_leg_butt_kick/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1083,14 +1031,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dynamic_back_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/dynamic_back_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1121,14 +1067,12 @@
 			{
 				"kind": "image",
 				"path": "/media/dynamic_chest_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/dynamic_chest_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1158,14 +1102,12 @@
 			{
 				"kind": "image",
 				"path": "/media/elbow_to_knee/0.webp",
-				"caption": "Start",
 				"width": 750,
 				"height": 500
 			},
 			{
 				"kind": "image",
 				"path": "/media/elbow_to_knee/1.webp",
-				"caption": "End",
 				"width": 750,
 				"height": 500
 			}
@@ -1197,14 +1139,12 @@
 			{
 				"kind": "image",
 				"path": "/media/elbows_back/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/elbows_back/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1238,14 +1178,12 @@
 			{
 				"kind": "image",
 				"path": "/media/floor_glute_ham_raise/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/floor_glute_ham_raise/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1279,14 +1217,12 @@
 			{
 				"kind": "image",
 				"path": "/media/flutter_kicks/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/flutter_kicks/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1325,14 +1261,12 @@
 			{
 				"kind": "image",
 				"path": "/media/freehand_jump_squat/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/freehand_jump_squat/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1361,14 +1295,12 @@
 			{
 				"kind": "image",
 				"path": "/media/front_leg_raises/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/front_leg_raises/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1401,14 +1333,12 @@
 			{
 				"kind": "image",
 				"path": "/media/glute_kickback/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/glute_kickback/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1443,14 +1373,12 @@
 			{
 				"kind": "image",
 				"path": "/media/gorilla_chin_crunch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/gorilla_chin_crunch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1480,14 +1408,12 @@
 			{
 				"kind": "image",
 				"path": "/media/groin_and_back_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/groin_and_back_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1517,14 +1443,12 @@
 			{
 				"kind": "image",
 				"path": "/media/groiners/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/groiners/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1560,14 +1484,12 @@
 			{
 				"kind": "image",
 				"path": "/media/handstand_push_ups/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/handstand_push_ups/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1598,14 +1520,12 @@
 			{
 				"kind": "image",
 				"path": "/media/hanging_leg_raise/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/hanging_leg_raise/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1637,14 +1557,12 @@
 			{
 				"kind": "image",
 				"path": "/media/hanging_pike/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/hanging_pike/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1676,14 +1594,12 @@
 			{
 				"kind": "image",
 				"path": "/media/hip_circles_prone/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/hip_circles_prone/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1716,14 +1632,12 @@
 			{
 				"kind": "image",
 				"path": "/media/hug_knees_to_chest/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/hug_knees_to_chest/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1760,14 +1674,12 @@
 			{
 				"kind": "image",
 				"path": "/media/hyperextensions_with_no_hyperextension_bench/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/hyperextensions_with_no_hyperextension_bench/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1799,14 +1711,12 @@
 			{
 				"kind": "image",
 				"path": "/media/inchworm/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 533
 			},
 			{
 				"kind": "image",
 				"path": "/media/inchworm/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 533
 			}
@@ -1839,14 +1749,12 @@
 			{
 				"kind": "image",
 				"path": "/media/incline_push_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/incline_push_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1882,14 +1790,12 @@
 			{
 				"kind": "image",
 				"path": "/media/inverted_row/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/inverted_row/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1919,14 +1825,12 @@
 			{
 				"kind": "image",
 				"path": "/media/iron_crosses_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/iron_crosses_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1957,14 +1861,12 @@
 			{
 				"kind": "image",
 				"path": "/media/jackknife_sit_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/jackknife_sit_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -1996,14 +1898,12 @@
 			{
 				"kind": "image",
 				"path": "/media/knee_across_the_body/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/knee_across_the_body/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2039,14 +1939,12 @@
 			{
 				"kind": "image",
 				"path": "/media/knee_tuck_jump/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/knee_tuck_jump/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2075,14 +1973,12 @@
 			{
 				"kind": "image",
 				"path": "/media/kneeling_forearm_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/kneeling_forearm_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2115,14 +2011,12 @@
 			{
 				"kind": "image",
 				"path": "/media/kneeling_hip_flexor/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/kneeling_hip_flexor/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2160,14 +2054,12 @@
 			{
 				"kind": "image",
 				"path": "/media/lateral_bound/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/lateral_bound/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2201,14 +2093,12 @@
 			{
 				"kind": "image",
 				"path": "/media/leg_lift/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/leg_lift/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2239,14 +2129,12 @@
 			{
 				"kind": "image",
 				"path": "/media/leg_pull_in/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/leg_pull_in/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2276,14 +2164,12 @@
 			{
 				"kind": "image",
 				"path": "/media/leg_up_hamstring_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/leg_up_hamstring_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2316,14 +2202,12 @@
 			{
 				"kind": "image",
 				"path": "/media/middle_back_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/middle_back_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2357,14 +2241,12 @@
 			{
 				"kind": "image",
 				"path": "/media/mountain_climbers/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/mountain_climbers/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2396,14 +2278,12 @@
 			{
 				"kind": "image",
 				"path": "/media/oblique_crunches_on_the_floor/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/oblique_crunches_on_the_floor/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2432,14 +2312,12 @@
 			{
 				"kind": "image",
 				"path": "/media/on_your_side_quad_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/on_your_side_quad_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2468,14 +2346,6 @@
 			{
 				"kind": "image",
 				"path": "/media/one_arm_against_wall/0.webp",
-				"caption": "Start",
-				"width": 800,
-				"height": 534
-			},
-			{
-				"kind": "image",
-				"path": "/media/one_arm_against_wall/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2509,14 +2379,12 @@
 			{
 				"kind": "image",
 				"path": "/media/overhead_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/overhead_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2546,14 +2414,12 @@
 			{
 				"kind": "image",
 				"path": "/media/pelvic_tilt_into_bridge/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/pelvic_tilt_into_bridge/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2584,14 +2450,12 @@
 			{
 				"kind": "image",
 				"path": "/media/plank/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/plank/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2627,14 +2491,12 @@
 			{
 				"kind": "image",
 				"path": "/media/plyo_push_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/plyo_push_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2671,14 +2533,12 @@
 			{
 				"kind": "image",
 				"path": "/media/pullups/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/pullups/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2714,14 +2574,12 @@
 			{
 				"kind": "image",
 				"path": "/media/push_up_to_side_plank/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/push_up_to_side_plank/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2756,14 +2614,12 @@
 			{
 				"kind": "image",
 				"path": "/media/push_up_wide/0.webp",
-				"caption": "Start",
 				"width": 500,
 				"height": 750
 			},
 			{
 				"kind": "image",
 				"path": "/media/push_up_wide/1.webp",
-				"caption": "End",
 				"width": 500,
 				"height": 750
 			}
@@ -2797,14 +2653,12 @@
 			{
 				"kind": "image",
 				"path": "/media/push_ups_close_triceps_position/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/push_ups_close_triceps_position/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2839,14 +2693,12 @@
 			{
 				"kind": "image",
 				"path": "/media/push_ups_with_feet_elevated/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/push_ups_with_feet_elevated/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2883,14 +2735,12 @@
 			{
 				"kind": "image",
 				"path": "/media/pushups/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/pushups/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2922,14 +2772,12 @@
 			{
 				"kind": "image",
 				"path": "/media/reverse_crunch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/reverse_crunch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -2962,14 +2810,12 @@
 			{
 				"kind": "image",
 				"path": "/media/rocket_jump/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/rocket_jump/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3002,14 +2848,12 @@
 			{
 				"kind": "image",
 				"path": "/media/runners_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/runners_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3044,14 +2888,12 @@
 			{
 				"kind": "image",
 				"path": "/media/russian_twist/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/russian_twist/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3084,14 +2926,12 @@
 			{
 				"kind": "image",
 				"path": "/media/scapular_pull_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/scapular_pull_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3125,14 +2965,12 @@
 			{
 				"kind": "image",
 				"path": "/media/scissors_jump/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/scissors_jump/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3163,14 +3001,6 @@
 			{
 				"kind": "image",
 				"path": "/media/seated_floor_hamstring_stretch/0.webp",
-				"caption": "Start",
-				"width": 800,
-				"height": 534
-			},
-			{
-				"kind": "image",
-				"path": "/media/seated_floor_hamstring_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3201,14 +3031,12 @@
 			{
 				"kind": "image",
 				"path": "/media/shoulder_circles/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/shoulder_circles/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3236,14 +3064,12 @@
 			{
 				"kind": "image",
 				"path": "/media/shoulder_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/shoulder_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3272,14 +3098,12 @@
 			{
 				"kind": "image",
 				"path": "/media/side_bridge/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/side_bridge/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3305,14 +3129,12 @@
 			{
 				"kind": "image",
 				"path": "/media/side_jackknife/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/side_jackknife/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3342,14 +3164,12 @@
 			{
 				"kind": "image",
 				"path": "/media/side_leg_raises/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/side_leg_raises/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3381,14 +3201,12 @@
 			{
 				"kind": "image",
 				"path": "/media/side_lying_groin_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/side_lying_groin_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3417,14 +3235,12 @@
 			{
 				"kind": "image",
 				"path": "/media/side_neck_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/side_neck_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3458,14 +3274,12 @@
 			{
 				"kind": "image",
 				"path": "/media/single_arm_push_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/single_arm_push_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3498,14 +3312,12 @@
 			{
 				"kind": "image",
 				"path": "/media/single_leg_glute_bridge/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/single_leg_glute_bridge/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3539,14 +3351,12 @@
 			{
 				"kind": "image",
 				"path": "/media/sit_squats/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/sit_squats/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3580,14 +3390,12 @@
 			{
 				"kind": "image",
 				"path": "/media/sit_up/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/sit_up/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3621,14 +3429,12 @@
 			{
 				"kind": "image",
 				"path": "/media/spider_crawl/0.webp",
-				"caption": "Start",
 				"width": 750,
 				"height": 500
 			},
 			{
 				"kind": "image",
 				"path": "/media/spider_crawl/1.webp",
-				"caption": "End",
 				"width": 750,
 				"height": 500
 			}
@@ -3664,14 +3470,12 @@
 			{
 				"kind": "image",
 				"path": "/media/spinal_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/spinal_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3707,14 +3511,12 @@
 			{
 				"kind": "image",
 				"path": "/media/split_jump/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/split_jump/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3747,14 +3549,12 @@
 			{
 				"kind": "image",
 				"path": "/media/split_squats/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/split_squats/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3786,14 +3586,12 @@
 			{
 				"kind": "image",
 				"path": "/media/standing_gastrocnemius_calf_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/standing_gastrocnemius_calf_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3824,14 +3622,12 @@
 			{
 				"kind": "image",
 				"path": "/media/standing_lateral_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/standing_lateral_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3860,14 +3656,12 @@
 			{
 				"kind": "image",
 				"path": "/media/standing_soleus_and_achilles_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/standing_soleus_and_achilles_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3898,14 +3692,12 @@
 			{
 				"kind": "image",
 				"path": "/media/standing_toe_touches/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/standing_toe_touches/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3941,14 +3733,12 @@
 			{
 				"kind": "image",
 				"path": "/media/star_jump/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/star_jump/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -3981,14 +3771,12 @@
 			{
 				"kind": "image",
 				"path": "/media/step_up_with_knee_raise/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 450
 			},
 			{
 				"kind": "image",
 				"path": "/media/step_up_with_knee_raise/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 450
 			}
@@ -4023,14 +3811,12 @@
 			{
 				"kind": "image",
 				"path": "/media/superman/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/superman/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4062,14 +3848,6 @@
 			{
 				"kind": "image",
 				"path": "/media/the_straddle/0.webp",
-				"caption": "Start",
-				"width": 800,
-				"height": 534
-			},
-			{
-				"kind": "image",
-				"path": "/media/the_straddle/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4099,14 +3877,12 @@
 			{
 				"kind": "image",
 				"path": "/media/triceps_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/triceps_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4139,14 +3915,12 @@
 			{
 				"kind": "image",
 				"path": "/media/tuck_crunch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/tuck_crunch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4176,14 +3950,12 @@
 			{
 				"kind": "image",
 				"path": "/media/upper_back_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/upper_back_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4217,14 +3989,12 @@
 			{
 				"kind": "image",
 				"path": "/media/windmills/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/windmills/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4260,14 +4030,12 @@
 			{
 				"kind": "image",
 				"path": "/media/worlds_greatest_stretch/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/worlds_greatest_stretch/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
@@ -4297,14 +4065,12 @@
 			{
 				"kind": "image",
 				"path": "/media/wrist_circles/0.webp",
-				"caption": "Start",
 				"width": 800,
 				"height": 534
 			},
 			{
 				"kind": "image",
 				"path": "/media/wrist_circles/1.webp",
-				"caption": "End",
 				"width": 800,
 				"height": 534
 			}
