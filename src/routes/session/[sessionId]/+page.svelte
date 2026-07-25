@@ -1,0 +1,341 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
+	import { page } from '$app/state';
+	import { onMount, onDestroy } from 'svelte';
+	import { getExercise } from '$lib/catalog/index.js';
+	import { getRoutine } from '$lib/db/routines.js';
+	import { getSession, putSession } from '$lib/db/sessions.js';
+	import { SessionPlayer } from '$lib/session/player.svelte.js';
+	import { describeStep, prefillFor } from '$lib/session/steps.js';
+	import type { Routine } from '$lib/types.js';
+
+	let player = $state<SessionPlayer | null>(null);
+	let loaded = $state(false);
+	let missing = $state(false);
+
+	// Log control state, reset for each step.
+	let value = $state(0);
+	let rpe = $state<number | undefined>(undefined);
+	let showRpe = $state(false);
+	let showCues = $state(false);
+	let frame = $state(0);
+	let confirmLeave = $state(false);
+
+	const step = $derived(player?.step);
+	const exercise = $derived(step ? getExercise(step.exerciseId) : undefined);
+	const timed = $derived(step?.target.kind === 'duration');
+
+	onMount(async () => {
+		const session = await getSession(page.params.sessionId!);
+		if (!session) {
+			missing = true;
+			loaded = true;
+			return;
+		}
+		const routine: Routine | undefined = await getRoutine(session.routineId);
+		if (!routine) {
+			missing = true;
+			loaded = true;
+			return;
+		}
+		player = new SessionPlayer(routine, session);
+		resetControl();
+		loaded = true;
+	});
+
+	onDestroy(() => {
+		void player?.suspend();
+	});
+
+	// New step: refresh the prefilled log value and collapse the extras.
+	$effect(() => {
+		if (player?.stepIndex !== undefined) {
+			resetControl();
+		}
+	});
+
+	function resetControl() {
+		const target = player?.step?.target;
+		value = target ? (prefillFor(target) ?? 0) : 0;
+		rpe = undefined;
+		showRpe = false;
+		showCues = false;
+		frame = 0;
+	}
+
+	async function start() {
+		await player?.start();
+		resetControl();
+	}
+
+	async function logSet() {
+		if (!player || !step) return;
+		const payload = timed ? { seconds: value, rpe } : { reps: value, rpe };
+		await player.log(payload);
+	}
+
+	async function endEarly() {
+		if (!player) return;
+		await player.finish();
+	}
+
+	async function leave() {
+		if (!player) return;
+		await player.suspend();
+		await goto(`${base}/`, { replaceState: true });
+	}
+
+	function mmss(seconds: number): string {
+		const m = Math.floor(Math.abs(seconds) / 60);
+		const s = Math.abs(seconds) % 60;
+		return `${m}:${String(s).padStart(2, '0')}`;
+	}
+</script>
+
+<svelte:head>
+	<title>{player?.session.routineName ?? 'Session'} · Deadload</title>
+</svelte:head>
+
+{#if !loaded}
+	<p class="mt-8 text-zinc-500">Loading…</p>
+{:else if missing || !player}
+	<p class="mt-8 text-zinc-300">That session is no longer here.</p>
+	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
+{:else if player.phase === 'ready'}
+	<section class="flex min-h-[70dvh] flex-col justify-between">
+		<div>
+			<button onclick={leave} class="text-sm text-zinc-400">← Leave</button>
+			<h1 class="mt-4 font-display text-3xl font-bold">{player.session.routineName}</h1>
+			<p class="mt-2 text-zinc-400">
+				{player.steps.length} sets across {player.routine.blocks.reduce(
+					(n, b) => n + b.items.length,
+					0
+				)} exercises.
+			</p>
+			<p class="mt-6 text-sm text-zinc-500">
+				The screen stays awake for the whole session, and the rest timer beeps. Press start with the
+				volume up.
+			</p>
+		</div>
+		<button
+			onclick={start}
+			class="mt-10 min-h-20 w-full rounded-2xl bg-zinc-100 py-6 font-display text-2xl font-bold text-zinc-900"
+		>
+			Start
+		</button>
+	</section>
+{:else if player.phase === 'finished'}
+	<section class="flex flex-col gap-6 pt-4">
+		<div>
+			<h1 class="font-display text-3xl font-bold">Done.</h1>
+			<p class="mt-2 text-zinc-400">
+				{player.done} set{player.done === 1 ? '' : 's'} logged for {player.session.routineName}.
+			</p>
+		</div>
+		<textarea
+			placeholder="Session notes (optional)"
+			rows="3"
+			onchange={(e) => player?.setNotes(e.currentTarget.value)}
+			class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+		></textarea>
+		<a
+			href="{base}/"
+			class="min-h-14 rounded-xl bg-zinc-100 py-4 text-center font-semibold text-zinc-900"
+		>
+			Back to routines
+		</a>
+	</section>
+{:else if player.phase === 'resting'}
+	<!-- Rest: the countdown is the largest thing on the screen (§12). -->
+	<section class="flex min-h-[80dvh] flex-col items-center justify-center gap-8">
+		<p class="text-sm tracking-wide text-zinc-400 uppercase">Rest</p>
+		<p class="font-display text-8xl font-bold tabular-nums">{mmss(player.restRemaining)}</p>
+		{#if step && exercise}
+			<p class="text-center text-zinc-400">
+				Next: {exercise.name}<br />
+				<span class="text-sm text-zinc-500">{describeStep(step)}</span>
+			</p>
+		{/if}
+		<div class="fixed inset-x-0 bottom-0 px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+			<div class="mx-auto flex max-w-2xl flex-col gap-3">
+				<div class="flex gap-3">
+					<button
+						onclick={() => player?.adjustRest(-15)}
+						class="min-h-16 flex-1 rounded-xl border border-zinc-700 text-lg"
+					>
+						−15 s
+					</button>
+					<button
+						onclick={() => player?.adjustRest(15)}
+						class="min-h-16 flex-1 rounded-xl border border-zinc-700 text-lg"
+					>
+						+15 s
+					</button>
+				</div>
+				<button
+					onclick={() => player?.endRest()}
+					class="min-h-16 w-full rounded-xl bg-zinc-100 text-lg font-semibold text-zinc-900"
+				>
+					Skip rest
+				</button>
+			</div>
+		</div>
+	</section>
+{:else if step && exercise}
+	<section class="flex flex-col gap-4 pb-64">
+		<div class="flex items-center justify-between">
+			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
+			<span class="text-sm text-zinc-500 tabular-nums">
+				{player.stepIndex + 1} / {player.steps.length}
+			</span>
+		</div>
+
+		<!-- One frame large, tap to swap. Not animated: see SPEC §7. -->
+		<button
+			onclick={() => (frame = (frame + 1) % exercise.media.length)}
+			class="relative block w-full"
+			aria-label="Show the other photo"
+		>
+			<img
+				src="{base}{exercise.media[frame].path}"
+				alt={exercise.name}
+				width={exercise.media[frame].width}
+				height={exercise.media[frame].height}
+				class="w-full rounded-2xl bg-white"
+			/>
+			{#if exercise.media.length > 1}
+				<span
+					class="absolute right-3 bottom-3 rounded-full bg-zinc-950/80 px-3 py-1 text-xs text-zinc-200"
+				>
+					{frame + 1}/{exercise.media.length} · tap
+				</span>
+			{/if}
+		</button>
+
+		<div>
+			{#if step.blockLabel}
+				<p class="text-xs tracking-wide text-zinc-500 uppercase">{step.blockLabel}</p>
+			{/if}
+			<h1 class="font-display text-2xl font-bold">{exercise.name}</h1>
+			<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
+			{#if step.notes}
+				<p class="mt-2 text-sm text-zinc-400">{step.notes}</p>
+			{/if}
+		</div>
+
+		{#if exercise.instructions.length}
+			<details bind:open={showCues} class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
+				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
+				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
+					{#each exercise.instructions as line, i (i)}
+						<li>{line}</li>
+					{/each}
+				</ol>
+			</details>
+		{/if}
+
+		{#if timed}
+			<p class="text-center font-display text-6xl font-bold tabular-nums">
+				{mmss(player.elapsed)}
+			</p>
+		{/if}
+	</section>
+
+	<!-- Log control lives in the bottom third, one tap to accept the target. -->
+	<div
+		class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur"
+	>
+		<div class="mx-auto flex max-w-2xl flex-col gap-3">
+			<div class="flex items-center gap-3">
+				<button
+					onclick={() => (value = Math.max(0, value - 1))}
+					aria-label="One fewer"
+					class="min-h-16 min-w-16 rounded-xl border border-zinc-700 font-display text-2xl"
+				>
+					−
+				</button>
+				<div class="flex-1 text-center">
+					<div class="font-display text-4xl font-bold tabular-nums">{value}</div>
+					<div class="text-xs text-zinc-500">{timed ? 'seconds' : 'reps'}</div>
+				</div>
+				<button
+					onclick={() => (value += 1)}
+					aria-label="One more"
+					class="min-h-16 min-w-16 rounded-xl border border-zinc-700 font-display text-2xl"
+				>
+					+
+				</button>
+			</div>
+
+			{#if showRpe}
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-zinc-500">RPE</span>
+					{#each [6, 7, 8, 9, 10] as n (n)}
+						<button
+							onclick={() => (rpe = rpe === n ? undefined : n)}
+							class="min-h-11 flex-1 rounded-lg text-sm {rpe === n
+								? 'bg-zinc-100 text-zinc-900'
+								: 'border border-zinc-700 text-zinc-300'}"
+						>
+							{n}
+						</button>
+					{/each}
+				</div>
+			{/if}
+
+			<button
+				onclick={logSet}
+				class="min-h-16 w-full rounded-xl bg-zinc-100 font-display text-xl font-bold text-zinc-900"
+			>
+				Log set
+			</button>
+
+			<div class="flex gap-3 text-sm">
+				<button
+					onclick={() => (showRpe = !showRpe)}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+				>
+					{showRpe ? 'Hide RPE' : 'Add RPE'}
+				</button>
+				<button
+					onclick={() => player?.skip()}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+				>
+					Skip set
+				</button>
+				<button
+					onclick={endEarly}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+				>
+					End session
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if confirmLeave}
+	<div class="fixed inset-0 z-50 flex items-end bg-zinc-950/80 p-4">
+		<div class="mx-auto w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+			<p class="font-medium">Leave this session?</p>
+			<p class="mt-1 text-sm text-zinc-400">
+				It stays unfinished, and the home screen will offer to pick it back up.
+			</p>
+			<div class="mt-4 flex gap-3">
+				<button
+					onclick={leave}
+					class="min-h-14 flex-1 rounded-xl border border-zinc-700 font-medium"
+				>
+					Leave
+				</button>
+				<button
+					onclick={() => (confirmLeave = false)}
+					class="min-h-14 flex-1 rounded-xl bg-zinc-100 font-semibold text-zinc-900"
+				>
+					Keep going
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

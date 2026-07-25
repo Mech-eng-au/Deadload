@@ -4,12 +4,31 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
-	import { countItems, deleteRoutine, describeItem, getRoutine } from '$lib/db/routines.js';
+	import { countItems, deleteRoutine, describeItem, getRoutine, uid } from '$lib/db/routines.js';
+	import { putSession } from '$lib/db/sessions.js';
 	import type { Routine } from '$lib/types.js';
 
 	let routine = $state<Routine | null>(null);
 	let loaded = $state(false);
 	let confirmingDelete = $state(false);
+	let starting = $state(false);
+
+	async function startSession() {
+		if (!routine) return;
+		starting = true;
+		try {
+			const session = await putSession({
+				id: uid(),
+				routineId: routine.id,
+				routineName: routine.name,
+				startedAt: new Date().toISOString(),
+				entries: []
+			});
+			await goto(`${base}/session/${session.id}/`);
+		} finally {
+			starting = false;
+		}
+	}
 
 	onMount(async () => {
 		routine = (await getRoutine(page.params.id!)) ?? null;
@@ -94,9 +113,18 @@
 		{/each}
 
 		<div class="flex flex-col gap-3 border-t border-zinc-800 pt-6">
+			{#if countItems(routine) > 0}
+				<button
+					onclick={startSession}
+					disabled={starting}
+					class="min-h-16 rounded-xl bg-zinc-100 py-4 font-display text-xl font-bold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
+				>
+					{starting ? 'Starting…' : 'Start session'}
+				</button>
+			{/if}
 			<a
 				href="{base}/routines/{routine.id}/edit/"
-				class="min-h-14 rounded-xl bg-zinc-100 py-4 text-center text-base font-semibold text-zinc-900"
+				class="min-h-14 rounded-xl border border-zinc-700 py-4 text-center text-base font-medium"
 			>
 				Edit routine
 			</a>

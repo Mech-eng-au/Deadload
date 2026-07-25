@@ -3,15 +3,24 @@
 	import { onMount } from 'svelte';
 	import { catalog } from '$lib/catalog/index.js';
 	import { countItems, listRoutines } from '$lib/db/routines.js';
-	import type { Routine } from '$lib/types.js';
+	import { deleteSession, findUnfinishedSession } from '$lib/db/sessions.js';
+	import type { Routine, Session } from '$lib/types.js';
 
 	let routines = $state<Routine[]>([]);
+	let unfinished = $state<Session | null>(null);
 	let loaded = $state(false);
 
 	onMount(async () => {
 		routines = await listRoutines();
+		unfinished = (await findUnfinishedSession()) ?? null;
 		loaded = true;
 	});
+
+	async function discardUnfinished() {
+		if (!unfinished) return;
+		await deleteSession(unfinished.id);
+		unfinished = null;
+	}
 </script>
 
 <svelte:head>
@@ -28,6 +37,32 @@
 			New routine
 		</a>
 	</div>
+
+	{#if unfinished}
+		<!-- Crash-resume: an explicit prompt, never a silent restore (§7). -->
+		<div class="rounded-2xl border border-zinc-700 bg-zinc-900 p-5">
+			<p class="font-medium">Resume session?</p>
+			<p class="mt-1 text-sm text-zinc-400">
+				{unfinished.routineName} · {unfinished.entries.length} set{unfinished.entries.length === 1
+					? ''
+					: 's'} logged
+			</p>
+			<div class="mt-4 flex gap-3">
+				<a
+					href="{base}/session/{unfinished.id}/"
+					class="min-h-14 flex-1 rounded-xl bg-zinc-100 py-4 text-center font-semibold text-zinc-900"
+				>
+					Resume
+				</a>
+				<button
+					onclick={discardUnfinished}
+					class="min-h-14 flex-1 rounded-xl border border-zinc-700 py-4 text-zinc-300"
+				>
+					Discard
+				</button>
+			</div>
+		</div>
+	{/if}
 
 	{#if loaded && routines.length === 0}
 		<div class="rounded-2xl border border-dashed border-zinc-800 p-8 text-center">
