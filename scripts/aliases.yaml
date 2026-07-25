@@ -1,0 +1,80 @@
+# Manual aliases, keyed by source exercise name.
+# Seeds Exercise.aliases on top of the auto-generated ones
+# (source name + id with underscores as spaces).
+Pushups:
+  - push up
+  - press up
+  - standard push-up
+Pullups:
+  - pull up
+  - pull-ups
+Chin-Up:
+  - chin up
+  - chinups
+Butt Lift (Bridge):
+  - glute bridge
+  - hip bridge
+  - bridge
+Air Bike:
+  - bicycle crunch
+  - bicycles
+Bodyweight Squat:
+  - air squat
+  - squat
+Bodyweight Walking Lunge:
+  - walking lunge
+  - lunge
+Bench Dips:
+  - chair dips
+  - tricep dips
+Dips - Triceps Version:
+  - dips
+  - parallel bar dips
+Cat Stretch:
+  - cat cow
+  - cat-cow
+  - cat camel
+Kneeling Hip Flexor:
+  - hip flexor stretch
+  - couch stretch light
+Ankle On The Knee:
+  - figure four stretch
+  - figure 4 stretch
+Hug Knees To Chest:
+  - knees to chest
+Child's Pose:
+  - childs pose
+  - balasana
+Mountain Climbers:
+  - mountain climber
+Plank:
+  - front plank
+  - forearm plank
+Side Bridge:
+  - side plank
+Dead Bug:
+  - deadbug
+Superman:
+  - back extension floor
+Inverted Row:
+  - australian pull up
+  - bodyweight row
+Sit-Up:
+  - situp
+  - sit ups
+Russian Twist:
+  - russian twists
+Handstand Push-Ups:
+  - hspu
+  - handstand pushup
+World's Greatest Stretch:
+  - worlds greatest stretch
+  - wgs
+Freehand Jump Squat:
+  - jump squat
+  - squat jump
+Star Jump:
+  - jumping jack star
+Hyperextensions With No Hyperextension Bench:
+  - floor hyperextension
+  - back extension
