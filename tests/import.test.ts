@@ -225,6 +225,36 @@ describe('defaults (§6.1)', () => {
 	});
 });
 
+describe('circuit blocks (§6.1, §6.2)', () => {
+	it('reads "circuit": true on a JSON block', () => {
+		const r = review(
+			'{"blocks":[{"label":"Main","circuit":true,"items":[{"exercise":"pushups"},{"exercise":"pullups"}]},{"label":"Cooldown","items":[{"exercise":"worlds_greatest_stretch"}]}]}'
+		);
+		const { routine } = toRoutine(r, index, key);
+		expect(routine.blocks[0].mode).toBe('circuit');
+		expect(routine.blocks[1].mode).toBeUndefined();
+	});
+
+	it('accepts "mode": "circuit" and a loose "yes" as synonyms', () => {
+		const byMode = parseJson(
+			'{"blocks":[{"mode":"Circuit","items":[{"exercise":"pushups"}]}]}'
+		);
+		expect(byMode.blocks[0].circuit).toBe(true);
+		const byYes = parseJson('{"blocks":[{"circuit":"yes","items":[{"exercise":"pushups"}]}]}');
+		expect(byYes.blocks[0].circuit).toBe(true);
+	});
+
+	it('marks a CSV block as a circuit from any truthy circuit cell', () => {
+		const r = review(
+			'block,exercise,sets,reps,circuit\nMain,Push-ups,3,10,true\nMain,Pull-ups,3,5,\nCooldown,Cat stretch,1,10,',
+			'routine.csv'
+		);
+		const { routine } = toRoutine(r, index, key);
+		expect(routine.blocks[0].mode).toBe('circuit');
+		expect(routine.blocks[1].mode).toBeUndefined();
+	});
+});
+
 describe('built-in presets (§9)', () => {
 	it.each(PRESET_FILES)('%s resolves completely through the import path', (file) => {
 		const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');

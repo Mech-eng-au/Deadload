@@ -198,6 +198,7 @@ interface Block {
   id: string;
   label?: string;                     // "Warm-up", "Main", "Cooldown"
   items: RoutineItem[];
+  mode?: 'circuit';                   // see below; absent = straight through
 }
 
 interface RoutineItem {
@@ -219,6 +220,12 @@ type Target =
 ```
 
 Blocks exist because LLM-generated routines are naturally sectioned and because warm-up / cooldown is a real distinction during a session. A routine with no sections is stored as a single unlabelled block.
+
+**Circuit blocks.** Added 2026-07-25. `mode: 'circuit'` runs a block round-robin — one set of each item in order, then the next round — instead of all sets of an item before the next. A superset is simply a two-item circuit block, so there is no separate superset concept. Rules, chosen so that nothing else in the app changes:
+
+- Rounds = the largest `sets` in the block. An item with fewer sets drops out of later rounds, which means every item performs its sets in consecutive rounds from round one — so **`SetEntry.setIndex` always equals the round index**, and the log format, crash-resume, and last-time comparison are untouched.
+- `restSeconds` keeps its meaning: rest after each set, wherever that set falls. A classic "rest only between rounds" circuit is expressed with 0 s on every item except the block's last. The import prompt says so.
+- Per-side sets stay together within a round (left then right), same as §7 sequencing.
 
 ### 4.3 Session log (user data)
 
@@ -342,6 +349,7 @@ Parser rules:
 - Missing `per_side` falls back to `Exercise.unilateral`.
 - Unknown top-level keys are ignored, not rejected. LLMs add fields.
 - Accept a bare array of items with no `blocks` wrapper, and accept `exercises` as a synonym for `items`.
+- A block with `"circuit": true` (or `"mode": "circuit"`) becomes a circuit block (§4.2). Added 2026-07-25.
 
 Validate with zod, then map into the internal model. Keep the wire format and the internal model as separate types; do not let the import shape leak into `Routine`.
 
@@ -356,6 +364,8 @@ Main,World's greatest stretch,2,,45,true,15,
 ```
 
 Same resolution and defaulting rules. Parse with a real CSV parser (`papaparse`), not `split(',')` - notes fields will contain commas.
+
+An optional `circuit` column marks blocks: a truthy cell (`true`, `yes`, `1`, `circuit`) on any row makes that row's whole block a circuit. Added 2026-07-25.
 
 Markdown is explicitly not supported. If a pasted-text path is ever wanted, that is a separate feature and not part of this spec.
 
@@ -436,6 +446,7 @@ stateDiagram-v2
 
 - **Manual advance only.** No auto-progression through exercises. The user presses to continue.
 - Current screen shows: exercise media (large, primary visual element), name, target for this set (`Set 2 of 3 - 45 s per side`), the cue instructions collapsed behind a tap, and the log control.
+- Circuit blocks (§4.2) change only the *order* the flattened steps come out in — the state machine, logging, resume and undo are order-blind. Their steps read `Round 2 of 3` instead of `Set 2 of 3`, because in a circuit the round is the number worth knowing. Added 2026-07-25.
 
 #### Media on the session screen
 
@@ -650,6 +661,8 @@ Shipped in-app on the import screen, with a copy button, and with `catalog-for-l
 > ```
 >
 > Per item, use exactly one of `reps`, `duration_seconds`, `reps_min` + `reps_max`, or `"amrap": true`. Set `per_side: true` for anything performed one side at a time. All durations in seconds. Use metric units throughout.
+>
+> To alternate exercises as a circuit or superset, set `"circuit": true` on the block: each round performs one set of every item in order. Rest is still taken after each set as its `rest_seconds` says, so for rest only between rounds give every item 0 except the block's last.
 >
 > Goal: **[describe the goal here]**
 > Target duration: **[minutes]**

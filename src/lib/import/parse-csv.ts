@@ -26,7 +26,7 @@ export function parseCsv(text: string): ParsedRoutine {
 		);
 	}
 
-	const blocks: { label?: string; items: WireItem[] }[] = [];
+	const blocks: { label?: string; circuit?: boolean; items: WireItem[] }[] = [];
 	rows.forEach((row, i) => {
 		const clean: Record<string, string> = {};
 		for (const [k, v] of Object.entries(row)) if (v?.trim()) clean[k] = v.trim();
@@ -41,10 +41,19 @@ export function parseCsv(text: string): ParsedRoutine {
 			);
 		}
 
+		// A truthy `circuit` cell on any row marks its whole block as a circuit.
+		const circuit = ['true', 'yes', '1', 'y', 'circuit'].includes(
+			(clean.circuit ?? '').toLowerCase()
+		);
+
 		const label = clean.block || undefined;
 		const last = blocks[blocks.length - 1];
-		if (last && last.label === label) last.items.push(parsed.data);
-		else blocks.push({ label, items: [parsed.data] });
+		if (last && last.label === label) {
+			last.items.push(parsed.data);
+			if (circuit) last.circuit = true;
+		} else {
+			blocks.push({ label, circuit: circuit || undefined, items: [parsed.data] });
+		}
 	});
 
 	if (blocks.length === 0) throw new ImportError('The routine has no exercises in it.');

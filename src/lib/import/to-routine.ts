@@ -25,6 +25,7 @@ export interface ReviewItem {
 export interface ReviewBlock {
 	key: string;
 	label?: string;
+	circuit?: boolean;
 	items: ReviewItem[];
 }
 
@@ -46,6 +47,7 @@ export function buildReview(
 	const blocks = parsed.blocks.map((b) => ({
 		key: newKey(),
 		label: b.label,
+		circuit: b.circuit,
 		items: b.items.map((raw) => {
 			const result = resolve(raw.exercise, index, overrides);
 			return {
@@ -153,6 +155,7 @@ export function toRoutine(
 		.map((b) => ({
 			id: newId(),
 			label: b.label,
+			mode: b.circuit ? ('circuit' as const) : undefined,
 			items: b.items
 				.filter((i) => !i.dropped && i.chosen)
 				.map((i) => {

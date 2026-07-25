@@ -5,7 +5,7 @@ export interface ParsedRoutine {
 	goal?: string;
 	description?: string;
 	tags: string[];
-	blocks: { label?: string; items: WireItem[] }[];
+	blocks: { label?: string; circuit?: boolean; items: WireItem[] }[];
 	notes: ImportNote[];
 }
 
@@ -90,9 +90,13 @@ export function parseJson(text: string): ParsedRoutine {
 		});
 	}
 
-	let blocks: { label?: string; items: WireItem[] }[];
+	let blocks: { label?: string; circuit?: boolean; items: WireItem[] }[];
 	if (routine.blocks?.length) {
-		blocks = routine.blocks.map((b) => ({ label: b.label, items: b.items ?? b.exercises ?? [] }));
+		blocks = routine.blocks.map((b) => ({
+			label: b.label,
+			circuit: b.circuit || b.mode?.trim().toLowerCase() === 'circuit' || undefined,
+			items: b.items ?? b.exercises ?? []
+		}));
 	} else {
 		const flat = routine.items ?? routine.exercises ?? [];
 		blocks = [{ items: flat }];
