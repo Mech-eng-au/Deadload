@@ -4,11 +4,13 @@
 	import { catalog, getExercise } from '$lib/catalog/index.js';
 	import { listSessions } from '$lib/db/sessions.js';
 	import {
+		activityCalendar,
 		currentStreak,
 		exerciseProgress,
 		longestStreak,
 		routineUsage,
 		sessionsPerWeek,
+		summarize,
 		totals,
 		volumeByMuscle,
 		type ExerciseProgress
@@ -35,6 +37,20 @@
 	const peakMuscle = $derived(Math.max(1, ...muscles.map((m) => m.sets)));
 	const progress = $derived(exerciseProgress(sessions));
 	const routines = $derived(routineUsage(sessions));
+	const calendar = $derived(activityCalendar(sessions, 16));
+	const busiestDay = $derived(
+		Math.max(1, ...calendar.flat().map((d) => d.sets))
+	);
+	const recent = $derived(summarize(sessions).slice(0, 5));
+
+	/** Four shades: absent, light, medium, heavy, relative to the busiest day. */
+	function shade(sets: number): string {
+		if (sets === 0) return 'bg-zinc-900';
+		const share = sets / busiestDay;
+		if (share > 0.66) return 'bg-zinc-100';
+		if (share > 0.33) return 'bg-zinc-400';
+		return 'bg-zinc-600';
+	}
 
 	function minutes(seconds: number): string {
 		if (seconds < 60) return `${seconds} s`;
@@ -96,6 +112,36 @@
 			</div>
 		</div>
 
+		<!-- Sixteen weeks of daily activity, shaded by how much was logged. -->
+		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Activity</h2>
+			<div class="mt-3 flex gap-[3px] overflow-x-auto pb-1">
+				{#each calendar as week (week[0].key)}
+					<div class="flex shrink-0 flex-col gap-[3px]">
+						{#each week as day (day.key)}
+							<div
+								class="h-3.5 w-3.5 rounded-[3px] {day.future ? 'bg-transparent' : shade(day.sets)}"
+								title={day.future
+									? ''
+									: `${day.date.toLocaleDateString()} — ${day.sets} set${day.sets === 1 ? '' : 's'}`}
+							></div>
+						{/each}
+					</div>
+				{/each}
+			</div>
+			<div class="mt-2 flex items-center justify-between text-[10px] text-zinc-600">
+				<span>16 weeks ago</span>
+				<span class="flex items-center gap-1">
+					less
+					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-900"></span>
+					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-600"></span>
+					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-400"></span>
+					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-100"></span>
+					more
+				</span>
+			</div>
+		</section>
+
 		<!-- Sessions per week, last 12 -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
@@ -118,6 +164,26 @@
 				<span>{weeks[0]?.label}</span>
 				<span>this week</span>
 			</div>
+		</section>
+
+		<!-- Recent sessions, with the way through to the full log. -->
+		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+			<div class="flex items-baseline justify-between">
+				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Recent sessions</h2>
+				<a href="{base}/history/" class="text-sm text-zinc-400 underline">See all</a>
+			</div>
+			<ul class="mt-3 flex flex-col gap-2 text-sm">
+				{#each recent as row (row.id)}
+					<li>
+						<a href="{base}/history/{row.id}/" class="flex justify-between gap-3">
+							<span class="min-w-0 truncate text-zinc-300">{row.routineName}</span>
+							<span class="shrink-0 text-zinc-500 tabular-nums">
+								{new Date(row.startedAt).toLocaleDateString()} · {row.sets} sets
+							</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
 		</section>
 
 		<!-- Volume by muscle group -->

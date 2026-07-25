@@ -59,6 +59,101 @@ export function sessionsPerWeek(sessions: Session[], weeks = 12, now = new Date(
 	return buckets;
 }
 
+export interface DayCell {
+	date: Date;
+	key: string;
+	sessions: number;
+	sets: number;
+	/** Days after today, which are drawn as blanks rather than empty days. */
+	future: boolean;
+}
+
+/**
+ * Daily activity as columns of weeks, Monday at the top — the shape a calendar
+ * heatmap wants. Empty days are present rather than omitted, because the gaps
+ * are the informative part.
+ */
+export function activityCalendar(sessions: Session[], weeks = 16, now = new Date()): DayCell[][] {
+	const counts = new Map<string, { sessions: number; sets: number }>();
+	for (const session of completed(sessions)) {
+		const key = dayKey(session.startedAt);
+		const row = counts.get(key) ?? { sessions: 0, sets: 0 };
+		row.sessions += 1;
+		row.sets += session.entries.filter((e) => !e.skipped).length;
+		counts.set(key, row);
+	}
+
+	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	const firstMonday = weekStart(now);
+	firstMonday.setDate(firstMonday.getDate() - (weeks - 1) * 7);
+
+	const grid: DayCell[][] = [];
+	for (let w = 0; w < weeks; w++) {
+		const column: DayCell[] = [];
+		for (let d = 0; d < 7; d++) {
+			const date = new Date(firstMonday);
+			date.setDate(date.getDate() + w * 7 + d);
+			const key = dayKey(date.toISOString());
+			const hit = counts.get(key);
+			column.push({
+				date,
+				key,
+				sessions: hit?.sessions ?? 0,
+				sets: hit?.sets ?? 0,
+				future: date.getTime() > today.getTime()
+			});
+		}
+		grid.push(column);
+	}
+	return grid;
+}
+
+export interface SessionSummary {
+	id: string;
+	routineName: string;
+	startedAt: string;
+	/** Whole minutes, or undefined when the session was never finished. */
+	minutes?: number;
+	sets: number;
+	skipped: number;
+	reps: number;
+	seconds: number;
+	finished: boolean;
+}
+
+/** One line per session, for the history list. Newest first. */
+export function summarize(sessions: Session[]): SessionSummary[] {
+	return sessions
+		.map((s) => {
+			let sets = 0;
+			let skipped = 0;
+			let reps = 0;
+			let seconds = 0;
+			for (const entry of s.entries) {
+				if (entry.skipped) skipped++;
+				else {
+					sets++;
+					reps += entry.reps ?? 0;
+					seconds += entry.seconds ?? 0;
+				}
+			}
+			return {
+				id: s.id,
+				routineName: s.routineName,
+				startedAt: s.startedAt,
+				minutes: s.endedAt
+					? Math.max(1, Math.round((Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000))
+					: undefined,
+				sets,
+				skipped,
+				reps,
+				seconds,
+				finished: !!s.endedAt
+			};
+		})
+		.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+}
+
 export interface MuscleVolume {
 	muscle: string;
 	sets: number;

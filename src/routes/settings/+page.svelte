@@ -21,7 +21,7 @@
 		type BackupFile,
 		type RestoreSummary
 	} from '$lib/db/backup.js';
-	import { exportBackupFile } from '$lib/db/export-file.js';
+	import { exportBackupFile, exportCsvFile } from '$lib/db/export-file.js';
 	import type { Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
@@ -74,6 +74,20 @@
 			exportedAs = shared ? filename : `${filename} (saved to app storage)`;
 		} catch (err) {
 			error = { message: 'The backup could not be written.', detail: String(err) };
+		} finally {
+			exporting = false;
+		}
+	}
+
+	async function doExportCsv() {
+		exporting = true;
+		error = null;
+		exportedAs = null;
+		try {
+			const { filename } = await exportCsvFile();
+			exportedAs = filename;
+		} catch (err) {
+			error = { message: 'The CSV could not be written.', detail: String(err) };
 		} finally {
 			exporting = false;
 		}
@@ -165,6 +179,16 @@
 		{#if exportedAs}
 			<p class="mt-2 text-xs text-zinc-400">Wrote {exportedAs}</p>
 		{/if}
+		<button
+			onclick={doExportCsv}
+			disabled={exporting || sessionCount === 0}
+			class="mt-3 min-h-14 w-full rounded-xl border border-zinc-700 py-3.5 font-medium disabled:opacity-40"
+		>
+			Export sets as CSV
+		</button>
+		<p class="mt-2 text-xs text-zinc-500">
+			The JSON restores the app. The CSV is one row per set, for reading in a spreadsheet.
+		</p>
 		{#if settings?.lastExportAt}
 			<p class="mt-2 text-xs text-zinc-500">
 				Last export: {new Date(settings.lastExportAt).toLocaleString()}
