@@ -1,0 +1,6 @@
+{
+  "name": "Stringly typed",
+  "blocks": [
+    { "items": [ { "exercise": "plank", "sets": "3", "duration_seconds": "45", "per_side": "false" } ] }
+  ]
+}

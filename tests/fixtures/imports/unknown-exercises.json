@@ -1,0 +1,12 @@
+{
+  "name": "Three strangers",
+  "extra_field_llms_add": true,
+  "blocks": [
+    { "items": [
+      { "exercise": "Turkish get-up", "sets": 3, "reps": 5 },
+      { "exercise": "barbell thruster", "sets": 3, "reps": 8 },
+      { "exercise": "kettlebell swing", "sets": 3, "reps": 20 },
+      { "exercise": "pushups", "sets": 3, "reps": 10 }
+    ]}
+  ]
+}

@@ -1,0 +1,35 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Upper body strength",
+	"goal": "upper body strength",
+	"description": "Push and pull, floor and bar. Scale by changing the incline rather than rushing the reps.",
+	"tags": ["strength", "upper body"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{ "exercise": "arm_circles", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "dynamic_chest_stretch", "sets": 1, "reps": 12, "rest_seconds": 0 },
+				{ "exercise": "scapular_pull_up", "sets": 2, "reps": 8, "rest_seconds": 30 }
+			]
+		},
+		{
+			"label": "Main",
+			"items": [
+				{ "exercise": "pushups", "sets": 4, "reps_min": 8, "reps_max": 12, "rest_seconds": 60 },
+				{ "exercise": "pullups", "sets": 4, "amrap": true, "rest_seconds": 90, "notes": "Stop two short of failure on every set but the last." },
+				{ "exercise": "dips_triceps_version", "sets": 3, "reps_min": 6, "reps_max": 10, "rest_seconds": 60 },
+				{ "exercise": "inverted_row", "sets": 3, "reps_min": 8, "reps_max": 12, "rest_seconds": 60 },
+				{ "exercise": "push_up_to_side_plank", "sets": 2, "reps": 6, "per_side": true, "rest_seconds": 45 }
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{ "exercise": "shoulder_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "triceps_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "elbows_back", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 }
+			]
+		}
+	]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Ambiguous targets",
+  "blocks": [
+    { "items": [
+      { "exercise": "childs_pose", "sets": 1, "reps": 10, "duration_seconds": 60 },
+      { "exercise": "pushups", "sets": 3, "reps": 12, "duration_seconds": 30 }
+    ]}
+  ]
+}
