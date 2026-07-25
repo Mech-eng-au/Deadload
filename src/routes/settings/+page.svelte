@@ -1,19 +1,98 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { listRoutines } from '$lib/db/routines.js';
-	import { ensureStoragePersisted, storageEstimate } from '$lib/db/settings.js';
+	import { countSessions } from '$lib/db/sessions.js';
+	import { countAliasOverrides } from '$lib/db/aliases.js';
+	import {
+		backupIsDue,
+		ensureStoragePersisted,
+		getSettings,
+		recordExport,
+		storageEstimate
+	} from '$lib/db/settings.js';
 	import { DB_VERSION } from '$lib/db/schema.js';
+	import {
+		BackupError,
+		parseBackup,
+		restoreBackup,
+		type BackupFile,
+		type RestoreSummary
+	} from '$lib/db/backup.js';
+	import { exportBackupFile } from '$lib/db/export-file.js';
 	import type { Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
 	let usage = $state<number | undefined>();
 	let routineCount = $state(0);
+	let sessionCount = $state(0);
+	let aliasCount = $state(0);
+
+	let exporting = $state(false);
+	let exportedAs = $state<string | null>(null);
+	let error = $state<{ message: string; detail?: string } | null>(null);
+
+	let pending = $state<BackupFile | null>(null);
+	let restoring = $state(false);
+	let summary = $state<RestoreSummary | null>(null);
+
+	const due = $derived(backupIsDue(sessionCount, settings));
+
+	async function refresh() {
+		settings = await getSettings();
+		routineCount = (await listRoutines()).length;
+		sessionCount = await countSessions();
+		aliasCount = await countAliasOverrides();
+		({ usage } = await storageEstimate());
+	}
 
 	onMount(async () => {
 		settings = await ensureStoragePersisted();
-		({ usage } = await storageEstimate());
-		routineCount = (await listRoutines()).length;
+		await refresh();
 	});
+
+	async function doExport() {
+		exporting = true;
+		error = null;
+		exportedAs = null;
+		try {
+			const { filename, shared } = await exportBackupFile();
+			settings = await recordExport(sessionCount);
+			exportedAs = shared ? filename : `${filename} (saved to app storage)`;
+		} catch (err) {
+			error = { message: 'The backup could not be written.', detail: String(err) };
+		} finally {
+			exporting = false;
+		}
+	}
+
+	async function pickFile(event: Event) {
+		const file = (event.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+		error = null;
+		summary = null;
+		try {
+			pending = parseBackup(await file.text());
+		} catch (err) {
+			pending = null;
+			if (err instanceof BackupError) error = { message: err.message, detail: err.detail };
+			else error = { message: String(err) };
+		}
+	}
+
+	async function applyRestore(mode: 'merge' | 'replace') {
+		if (!pending) return;
+		restoring = true;
+		try {
+			summary = await restoreBackup(pending, mode);
+			pending = null;
+			await refresh();
+		} catch (err) {
+			error = { message: 'The restore failed part way.', detail: String(err) };
+		} finally {
+			restoring = false;
+		}
+	}
 
 	function mb(bytes?: number) {
 		return bytes === undefined ? 'unknown' : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
@@ -24,8 +103,112 @@
 	<title>Settings · Deadload</title>
 </svelte:head>
 
-<section class="flex flex-col gap-6 pt-2">
+<section class="flex flex-col gap-6 pt-2 pb-12">
 	<h1 class="font-display text-3xl font-bold">Settings</h1>
+
+	{#if due}
+		<div class="rounded-2xl border border-amber-800/70 bg-amber-950/30 p-4 text-sm">
+			<p class="font-medium text-amber-100">You have {sessionCount} sessions logged.</p>
+			<p class="mt-1 text-amber-200/80">
+				Worth exporting a backup — it all lives on this phone and nowhere else.
+			</p>
+		</div>
+	{/if}
+
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Backup</h2>
+		<p class="mt-2 text-sm text-zinc-400">
+			One file with every routine, every logged session, your learned exercise names and your
+			settings.
+		</p>
+		<button
+			onclick={doExport}
+			disabled={exporting}
+			class="mt-4 min-h-14 w-full rounded-xl bg-zinc-100 py-3.5 font-semibold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
+		>
+			{exporting ? 'Preparing…' : 'Export backup'}
+		</button>
+		{#if exportedAs}
+			<p class="mt-2 text-xs text-zinc-400">Wrote {exportedAs}</p>
+		{/if}
+		{#if settings?.lastExportAt}
+			<p class="mt-2 text-xs text-zinc-500">
+				Last export: {new Date(settings.lastExportAt).toLocaleString()}
+			</p>
+		{:else}
+			<p class="mt-2 text-xs text-zinc-500">Never exported.</p>
+		{/if}
+	</div>
+
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Restore</h2>
+		{#if !pending && !summary}
+			<p class="mt-2 text-sm text-zinc-400">
+				Read a backup file back in. You choose whether to merge it with what is here or replace
+				everything.
+			</p>
+			<label
+				class="mt-4 block min-h-14 cursor-pointer rounded-xl border border-zinc-700 py-3.5 text-center font-medium"
+			>
+				Choose a backup file
+				<input type="file" accept=".json,application/json" class="hidden" onchange={pickFile} />
+			</label>
+		{:else if pending}
+			<p class="mt-2 text-sm text-zinc-300">
+				{pending.routines.length} routine{pending.routines.length === 1 ? '' : 's'},
+				{pending.sessions.length} session{pending.sessions.length === 1 ? '' : 's'},
+				{Object.keys(pending.aliasOverrides).length} learned name{Object.keys(pending.aliasOverrides)
+					.length === 1
+					? ''
+					: 's'}.
+			</p>
+			<p class="mt-1 text-xs text-zinc-500">
+				Exported {new Date(pending.exportedAt).toLocaleString()}
+			</p>
+			<div class="mt-4 flex flex-col gap-3">
+				<button
+					onclick={() => applyRestore('merge')}
+					disabled={restoring}
+					class="min-h-14 w-full rounded-xl bg-zinc-100 py-3.5 font-semibold text-zinc-900"
+				>
+					Merge into what is here
+				</button>
+				<button
+					onclick={() => applyRestore('replace')}
+					disabled={restoring}
+					class="min-h-14 w-full rounded-xl border border-red-900 py-3.5 font-medium text-red-200"
+				>
+					Replace everything
+				</button>
+				<button onclick={() => (pending = null)} class="min-h-12 text-sm text-zinc-500 underline">
+					Cancel
+				</button>
+			</div>
+			<p class="mt-3 text-xs text-zinc-500">
+				Merge keeps what is on this phone, adds anything missing, and updates a routine only when
+				the file's copy is newer. Replace deletes everything here first.
+			</p>
+		{:else if summary}
+			<p class="mt-2 text-sm text-zinc-100">Restored.</p>
+			<ul class="mt-2 flex flex-col gap-1 text-sm text-zinc-400">
+				<li>{summary.routinesAdded} routines added, {summary.routinesUpdated} updated{summary.routinesSkipped ? `, ${summary.routinesSkipped} already current` : ''}</li>
+				<li>{summary.sessionsAdded} sessions added{summary.sessionsSkipped ? `, ${summary.sessionsSkipped} already here` : ''}</li>
+				<li>{summary.aliasesAdded} learned names added</li>
+			</ul>
+			<button onclick={() => (summary = null)} class="mt-4 min-h-12 text-sm text-zinc-400 underline">
+				Done
+			</button>
+		{/if}
+	</div>
+
+	{#if error}
+		<div class="rounded-xl border border-red-900 bg-red-950/40 p-4">
+			<p class="font-medium text-red-200">{error.message}</p>
+			{#if error.detail}
+				<p class="mt-1 text-xs break-words text-red-300/80">{error.detail}</p>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
 		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Storage</h2>
@@ -33,13 +216,13 @@
 			<p class="mt-2 text-zinc-100">Your data is marked as persistent.</p>
 			<p class="mt-1 text-sm text-zinc-400">
 				Android will not clear it automatically when the device runs low on space. Uninstalling the
-				app still deletes everything.
+				app still deletes everything, so keep a backup.
 			</p>
 		{:else if settings}
 			<p class="mt-2 text-zinc-100">Your data is stored, but not marked as persistent.</p>
 			<p class="mt-1 text-sm text-zinc-400">
-				It survives restarts, but the system is allowed to clear it if the device runs very low on
-				space. Keeping a backup will matter once export lands.
+				It survives restarts, but the system may clear it if the device runs very low on space.
+				Export a backup.
 			</p>
 		{:else}
 			<p class="mt-2 text-zinc-500">Checking…</p>
@@ -50,11 +233,15 @@
 		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Data</h2>
 		<dl class="mt-2 flex flex-col gap-1 text-zinc-300">
 			<div class="flex justify-between"><dt>Routines</dt><dd>{routineCount}</dd></div>
+			<div class="flex justify-between"><dt>Sessions</dt><dd>{sessionCount}</dd></div>
+			<div class="flex justify-between"><dt>Learned names</dt><dd>{aliasCount}</dd></div>
 			<div class="flex justify-between"><dt>Space used</dt><dd>{mb(usage)}</dd></div>
 			<div class="flex justify-between"><dt>Database version</dt><dd>{DB_VERSION}</dd></div>
 		</dl>
-		<p class="mt-3 text-xs text-zinc-500">
-			Everything stays on this device. Backup and restore arrive in a later milestone.
-		</p>
+		<p class="mt-3 text-xs text-zinc-500">Everything stays on this device.</p>
 	</div>
+
+	<a href="{base}/about/" class="text-center text-sm text-zinc-500 underline">
+		About and attribution
+	</a>
 </section>

@@ -37,6 +37,8 @@
     "@capacitor/android": "^8.4.2",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.4.2",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/share": "^8.0.1",
     "idb": "^8.0.3",
     "papaparse": "^5.5.4",
     "zod": "^4.4.3"

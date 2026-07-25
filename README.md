@@ -8,7 +8,7 @@ Single user, no accounts, no backend. Data lives in the browser (IndexedDB) with
 
 ## Status
 
-M0–M3 done. 108 bodyweight exercises with images, routine building, LLM/CSV import with name resolution, five built-in routines, and a session player with per-set logging, rest timer and crash-resume — all offline in a sideloaded Android app. Backup and export (M4) and statistics (M5) are next.
+M0–M5 done. 108 bodyweight exercises with images, routine building, LLM/CSV import with name resolution, five built-in routines, a session player with per-set logging and crash-resume, whole-database backup and restore, and statistics over the log — all offline in a sideloaded Android app.
 
 - [`docs/SPEC.md`](docs/SPEC.md) — full design spec, data model, and milestone plan
 - [`docs/M0-findings.md`](docs/M0-findings.md) — verification of the exercise-data sources (free-exercise-db, wger) with real counts
