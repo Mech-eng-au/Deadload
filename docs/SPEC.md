@@ -173,7 +173,7 @@ interface MediaAsset {
 interface Attribution {
   id: string;
   source: 'free-exercise-db' | 'wger' | 'wikimedia' | 'own';
-  license: 'PD' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'own';
+  license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'own';
   author?: string;
   sourceUrl?: string;
 }
@@ -273,16 +273,18 @@ Write the migration scaffolding in v1 even though there is nothing to migrate. A
 
 ### Sources, in priority order
 
-1. **free-exercise-db** (`yuhonas/free-exercise-db`). Public domain. Pull `dist/exercises.json`. Images at `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises/<path>`. Filter to `equipment` in `["body only", null]`, plus an explicit include list in the script for anything using only a wall, floor, chair, or pull-up bar.
-2. **wger** (`https://wger.de/api/v2/`). Exercise data CC-BY-SA 3.0, images a smaller subset than the exercise list. Use only to fill gaps left by source 1, primarily stretches and mobility work. Attribution is mandatory, record author and source URL per image.
-3. **`scripts/manual/*.yaml`** - hand-authored entries pointing at local image or video files. This is where own-filmed stretches go. Expect to need 10-20 of these; the two databases thin out badly on mobility work, which is exactly what the hip-flexibility and back-relief presets need.
+1. **free-exercise-db** (`yuhonas/free-exercise-db`). Public domain. Pull `dist/exercises.json`. Images at `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/<path>` — note: **not** under `dist/`, that path 404s. Filter to `equipment` in `["body only", null]` (verified 2026-07-25: 111 + 77 = 188 entries, every one with exactly two JPEG images), plus an explicit include list in the script for anything using only a wall, floor, chair, or pull-up bar (e.g. `Dips - Chest Version` and `Band Assisted Pull-Up` sit under `equipment: "other"`).
+2. **wger** (`https://wger.de/api/v2/`). **Optional — verify before building anything against it.** Exercise data is predominantly CC-BY-SA 4.0 (719 of 872 bases), with some CC-BY-SA 3.0 (133) and CC0 (20) — not uniformly 3.0 as previously stated. wger has **no stretch or mobility category** (categories are muscle groups only), so gap-filling means keyword-matching English names (~53 bodyweight stretch-named entries, overlapping heavily with source 1). Image coverage for those entries is unverified as of 2026-07-25 (API unreachable from the dev environment). If used at all: attribution is mandatory, record author, source URL, and per-entry license per image. See `docs/M0-findings.md`.
+3. **`scripts/manual/*.yaml`** - hand-authored entries pointing at local image or video files. This is where own-filmed content goes. Expect to need 10-20 of these, skewed toward modern dynamic mobility drills (90/90 transitions, couch stretch, CARs): source 1 turned out to carry 85 bodyweight stretches with images — static-stretch coverage is good, contemporary mobility programming is the actual gap.
 
 ### Behaviour
 
-- Slugify ids to snake_case. Collisions are a hard error, not a silent rename.
+- Slugify ids to snake_case. Source ids are mixed-case with hyphens (`3_4_Sit-Up`), so every id gets re-slugged. Collisions are a hard error, not a silent rename.
+- Map source vocabulary to the §4.1 enums: free-exercise-db `level` is `beginner | intermediate | expert` → map `expert` to `advanced`; `category` is `stretching | strength | plyometrics | cardio` in the bodyweight pool → `stretching` maps to `stretch` mechanically, but `mobility` and `core` do not exist in the source and are assigned via a hand-maintained overrides file (seed `core` from `primaryMuscles: abdominals` — 38 candidates; seed `defaultMetric: duration` from `force: "static"` — 63 candidates).
+- The source provides no `aliases`, `unilateral`, `defaultMetric`, or image dimensions. `unilateral` in particular must be hand-tagged per exercise in the overrides file. This is real curation work (~120 entries) — budget it in M0, it is not free.
 - Seed `aliases` from the source name, the id with underscores replaced by spaces, and any manual aliases in a `scripts/aliases.yaml` file.
 - Download images, resize to max 800 px on the long edge, convert to WebP quality 80 with `sharp`. Write to `static/media/<id>/`. Record real pixel dimensions into the `MediaAsset`.
-- **Drop any exercise that ends up with zero media, and print it to stderr as a warning.** The dropped list is the work queue for own-filmed content.
+- **Drop any exercise that ends up with zero media, and print it to stderr as a warning.** The dropped list is the work queue for own-filmed content. (Verified: all 188 bodyweight entries in source 1 ship with two images, so this list is expected to be empty for source 1 — the check stays as a guard against download failures.)
 - Emit `catalog.json` and `attribution.json`. Both are committed.
 - Print a summary: total exercises, count per category, count per source, count dropped.
 
@@ -511,12 +513,14 @@ Each milestone ends in a working, committed, usable state.
 
 ### M0 - Catalog spike
 
-The riskiest part, so it goes first. If media sourcing fails, the whole project premise changes and it's better to know in week one.
+The riskiest part, so it goes first. ~~If media sourcing fails, the whole project premise changes~~ — **verified 2026-07-25** (`docs/M0-findings.md`): free-exercise-db alone yields 188 bodyweight exercises, all with two images. Media *scarcity* is retired as the premise risk. The remaining M0 risks are image quality/consistency (judge after the first WebP conversion run) and the hand-tagging pass below.
 
 - `scripts/build-catalog.ts` running against free-exercise-db
 - WebP conversion, media written to `static/media/`
+- Hand-tagging pass over the pool: `unilateral`, `mobility`/`core` category assignment, `defaultMetric` — plus curation down to the 120 cap (188+ candidates means ~70 cuts)
 - `catalog.json` + `attribution.json` generated and committed
 - Minimal SvelteKit app: browse catalog, exercise detail page with media and instructions, attribution page
+- If wger is ever to be used: a 30-minute API probe for stretch image coverage from an unrestricted network decides it. Not a build dependency.
 - **Exit criteria:** at least 60 bodyweight exercises with images render offline, and the stderr list of dropped exercises has been reviewed.
 
 ### M1 - Shell, storage, routines

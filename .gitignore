@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# SvelteKit / Vite
+.svelte-kit/
+build/
+dist/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Test output
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# NOTE: static/media/ and src/lib/catalog/*.json are generated but COMMITTED
+# by design (see docs/SPEC.md §3) — do not add them here.
