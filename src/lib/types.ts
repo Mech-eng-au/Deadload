@@ -83,6 +83,15 @@ export interface Session {
 	endedAt?: string; // absent => abandoned or in progress
 	entries: SetEntry[];
 	notes?: string;
+
+	// Timing is stored as wall-clock deadlines rather than counted down in
+	// memory, so a timed set or a rest period survives the app being killed and
+	// cannot drift while the screen is off. Both are cleared when the session
+	// ends.
+	/** When the current step began, for the count-up on a timed set. */
+	activeStepStartedAt?: string;
+	/** When the current rest period is due to end. */
+	restEndsAt?: string;
 }
 
 export interface SetEntry {

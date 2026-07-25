@@ -448,6 +448,20 @@ Decided 2026-07-25, measured against the real catalog (see `docs/M0-findings.md`
 3. §12 reserves motion for the rest countdown and set completion. A looping image during a set competes with the rep count for attention.
 
 A tap-to-swap control degrades correctly for the exercises that have only one frame, needs no new catalog field, and still reclaims the vertical space.
+
+**Revised 2026-07-25 after the first real workout.** Alternation is worth having, but as something the user asks for rather than something the screen does on its own. Single tap swaps one frame; **double tap alternates them every 1.4 s until tapped again**. This keeps the original objection intact — the pairs where the camera moved would be a jump cut, so nothing animates unless asked — while letting the user play the ones that do read as a movement. It adds one gesture and no chrome.
+
+#### Timing
+
+Both the count-up on a timed set and the rest countdown are derived from **wall-clock deadlines persisted on the session** (`activeStepStartedAt`, `restEndsAt` in §4.3), never counted down in memory. Counting ticks loses the clock when the app is killed and drifts while the screen is off; deadlines survive both, and a rest period that expired while the app was closed is simply over on return.
+
+#### Correcting mistakes
+
+`Log set` is the largest control on the screen and gets pressed by accident. **Back a set** removes the last logged entry and returns to that set, from either the working or the resting screen. Rest is cancelled on the way back, because the intent is to redo the set rather than to wait.
+
+#### System back
+
+The Android back gesture must behave like the on-screen back affordance, never close the app from mid-session. A guard stack lets whatever is on screen consume the press first — an active session raises the leave confirmation — before falling back to history, and only the home screen exits.
 - Log control: a number stepper prefilled with the target reps, or a count-down for duration targets. One tap to accept the target as performed. Editing to a different number is two taps. Optional RPE is behind a secondary control and never blocks progress.
 - Unilateral exercises log left and right as separate `SetEntry` rows.
 - **Rest timer:** starts automatically after logging when `restSeconds > 0`. Large countdown, skip button, and `+15 s` / `-15 s` adjust. Audible beep at zero.
