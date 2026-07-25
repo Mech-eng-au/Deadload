@@ -3,3 +3,65 @@
 @theme {
 	--font-display: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 }
+
+/*
+ * Directional page transitions (see src/routes/+layout.svelte). Short on
+ * purpose: long enough to show which way you moved, short enough that it never
+ * stands between a tap and the screen.
+ */
+@keyframes dl-slide-from-right {
+	from {
+		transform: translateX(100%);
+	}
+}
+@keyframes dl-slide-to-left {
+	to {
+		transform: translateX(-25%);
+		opacity: 0.6;
+	}
+}
+@keyframes dl-slide-from-left {
+	from {
+		transform: translateX(-25%);
+		opacity: 0.6;
+	}
+}
+@keyframes dl-slide-to-right {
+	to {
+		transform: translateX(100%);
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	:root[data-nav='forward']::view-transition-old(root) {
+		animation: dl-slide-to-left 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+	}
+	:root[data-nav='forward']::view-transition-new(root) {
+		animation: dl-slide-from-right 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+	}
+	:root[data-nav='back']::view-transition-old(root) {
+		animation: dl-slide-to-right 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+	}
+	:root[data-nav='back']::view-transition-new(root) {
+		animation: dl-slide-from-left 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+	}
+	/* The outgoing screen sits underneath, so the incoming one slides over it. */
+	:root[data-nav='forward']::view-transition-new(root) {
+		z-index: 1;
+	}
+	:root[data-nav='back']::view-transition-old(root) {
+		z-index: 1;
+	}
+}
+
+/* Presses should feel like presses. Kept off anything the user holds down. */
+@media (prefers-reduced-motion: no-preference) {
+	button:active:not(:disabled),
+	a:active {
+		transform: scale(0.985);
+	}
+	button,
+	a {
+		transition: transform 90ms ease-out;
+	}
+}

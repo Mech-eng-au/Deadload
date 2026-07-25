@@ -455,6 +455,12 @@ A tap-to-swap control degrades correctly for the exercises that have only one fr
 
 Both the count-up on a timed set and the rest countdown are derived from **wall-clock deadlines persisted on the session** (`activeStepStartedAt`, `restEndsAt` in §4.3), never counted down in memory. Counting ticks loses the clock when the app is killed and drifts while the screen is off; deadlines survive both, and a rest period that expired while the app was closed is simply over on return.
 
+#### Last time
+
+The working screen shows what was done for this exercise in the previous finished session, under the target: `Last time, 3 days ago: 12, 11, 9`, with the set currently in progress emphasised. Per-side exercises compare like with like — the left side against the left side — because the other side is not a fair comparison.
+
+This is the highest-value use of the per-set log (§4.3): it puts the history at the moment the decision is made, rather than on a page the user has to remember to visit. Skipped sets do not count as having done the exercise.
+
 #### Correcting mistakes
 
 `Log set` is the largest control on the screen and gets pressed by accident. **Back a set** removes the last logged entry and returns to that set, from either the working or the resting screen. Rest is cancelled on the way back, because the intent is to redo the set rather than to wait.
@@ -539,7 +545,9 @@ Not a full visual system, but enough to avoid generic defaults:
 - Primary session controls are at the **bottom third** of the screen, reachable one-handed, minimum 56 px touch targets.
 - Media is displayed large and uncropped. The image is the reason the catalog exists; do not reduce it to a thumbnail on the session screen.
 - Type: one characterful display face for numerals and headings, one neutral body face. Avoid a warm-cream-and-terracotta palette; it is the current AI-design default and reads as such.
-- Motion: only the rest countdown and set-completion get animation. Respect `prefers-reduced-motion`.
+- Motion: only the rest countdown, set-completion, and **navigation between screens** get animation. Respect `prefers-reduced-motion`.
+  - Amended 2026-07-25. Screens slide in the direction travelled — forward from the right, back from the left — because the direction carries meaning that an instant swap does not, particularly with the Android back gesture where the app should feel like it moved rather than blinked. 190 ms, and skipped where the View Transitions API is absent. This is the only decorative-looking motion allowed, and it is allowed because it is not decorative.
+  - Still excluded: anything animating during a set. The rep count and the countdown must be the only things moving while the user is working.
 - Copy: active voice, sentence case. "Log set", not "Submit". Empty states say what to do next, not that nothing exists.
 
 ---

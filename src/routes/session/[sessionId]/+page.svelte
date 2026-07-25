@@ -5,12 +5,13 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { getRoutine } from '$lib/db/routines.js';
-	import { getSession, putSession } from '$lib/db/sessions.js';
+	import { getSession, listSessions, putSession } from '$lib/db/sessions.js';
+	import { formatSet, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
 	import { SessionPlayer } from '$lib/session/player.svelte.js';
 	import { describeStep, prefillFor } from '$lib/session/steps.js';
 	import NumberWheel from '$lib/components/NumberWheel.svelte';
 	import { pushBackGuard } from '$lib/nav/back.js';
-	import type { Routine } from '$lib/types.js';
+	import type { Routine, Session } from '$lib/types.js';
 
 	/** Frames alternate this slowly when "playing" — fast enough to read as one
 	 *  movement, slow enough to study. */
@@ -30,9 +31,20 @@
 	let confirmLeave = $state(false);
 	let lastTapAt = 0;
 
+	let history = $state<Session[]>([]);
+
 	const step = $derived(player?.step);
 	const exercise = $derived(step ? getExercise(step.exerciseId) : undefined);
 	const timed = $derived(step?.target.kind === 'duration');
+
+	const lastTime = $derived(
+		step && player
+			? pickLastPerformance(history, step.exerciseId, {
+					excludeSessionId: player.session.id,
+					side: step.side
+				})
+			: undefined
+	);
 
 	onMount(async () => {
 		const session = await getSession(page.params.sessionId!);
@@ -50,6 +62,8 @@
 		player = new SessionPlayer(routine, session);
 		resetControl();
 		loaded = true;
+		// Not awaited before first paint: the workout must not wait on history.
+		void listSessions().then((all) => (history = all));
 
 		// A resumed session is already under way: restart the clocks and re-arm
 		// audio, which did not survive the app being closed.
@@ -272,6 +286,17 @@
 			{/if}
 			<h1 class="font-display text-2xl font-bold">{exercise.name}</h1>
 			<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
+			{#if lastTime}
+				<!-- What you did for this exercise last time, side matched. The set
+					 you are on now is emphasised. -->
+				<p class="mt-2 text-sm text-zinc-500">
+					Last time, {formatWhen(lastTime.performedAt)}:
+					{#each lastTime.sets as entry, i (entry.setIndex + '-' + i)}<span
+							class={entry.setIndex === step.setIndex ? 'font-semibold text-zinc-200' : ''}
+							>{formatSet(entry)}</span
+						>{#if i < lastTime.sets.length - 1}<span class="pr-1">,</span>{/if}{/each}
+				</p>
+			{/if}
 			{#if step.notes}
 				<p class="mt-2 text-sm text-zinc-400">{step.notes}</p>
 			{/if}
