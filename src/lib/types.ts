@@ -114,4 +114,7 @@ export interface Settings {
 	/** Result of the last persistence check. */
 	persistGranted: boolean;
 	createdAt: string;
+	/** Session count at the last export, so the §8 reminder knows when to nag. */
+	lastExportSessionCount?: number;
+	lastExportAt?: string;
 }

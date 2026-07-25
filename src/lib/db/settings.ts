@@ -35,6 +35,30 @@ export async function ensureStoragePersisted(): Promise<Settings> {
 	return putSettings({ ...settings, persistRequested: true, persistGranted: granted });
 }
 
+/**
+ * §8 asks for a backup reminder each time the session count crosses a multiple
+ * of 20. Comparing against the count at the last export means the reminder
+ * appears once per threshold and disappears the moment a backup is taken.
+ */
+export const BACKUP_REMINDER_EVERY = 20;
+
+export function backupIsDue(sessionCount: number, settings: Settings | null): boolean {
+	if (sessionCount < BACKUP_REMINDER_EVERY) return false;
+	const since = settings?.lastExportSessionCount ?? 0;
+	return (
+		Math.floor(sessionCount / BACKUP_REMINDER_EVERY) > Math.floor(since / BACKUP_REMINDER_EVERY)
+	);
+}
+
+export async function recordExport(sessionCount: number): Promise<Settings> {
+	const settings = await getSettings();
+	return putSettings({
+		...settings,
+		lastExportSessionCount: sessionCount,
+		lastExportAt: new Date().toISOString()
+	});
+}
+
 /** Bytes in use and available, when the browser is willing to say. */
 export async function storageEstimate(): Promise<{ usage?: number; quota?: number }> {
 	if (!navigator.storage?.estimate) return {};
