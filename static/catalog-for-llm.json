@@ -5,11 +5,6 @@
 		"category": "stretch"
 	},
 	{
-		"id": "adductor_groin",
-		"name": "Adductor/Groin",
-		"category": "stretch"
-	},
-	{
 		"id": "air_bike",
 		"name": "Air Bike",
 		"category": "core"
@@ -250,6 +245,11 @@
 		"category": "core"
 	},
 	{
+		"id": "knee_across_the_body",
+		"name": "Knee Across The Body",
+		"category": "stretch"
+	},
+	{
 		"id": "knee_tuck_jump",
 		"name": "Knee Tuck Jump",
 		"category": "cardio"
@@ -282,16 +282,6 @@
 	{
 		"id": "leg_up_hamstring_stretch",
 		"name": "Leg-Up Hamstring Stretch",
-		"category": "stretch"
-	},
-	{
-		"id": "lying_crossover",
-		"name": "Lying Crossover",
-		"category": "stretch"
-	},
-	{
-		"id": "lying_glute",
-		"name": "Lying Glute",
 		"category": "stretch"
 	},
 	{
@@ -428,6 +418,11 @@
 		"id": "side_leg_raises",
 		"name": "Side Leg Raises",
 		"category": "mobility"
+	},
+	{
+		"id": "side_lying_groin_stretch",
+		"name": "Side Lying Groin Stretch",
+		"category": "stretch"
 	},
 	{
 		"id": "side_neck_stretch",

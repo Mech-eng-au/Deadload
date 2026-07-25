@@ -16,7 +16,12 @@
 	});
 </script>
 
-<div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-4">
+<!-- Android 15+ draws the WebView edge to edge, so the system bars overlap the
+	 content unless the safe-area insets are honoured. `viewport-fit=cover` in
+	 app.html is what makes these resolve to non-zero values. -->
+<div
+	class="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+>
 	<header class="flex items-baseline justify-between py-5">
 		<a href="{base}/" class="font-display text-xl font-bold tracking-tight">Deadload</a>
 		<nav class="flex gap-5 text-sm text-zinc-400">
