@@ -53,7 +53,7 @@ Built-in presets, especially anything labelled for pain relief, are general trai
 | Validation | `zod` for import parsing |
 | Charts (M5) | `layerchart` or hand-rolled SVG. Do not pull in a heavy charting library. |
 | Tests | `vitest` for the import/resolution layer |
-| Deploy | Static files. GitHub Pages or any static host. |
+| Deploy | Static files, packaged into a sideloaded Android APK via Capacitor (§11). Any static host also works. |
 
 No backend. No API calls at runtime. The app must fully function in airplane mode after first load.
 
@@ -489,7 +489,18 @@ Compute on demand in a worker if it gets slow. It will not get slow at the data 
 - Verify offline behaviour explicitly: install, enable airplane mode, complete a full session.
 - Do not add a service worker update prompt in M1. Add it once the app is in daily use, because a silently stale app is confusing.
 
-**If Play Store distribution or background notifications are ever wanted:** wrap this same build in a Trusted Web Activity via Bubblewrap. That is a packaging step, not a rewrite. Nothing in this spec should be designed around that possibility now.
+### Delivery to the phone: sideloaded APK
+
+Amended 2026-07-25. The app is delivered as a **downloadable APK, built with Capacitor** (`capacitor.config.ts`, `android/`, `.github/workflows/android.yml`), not as a hosted PWA install.
+
+Why not the Bubblewrap/TWA route this section originally named: a Trusted Web Activity is a thin shell that loads the app *from a public HTTPS URL*, so it still requires hosting plus Digital Asset Links verification. Capacitor instead packages the static build inside the APK and serves it from a local origin, which means no hosting, no network at any point, and offline from first launch rather than after a warm-up visit. For a single-user app installed on one phone, that is strictly simpler.
+
+Consequences, all of which the rest of this spec already accommodates:
+
+- The service worker is not registered in the APK build (`VITE_CAPACITOR=1`); the assets are local, so a cache layer would only serve stale copies after an update. The PWA config stays, because the same build still works as a hosted PWA if that is ever wanted.
+- The Android WebView is Chromium, so IndexedDB, Screen Wake Lock, and `AudioContext` (§7) all behave as specified.
+- Updates are a re-download of the APK, not an automatic refresh. Every build is signed with a committed, deliberately non-secret sideload key (`android/deadload-sideload.jks`) so an updated APK installs over the previous one and **user data survives**. If that key ever changes, users must uninstall first and lose their IndexedDB data.
+- Play Store distribution remains a non-goal (§1). Sideloading is not publishing; nothing here is designed around store requirements.
 
 ---
 

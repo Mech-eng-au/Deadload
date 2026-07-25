@@ -6,6 +6,9 @@
 	let { children } = $props();
 
 	onMount(async () => {
+		// In the Android build the assets ship inside the APK; a service worker
+		// there would only serve stale copies after an app update.
+		if (import.meta.env.VITE_CAPACITOR === '1') return;
 		if ('serviceWorker' in navigator) {
 			const { registerSW } = await import('virtual:pwa-register');
 			registerSW({ immediate: true });
