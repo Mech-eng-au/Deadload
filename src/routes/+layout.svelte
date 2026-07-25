@@ -24,8 +24,9 @@
 >
 	<header class="flex items-baseline justify-between py-5">
 		<a href="{base}/" class="font-display text-xl font-bold tracking-tight">Deadload</a>
-		<nav class="flex gap-5 text-sm text-zinc-400">
+		<nav class="flex gap-4 text-sm text-zinc-400">
 			<a href="{base}/catalog/" class="hover:text-zinc-100">Catalog</a>
+			<a href="{base}/settings/" class="hover:text-zinc-100">Settings</a>
 			<a href="{base}/about/" class="hover:text-zinc-100">About</a>
 		</nav>
 	</header>
