@@ -1,8 +1,31 @@
 <script lang="ts">
 	import '../app.css';
 	import { base } from '$app/paths';
+	import { onNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { registerBackHandler } from '$lib/nav/back.js';
+
+	/**
+	 * Slide between screens in the direction you actually moved: forward from the
+	 * right, back from the left. The direction is the point — it says where you
+	 * went, which an instant swap does not. Skipped entirely where the View
+	 * Transitions API is missing or motion is unwanted (§12).
+	 */
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		// `delta` is only set for history navigations; a link is always forward.
+		const back = (navigation.delta ?? 0) < 0;
+		document.documentElement.dataset.nav = back ? 'back' : 'forward';
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
 	let { children } = $props();
 
