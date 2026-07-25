@@ -1,0 +1,68 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace = "app.deadload"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "app.deadload"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // CI sets these from the workflow run so each APK installs as an update.
+        versionCode System.getenv("DEADLOAD_VERSION_CODE") ? System.getenv("DEADLOAD_VERSION_CODE").toInteger() : 1
+        versionName System.getenv("DEADLOAD_VERSION_NAME") ?: "0.1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // Sideload signing key, committed on purpose and not a secret. Its only job
+    // is to keep the app signature stable across rebuilds so an updated APK
+    // installs over the previous one instead of forcing an uninstall, which
+    // would wipe the IndexedDB data. Never use this key to publish anywhere.
+    signingConfigs {
+        sideload {
+            storeFile file('../deadload-sideload.jks')
+            storePassword 'deadload'
+            keyAlias 'deadload'
+            keyPassword 'deadload'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.sideload
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

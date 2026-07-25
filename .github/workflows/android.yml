@@ -1,0 +1,87 @@
+name: Android APK
+
+# Builds the sideload APK and publishes it to the rolling `android-latest`
+# release, so the download link never changes:
+#   https://github.com/Mech-eng-au/Deadload/releases/download/android-latest/deadload.apk
+
+on:
+  push:
+    # Feature branches build the APK to validate the toolchain; only main publishes.
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0 platform-tools'
+
+      - run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+        env:
+          VITE_CAPACITOR: '1'
+
+      - name: Copy web assets into the Android project
+        run: npx cap sync android
+
+      - name: Assemble APK
+        working-directory: android
+        env:
+          DEADLOAD_VERSION_CODE: ${{ github.run_number }}
+          DEADLOAD_VERSION_NAME: 0.1.${{ github.run_number }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/deadload.apk
+          ls -la dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deadload-apk
+          path: dist/deadload.apk
+
+      - name: Publish to the rolling release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Sideload build 0.1.${{ github.run_number }} from ${GITHUB_SHA:0:7}.
+
+          Download **deadload.apk** below on your phone and open it to install.
+          Android will ask you to allow installing unknown apps from your browser the first time.
+
+          Every build is signed with the same key, so a new APK installs over the
+          previous one and keeps your data."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest dist/deadload.apk --clobber
+            gh release edit android-latest \
+              --title "Deadload APK (build ${{ github.run_number }})" --notes "$NOTES"
+          else
+            gh release create android-latest dist/deadload.apk \
+              --title "Deadload APK (build ${{ github.run_number }})" --notes "$NOTES"
+          fi
