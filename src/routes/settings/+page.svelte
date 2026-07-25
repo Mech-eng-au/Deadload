@@ -8,9 +8,11 @@
 		backupIsDue,
 		ensureStoragePersisted,
 		getSettings,
+		putSettings,
 		recordExport,
 		storageEstimate
 	} from '$lib/db/settings.js';
+	import { armAudio, cue, setSoundEnabled } from '$lib/session/audio.js';
 	import { DB_VERSION } from '$lib/db/schema.js';
 	import {
 		BackupError,
@@ -50,6 +52,17 @@
 		settings = await ensureStoragePersisted();
 		await refresh();
 	});
+
+	async function toggleSound() {
+		const next = !(settings?.soundEnabled ?? true);
+		settings = await putSettings({ ...(await getSettings()), soundEnabled: next });
+		setSoundEnabled(next);
+		// Play the cue so the choice is audible rather than theoretical.
+		if (next) {
+			await armAudio();
+			cue('done');
+		}
+	}
 
 	async function doExport() {
 		exporting = true;
@@ -114,6 +127,27 @@
 			</p>
 		</div>
 	{/if}
+
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Sound</h2>
+		<p class="mt-2 text-sm text-zinc-400">
+			Cues during a session: when a timed set starts, the last three seconds, time being up, a set
+			logged, and the end of the workout. Without them you have to watch the screen.
+		</p>
+		<button
+			onclick={toggleSound}
+			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
+		>
+			<span class="font-medium">Session sounds</span>
+			<span
+				class="rounded-full px-3 py-1 text-sm {settings?.soundEnabled === false
+					? 'bg-zinc-800 text-zinc-400'
+					: 'bg-zinc-100 font-medium text-zinc-900'}"
+			>
+				{settings?.soundEnabled === false ? 'Off' : 'On'}
+			</span>
+		</button>
+	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
 		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Backup</h2>

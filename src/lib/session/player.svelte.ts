@@ -1,7 +1,8 @@
 import { putSession } from '../db/sessions.js';
 import { uid } from '../db/routines.js';
 import type { Routine, Session, SetEntry } from '../types.js';
-import { armAudio, beep } from './audio.js';
+import { armAudio, cue, setSoundEnabled } from './audio.js';
+import { getSettings } from '../db/settings.js';
 import { expandRoutine, type Step } from './steps.js';
 import { allowScreenSleep, keepScreenAwake } from './wake-lock.js';
 
@@ -18,10 +19,12 @@ const TICK_MS = 250;
  * Manual advance only. Two rules matter more than the rest:
  *
  * 1. One SetEntry row per performed set, written as it happens (§4.3).
- * 2. **Time is wall-clock, never counted.** Both the count-up on a timed set
+ * 2. **Time is wall-clock, never counted.** Both the countdown on a timed set
  *    and the rest countdown are derived from timestamps persisted on the
  *    session. Counting ticks in memory loses the clock when the app is killed
  *    and drifts while the screen is off; deadlines survive both.
+ * 3. **Every moment that needs a decision makes a sound.** During a plank the
+ *    user cannot look at the screen at all, so a silent timer is useless.
  */
 export class SessionPlayer {
 	readonly routine: Routine;
@@ -36,7 +39,10 @@ export class SessionPlayer {
 	restRemaining = $state(0);
 
 	#ticker: ReturnType<typeof setInterval> | null = null;
-	#lastBeepAt = -1;
+	/** Last whole second announced during rest, so a 250 ms tick beeps once. */
+	#lastRestCueAt = -1;
+	/** The same, for the countdown on a timed set. */
+	#lastSetCueAt = -1;
 
 	constructor(routine: Routine, session?: Session) {
 		this.routine = routine;
@@ -95,6 +101,20 @@ export class SessionPlayer {
 		return this.session.entries.length > 0 && this.phase !== 'finished';
 	}
 
+	/** Seconds a timed set is meant to last, or undefined for a reps set. */
+	get targetSeconds(): number | undefined {
+		return this.step?.target.kind === 'duration' ? this.step.target.seconds : undefined;
+	}
+
+	/**
+	 * Seconds left of a timed set. Goes negative when the hold continues past
+	 * the target, which is worth showing rather than clamping.
+	 */
+	get remaining(): number | undefined {
+		const target = this.targetSeconds;
+		return target === undefined ? undefined : target - this.elapsed;
+	}
+
 	#secondsUntil(iso?: string): number {
 		if (!iso) return 0;
 		return Math.max(0, Math.ceil((Date.parse(iso) - Date.now()) / 1000));
@@ -111,22 +131,40 @@ export class SessionPlayer {
 			const left = this.#secondsUntil(this.session.restEndsAt);
 			this.restRemaining = left;
 
-			// Beep on each of the last three seconds, then once at zero. Guarded so
-			// a 250 ms tick cannot beep four times for the same second.
-			if (left > 0 && left <= 3 && left !== this.#lastBeepAt) {
-				this.#lastBeepAt = left;
-				beep();
+			if (left > 0 && left <= 3 && left !== this.#lastRestCueAt) {
+				this.#lastRestCueAt = left;
+				cue('countdown');
 			}
 			if (left <= 0) {
-				if (this.#lastBeepAt !== 0) {
-					this.#lastBeepAt = 0;
-					beep(true);
+				if (this.#lastRestCueAt !== 0) {
+					this.#lastRestCueAt = 0;
+					cue('done');
 				}
 				this.endRest();
 			}
 		} else if (this.phase === 'working') {
 			this.elapsed = this.#secondsSince(this.session.activeStepStartedAt);
+
+			// A timed set is the case where the user cannot look at the screen at
+			// all, so the end of it has to be audible.
+			const left = this.remaining;
+			if (left !== undefined) {
+				if (left > 0 && left <= 3 && left !== this.#lastSetCueAt) {
+					this.#lastSetCueAt = left;
+					cue('countdown');
+				}
+				if (left <= 0 && this.#lastSetCueAt !== 0) {
+					this.#lastSetCueAt = 0;
+					cue('done');
+				}
+			}
 		}
+	}
+
+	/** Announce the start of a timed set, so it is clear it is running. */
+	#enterStep(): void {
+		this.#lastSetCueAt = -1;
+		if (this.targetSeconds !== undefined) cue('go');
 	}
 
 	#startTicking(): void {
@@ -158,17 +196,23 @@ export class SessionPlayer {
 
 	/** Arms audio inside the user gesture that starts the session (§7). */
 	async start(): Promise<void> {
-		await armAudio();
+		await this.#armSound();
 		await keepScreenAwake();
 		this.phase = 'working';
 		this.session.activeStepStartedAt = new Date().toISOString();
 		await this.#persist();
+		this.#enterStep();
 		this.#startTicking();
+	}
+
+	async #armSound(): Promise<void> {
+		setSoundEnabled((await getSettings()).soundEnabled ?? true);
+		await armAudio();
 	}
 
 	/** Re-arm after a resume, since the AudioContext did not survive. */
 	async resumeFromStored(): Promise<void> {
-		await armAudio();
+		await this.#armSound();
 		await keepScreenAwake();
 		if (!this.session.activeStepStartedAt) {
 			this.session.activeStepStartedAt = new Date().toISOString();
@@ -193,6 +237,7 @@ export class SessionPlayer {
 			completedAt: new Date().toISOString()
 		};
 		this.session.entries.push(entry);
+		cue('logged');
 		await this.#advance(step.restSeconds);
 	}
 
@@ -226,7 +271,8 @@ export class SessionPlayer {
 		this.stepIndex = Math.max(0, Math.min(this.session.entries.length, this.steps.length - 1));
 		this.phase = 'working';
 		this.restRemaining = 0;
-		this.#lastBeepAt = -1;
+		this.#lastRestCueAt = -1;
+		this.#lastSetCueAt = -1;
 		this.session.restEndsAt = undefined;
 		this.session.endedAt = undefined;
 		this.session.activeStepStartedAt = new Date().toISOString();
@@ -242,17 +288,19 @@ export class SessionPlayer {
 		}
 
 		this.stepIndex += 1;
-		this.#lastBeepAt = -1;
+		this.#lastRestCueAt = -1;
 
 		if (restSeconds > 0) {
 			this.phase = 'resting';
 			this.restRemaining = restSeconds;
 			this.session.restEndsAt = new Date(Date.now() + restSeconds * 1000).toISOString();
 			this.session.activeStepStartedAt = undefined;
+			this.#lastSetCueAt = -1;
 		} else {
 			this.phase = 'working';
 			this.session.restEndsAt = undefined;
 			this.session.activeStepStartedAt = new Date().toISOString();
+			this.#enterStep();
 		}
 
 		await this.#persist();
@@ -264,7 +312,7 @@ export class SessionPlayer {
 		const next = Math.max(1, this.restRemaining + delta);
 		this.restRemaining = next;
 		this.session.restEndsAt = new Date(Date.now() + next * 1000).toISOString();
-		this.#lastBeepAt = -1;
+		this.#lastRestCueAt = -1;
 		void this.#persist();
 	}
 
@@ -274,13 +322,15 @@ export class SessionPlayer {
 		this.session.restEndsAt = undefined;
 		this.session.activeStepStartedAt = new Date().toISOString();
 		this.elapsed = 0;
-		this.#lastBeepAt = -1;
+		this.#lastRestCueAt = -1;
 		void this.#persist();
+		this.#enterStep();
 		this.#startTicking();
 	}
 
 	async finish(): Promise<void> {
 		this.#stopTicking();
+		cue('finished');
 		this.phase = 'finished';
 		this.session.endedAt = new Date().toISOString();
 		this.session.restEndsAt = undefined;

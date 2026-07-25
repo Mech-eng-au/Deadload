@@ -314,9 +314,23 @@
 		{/if}
 
 		{#if timed}
-			<p class="text-center font-display text-6xl font-bold tabular-nums">
-				{mmss(player.elapsed)}
-			</p>
+			<!-- Counts down to the target (§7), then keeps going as overtime so a
+				 longer hold is still measured rather than clamped at zero. -->
+			{@const left = player.remaining ?? 0}
+			<div class="text-center">
+				<p
+					class="font-display text-7xl font-bold tabular-nums {left <= 0
+						? 'text-zinc-100'
+						: left <= 3
+							? 'text-amber-300'
+							: 'text-zinc-100'}"
+				>
+					{left < 0 ? `+${mmss(-left)}` : mmss(left)}
+				</p>
+				<p class="mt-1 text-xs text-zinc-500">
+					{left > 0 ? 'left' : left === 0 ? 'time — log the set' : 'over the target'}
+				</p>
+			</div>
 		{/if}
 	</section>
 
