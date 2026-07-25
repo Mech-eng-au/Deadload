@@ -473,6 +473,26 @@ The Android back gesture must behave like the on-screen back affordance, never c
 - **Rest timer:** starts automatically after logging when `restSeconds > 0`. Large countdown, skip button, and `+15 s` / `-15 s` adjust. Audible beep at zero.
 - **Screen Wake Lock** acquired on session start, released on finish or when the page is hidden, re-acquired on `visibilitychange` back to visible. Without this the screen sleeps mid-set.
 - **Audio must be armed by a user gesture.** Create and resume the `AudioContext` on the Start button press, not at the first beep, or the first beep is silent. Use a synthesized oscillator tone, not an audio file.
+
+#### Sound is the primary channel, not a garnish
+
+Added 2026-07-25, after a real workout: *"if I can't see the screen, I don't know when to stop with a timed set"*. During a plank the user physically cannot look at the phone, so a silent timer is useless and a timed set with no end cue is a broken feature, not a missing nicety.
+
+**Every moment that requires the user to act makes a sound**, and the cues differ in pitch and shape rather than volume, because volume is what varies with the room:
+
+| Cue | When | Shape |
+|---|---|---|
+| `go` | a timed set starts | rising pair, quiet |
+| `countdown` | last three seconds of a timed set or of rest | single tick |
+| `done` | the target is reached, or rest is over | rising pair, brighter and longer — the one that has to carry across a room |
+| `logged` | a set is recorded | soft low click, confirming the tap landed |
+| `finished` | the session ends | three ascending notes |
+
+All of it is switchable off in Settings, and the toggle plays the cue when switched on so the choice is audible rather than theoretical.
+
+#### Timed sets count down
+
+A timed set counts **down** to its target, not up. Counting up gives the user nothing to act on; counting down ends at a moment worth announcing. Past zero it keeps going and shows overtime (`+0:07`), because a longer hold is worth measuring rather than clamping — the logged value still defaults to the target, so accepting it stays one tap.
 - Session state persists to IndexedDB after every logged set. Killing the app mid-workout and reopening resumes exactly where it left off, with an explicit "Resume session?" prompt on the home screen.
 - Skipping an exercise writes `skipped: true` entries rather than writing nothing, so that statistics can distinguish "not done" from "never prescribed".
 - No back navigation traps: a confirm dialog on leaving an active session.

@@ -117,4 +117,6 @@ export interface Settings {
 	/** Session count at the last export, so the §8 reminder knows when to nag. */
 	lastExportSessionCount?: number;
 	lastExportAt?: string;
+	/** Session audio cues (§7). On unless deliberately turned off. */
+	soundEnabled?: boolean;
 }
