@@ -8,7 +8,7 @@ Single user, no accounts, no backend. Data lives in the browser (IndexedDB) with
 
 ## Status
 
-M0 (catalog spike) built: 109 bodyweight exercises with images, browsable offline as an installable PWA. Routines, session player, and import arrive in M1–M3.
+M1 done. 108 bodyweight exercises with images, browsable offline in a sideloaded Android app, plus routine building and storage that survives a restart. The session player (M2) and LLM import (M3) are next.
 
 - [`docs/SPEC.md`](docs/SPEC.md) — full design spec, data model, and milestone plan
 - [`docs/M0-findings.md`](docs/M0-findings.md) — verification of the exercise-data sources (free-exercise-db, wger) with real counts
@@ -32,6 +32,7 @@ npm install
 npm run dev            # local dev server
 npm run build          # static production build (output in build/)
 npm run check          # type check
+npm test               # unit tests for the storage layer
 npm run build:catalog  # regenerate the catalog from free-exercise-db (network required)
 npm run build:apk      # web build + Capacitor sync + signed APK (needs the Android SDK)
 ```
