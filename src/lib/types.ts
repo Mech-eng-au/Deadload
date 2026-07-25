@@ -23,7 +23,7 @@ export interface Exercise {
 export interface MediaAsset {
 	kind: 'image' | 'video';
 	path: string; // "/media/push_up/0.webp"
-	caption?: string;
+	caption?: string; // only when the source actually labels the frame; never inferred
 	width: number;
 	height: number;
 }

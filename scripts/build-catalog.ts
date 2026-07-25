@@ -21,6 +21,10 @@ const IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/m
 const CATALOG_CAP = 125; // spec says "roughly 120"; hard error above this
 const MAX_EDGE = 800;
 const WEBP_QUALITY = 80;
+// Mean per-pixel difference (0-255) below which two frames count as the same
+// photo. Genuinely distinct frames in this source score 4 and up; re-used
+// photographs score 0.
+const DUPLICATE_THRESHOLD = 1.5;
 
 interface SourceExercise {
 	id: string;
@@ -60,6 +64,17 @@ function normalizeAlias(s: string): string {
 		.replace(/[̀-ͯ]/g, '')
 		.replace(/[^a-z0-9]+/g, ' ')
 		.trim();
+}
+
+/** Downscaled greyscale fingerprint, used to spot re-used photographs. */
+async function signature(webp: Buffer): Promise<Buffer> {
+	return sharp(webp).resize(64, 64, { fit: 'fill' }).greyscale().raw().toBuffer();
+}
+
+function meanAbsDiff(a: Buffer, b: Buffer): number {
+	let sum = 0;
+	for (let i = 0; i < a.length; i++) sum += Math.abs(a[i] - b[i]);
+	return sum / a.length;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -132,6 +147,7 @@ async function main() {
 
 	const attributionId = 'free_exercise_db';
 	const dropped: string[] = [];
+	const duplicateFrames: string[] = [];
 	const catalog: Exercise[] = [];
 
 	// Bounded concurrency for image downloads.
@@ -143,6 +159,7 @@ async function main() {
 			const id = slugify(src.name);
 
 			const media: MediaAsset[] = [];
+			const kept: Buffer[] = []; // signatures of the frames already written
 			for (let i = 0; i < src.images.length; i++) {
 				try {
 					const raw = await fetchWithRetry(IMAGE_BASE + src.images[i]);
@@ -151,13 +168,25 @@ async function main() {
 						withoutEnlargement: true
 					});
 					const buf = await converted.webp({ quality: WEBP_QUALITY }).toBuffer();
+
+					// Some source entries ship the same photograph twice. Rendering it
+					// twice looks like a bug, so keep only the first copy.
+					const sig = await signature(buf);
+					if (kept.some((k) => meanAbsDiff(k, sig) < DUPLICATE_THRESHOLD)) {
+						duplicateFrames.push(`${src.name} [${i}]`);
+						continue;
+					}
+					kept.push(sig);
+
 					const meta = await sharp(buf).metadata();
+					const index = media.length;
 					await mkdir(join(mediaRoot, id), { recursive: true });
-					await writeFile(join(mediaRoot, id, `${i}.webp`), buf);
+					await writeFile(join(mediaRoot, id, `${index}.webp`), buf);
 					media.push({
 						kind: 'image',
-						path: `/media/${id}/${i}.webp`,
-						caption: i === 0 ? 'Start' : 'End',
+						path: `/media/${id}/${index}.webp`,
+						// No caption: the source does not label its frames, and inferring
+						// "Start"/"End" from their order gets it wrong (see docs/M0-findings.md).
 						width: meta.width ?? 0,
 						height: meta.height ?? 0
 					});
@@ -232,6 +261,13 @@ async function main() {
 	console.log(`Per category: ${JSON.stringify(perCategory)}`);
 	console.log(`Per source: free-exercise-db=${catalog.length}`);
 	console.log(`Dropped (zero media): ${dropped.length}${dropped.length ? ' -> ' + dropped.join(', ') : ''}`);
+	console.log(
+		`Duplicate frames skipped: ${duplicateFrames.length}${
+			duplicateFrames.length ? ' -> ' + duplicateFrames.sort().join(', ') : ''
+		}`
+	);
+	const single = catalog.filter((e) => e.media.length === 1).length;
+	console.log(`Exercises with a single frame: ${single}, with two: ${catalog.length - single}`);
 }
 
 main().catch((err) => {
