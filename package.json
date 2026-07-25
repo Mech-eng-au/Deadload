@@ -20,6 +20,7 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/node": "^26.1.1",
+    "@types/papaparse": "^5.5.2",
     "@vite-pwa/sveltekit": "^1.0.0",
     "fake-indexeddb": "^6.2.5",
     "sharp": "^0.34.0",
@@ -35,6 +36,8 @@
   "dependencies": {
     "@capacitor/android": "^8.4.2",
     "@capacitor/core": "^8.4.2",
-    "idb": "^8.0.3"
+    "idb": "^8.0.3",
+    "papaparse": "^5.5.4",
+    "zod": "^4.4.3"
   }
 }

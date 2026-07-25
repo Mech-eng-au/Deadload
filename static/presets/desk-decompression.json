@@ -1,0 +1,21 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Desk decompression",
+	"goal": "posture relief",
+	"description": "Five minutes for a neck, chest and wrists that have been at a keyboard all day. Can be done standing.",
+	"tags": ["short", "posture", "desk"],
+	"blocks": [
+		{
+			"items": [
+				{ "exercise": "chin_to_chest_stretch", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "side_neck_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "elbows_back", "sets": 1, "duration_seconds": 30, "rest_seconds": 0, "notes": "Open the chest without arching the lower back." },
+				{ "exercise": "one_arm_against_wall", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "kneeling_forearm_stretch", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "wrist_circles", "sets": 1, "duration_seconds": 20, "rest_seconds": 0 },
+				{ "exercise": "upper_back_stretch", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "standing_lateral_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 }
+			]
+		}
+	]
+}

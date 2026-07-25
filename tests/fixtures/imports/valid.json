@@ -1,0 +1,14 @@
+{
+  "schema": "deadload.routine/1",
+  "name": "Morning hip mobility",
+  "goal": "hip flexibility",
+  "tags": ["morning"],
+  "blocks": [
+    { "label": "Warm-up", "items": [
+      { "exercise": "cat_stretch", "sets": 1, "reps": 10, "rest_seconds": 0, "notes": "Move slowly." }
+    ]},
+    { "label": "Main", "items": [
+      { "exercise": "worlds greatest stretch", "sets": 2, "duration_seconds": 45, "per_side": true, "rest_seconds": 15 }
+    ]}
+  ]
+}

@@ -33,11 +33,17 @@
 		<div class="rounded-2xl border border-dashed border-zinc-800 p-8 text-center">
 			<p class="text-zinc-300">No routines yet.</p>
 			<p class="mt-1 text-sm text-zinc-500">
-				Build one from the catalog, or browse the {catalog.length} exercises first.
+				Start from a built-in routine, build your own, or import one.
 			</p>
 			<a
-				href="{base}/routines/new/"
+				href="{base}/presets/"
 				class="mt-5 inline-block min-h-12 rounded-xl bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-900"
+			>
+				Browse built-in routines
+			</a>
+			<a
+				href="{base}/routines/new/"
+				class="mt-3 block text-sm text-zinc-400 underline"
 			>
 				Build a routine
 			</a>
@@ -60,6 +66,23 @@
 			{/each}
 		</ul>
 	{/if}
+
+	<div class="grid grid-cols-2 gap-3">
+		<a
+			href="{base}/presets/"
+			class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-sm transition-colors hover:border-zinc-600"
+		>
+			<div class="font-medium">Built-in routines</div>
+			<div class="mt-1 text-xs text-zinc-400">Five to start from</div>
+		</a>
+		<a
+			href="{base}/import/"
+			class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-sm transition-colors hover:border-zinc-600"
+		>
+			<div class="font-medium">Import</div>
+			<div class="mt-1 text-xs text-zinc-400">From JSON or CSV</div>
+		</a>
+	</div>
 
 	<a
 		href="{base}/catalog/"

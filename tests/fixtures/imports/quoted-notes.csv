@@ -1,0 +1,3 @@
+block,exercise,sets,reps,duration_seconds,per_side,rest_seconds,notes
+Warm-up,Cat stretch,1,10,,false,0,"Move slowly, follow the breath"
+Main,World's greatest stretch,2,,45,true,15,"Hold, breathe, then rotate"

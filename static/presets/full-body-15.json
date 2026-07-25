@@ -1,0 +1,34 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Full body, 15 minutes",
+	"goal": "general strength",
+	"description": "One round through the whole body when time is short. Floor only, no bar needed.",
+	"tags": ["quick", "full body"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{ "exercise": "shoulder_circles", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "sit_squats", "sets": 1, "reps": 10, "rest_seconds": 0 },
+				{ "exercise": "inchworm", "sets": 1, "reps": 6, "rest_seconds": 0 }
+			]
+		},
+		{
+			"label": "Circuit",
+			"items": [
+				{ "exercise": "bodyweight_squat", "sets": 3, "reps": 15, "rest_seconds": 30 },
+				{ "exercise": "pushups", "sets": 3, "reps_min": 8, "reps_max": 12, "rest_seconds": 30 },
+				{ "exercise": "bodyweight_walking_lunge", "sets": 2, "reps": 10, "per_side": true, "rest_seconds": 30 },
+				{ "exercise": "plank", "sets": 3, "duration_seconds": 40, "rest_seconds": 30 },
+				{ "exercise": "mountain_climbers", "sets": 2, "duration_seconds": 30, "rest_seconds": 30 }
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{ "exercise": "standing_gastrocnemius_calf_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "childs_pose", "sets": 1, "duration_seconds": 45, "rest_seconds": 0 }
+			]
+		}
+	]
+}

@@ -1,0 +1,9 @@
+```json
+{
+  "schema": "deadload.routine/1",
+  "name": "Fenced routine",
+  "blocks": [
+    { "items": [ { "exercise": "pushups", "sets": 3, "reps": 10 } ] }
+  ]
+}
+```
