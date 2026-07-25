@@ -8,7 +8,13 @@
 	import { getSession, putSession } from '$lib/db/sessions.js';
 	import { SessionPlayer } from '$lib/session/player.svelte.js';
 	import { describeStep, prefillFor } from '$lib/session/steps.js';
+	import NumberWheel from '$lib/components/NumberWheel.svelte';
+	import { pushBackGuard } from '$lib/nav/back.js';
 	import type { Routine } from '$lib/types.js';
+
+	/** Frames alternate this slowly when "playing" — fast enough to read as one
+	 *  movement, slow enough to study. */
+	const PLAY_INTERVAL_MS = 1400;
 
 	let player = $state<SessionPlayer | null>(null);
 	let loaded = $state(false);
@@ -20,7 +26,9 @@
 	let showRpe = $state(false);
 	let showCues = $state(false);
 	let frame = $state(0);
+	let playing = $state(false);
 	let confirmLeave = $state(false);
+	let lastTapAt = 0;
 
 	const step = $derived(player?.step);
 	const exercise = $derived(step ? getExercise(step.exerciseId) : undefined);
@@ -42,11 +50,50 @@
 		player = new SessionPlayer(routine, session);
 		resetControl();
 		loaded = true;
+
+		// A resumed session is already under way: restart the clocks and re-arm
+		// audio, which did not survive the app being closed.
+		if (player.phase === 'working' || player.phase === 'resting') {
+			await player.resumeFromStored();
+		}
+	});
+
+	// The system back gesture should behave like the on-screen Leave, not close
+	// the app. Registered here so it only applies while a session is open.
+	onMount(() =>
+		pushBackGuard(() => {
+			if (!player || player.phase === 'finished') return false;
+			if (confirmLeave) return false; // second press goes through
+			confirmLeave = true;
+			return true;
+		})
+	);
+
+	// Alternate the two frames while "playing".
+	$effect(() => {
+		if (!playing || !exercise || exercise.media.length < 2) return;
+		const id = setInterval(
+			() => (frame = (frame + 1) % exercise.media.length),
+			PLAY_INTERVAL_MS
+		);
+		return () => clearInterval(id);
 	});
 
 	onDestroy(() => {
 		void player?.suspend();
 	});
+
+	/** Single tap swaps once; double tap starts or stops the alternation. */
+	function onImageTap() {
+		const now = Date.now();
+		if (now - lastTapAt < 300) {
+			playing = !playing;
+			lastTapAt = 0;
+			return;
+		}
+		lastTapAt = now;
+		if (!playing && exercise) frame = (frame + 1) % exercise.media.length;
+	}
 
 	// New step: refresh the prefilled log value and collapse the extras.
 	$effect(() => {
@@ -62,6 +109,7 @@
 		showRpe = false;
 		showCues = false;
 		frame = 0;
+		playing = false;
 	}
 
 	async function start() {
@@ -179,6 +227,13 @@
 				>
 					Skip rest
 				</button>
+				<button
+					onclick={() => player?.undo()}
+					disabled={!player.canUndo}
+					class="min-h-12 w-full rounded-lg border border-zinc-800 text-sm text-zinc-400 disabled:opacity-30"
+				>
+					← Back a set
+				</button>
 			</div>
 		</div>
 	</section>
@@ -191,12 +246,8 @@
 			</span>
 		</div>
 
-		<!-- One frame large, tap to swap. Not animated: see SPEC §7. -->
-		<button
-			onclick={() => (frame = (frame + 1) % exercise.media.length)}
-			class="relative block w-full"
-			aria-label="Show the other photo"
-		>
+		<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. -->
+		<button onclick={onImageTap} class="relative block w-full" aria-label="Swap photo, double tap to play">
 			<img
 				src="{base}{exercise.media[frame].path}"
 				alt={exercise.name}
@@ -206,9 +257,11 @@
 			/>
 			{#if exercise.media.length > 1}
 				<span
-					class="absolute right-3 bottom-3 rounded-full bg-zinc-950/80 px-3 py-1 text-xs text-zinc-200"
+					class="absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
+						? 'bg-zinc-100 font-medium text-zinc-900'
+						: 'bg-zinc-950/80 text-zinc-200'}"
 				>
-					{frame + 1}/{exercise.media.length} · tap
+					{playing ? 'playing · double tap to stop' : `${frame + 1}/${exercise.media.length} · double tap to play`}
 				</span>
 			{/if}
 		</button>
@@ -251,18 +304,17 @@
 				<button
 					onclick={() => (value = Math.max(0, value - 1))}
 					aria-label="One fewer"
-					class="min-h-16 min-w-16 rounded-xl border border-zinc-700 font-display text-2xl"
+					class="min-h-16 min-w-16 shrink-0 rounded-xl border border-zinc-700 font-display text-2xl"
 				>
 					−
 				</button>
-				<div class="flex-1 text-center">
-					<div class="font-display text-4xl font-bold tabular-nums">{value}</div>
-					<div class="text-xs text-zinc-500">{timed ? 'seconds' : 'reps'}</div>
+				<div class="min-w-0 flex-1">
+					<NumberWheel bind:value min={0} max={timed ? 300 : 60} label={timed ? 'seconds' : 'reps'} />
 				</div>
 				<button
 					onclick={() => (value += 1)}
 					aria-label="One more"
-					class="min-h-16 min-w-16 rounded-xl border border-zinc-700 font-display text-2xl"
+					class="min-h-16 min-w-16 shrink-0 rounded-xl border border-zinc-700 font-display text-2xl"
 				>
 					+
 				</button>
@@ -293,6 +345,13 @@
 
 			<div class="flex gap-3 text-sm">
 				<button
+					onclick={() => player?.undo()}
+					disabled={!player.canUndo}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400 disabled:opacity-30"
+				>
+					← Back a set
+				</button>
+				<button
 					onclick={() => (showRpe = !showRpe)}
 					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
 				>
@@ -308,7 +367,7 @@
 					onclick={endEarly}
 					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
 				>
-					End session
+					End
 				</button>
 			</div>
 		</div>
