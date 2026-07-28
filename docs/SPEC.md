@@ -563,6 +563,7 @@ Consequences, all of which the rest of this spec already accommodates:
 - The service worker is not registered in the APK build (`VITE_CAPACITOR=1`); the assets are local, so a cache layer would only serve stale copies after an update. The PWA config stays, because the same build still works as a hosted PWA if that is ever wanted.
 - The Android WebView is Chromium, so IndexedDB, Screen Wake Lock, and `AudioContext` (§7) all behave as specified.
 - Updates are a re-download of the APK, not an automatic refresh. Every build is signed with a committed, deliberately non-secret sideload key (`android/deadload-sideload.jks`) so an updated APK installs over the previous one and **user data survives**. If that key ever changes, users must uninstall first and lose their IndexedDB data.
+- Because the download URL never changes, "did the update actually install?" must be answerable from inside the app: CI stamps the build number, commit, and date into the web bundle, shown under Settings → Data as `0.1.<run> · <sha> · <date>` (`dev` outside CI). The APK's `versionCode`/`versionName` come from the same run number. Added 2026-07-28 after a stale download made the app look unchanged.
 - Play Store distribution remains a non-goal (§1). Sideloading is not publishing; nothing here is designed around store requirements.
 
 ---
