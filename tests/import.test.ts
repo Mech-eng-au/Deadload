@@ -268,4 +268,13 @@ describe('built-in presets (§9)', () => {
 		expect(routine.name.length).toBeGreaterThan(0);
 		expect(routine.blocks.flatMap((b) => b.items).length).toBe(items(r).length);
 	});
+
+	it.each([
+		['push-pull-supersets.json', 3],
+		['full-body-circuit.json', 1]
+	])('%s keeps its circuit blocks through the import path', (file, circuitBlocks) => {
+		const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');
+		const { routine } = toRoutine(review(text, file), index, key, 'builtin');
+		expect(routine.blocks.filter((b) => b.mode === 'circuit')).toHaveLength(circuitBlocks);
+	});
 });

@@ -1,0 +1,36 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Full-body circuit",
+	"goal": "conditioning",
+	"description": "Five stations, three rounds, rest only between rounds. Floor only, no bar.",
+	"tags": ["conditioning", "full body", "circuit"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{ "exercise": "inchworm", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "standing_toe_touches", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "sit_squats", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 }
+			]
+		},
+		{
+			"label": "Circuit",
+			"circuit": true,
+			"items": [
+				{ "exercise": "bodyweight_squat", "sets": 3, "reps": 15, "rest_seconds": 0 },
+				{ "exercise": "pushups", "sets": 3, "reps": 10, "rest_seconds": 0 },
+				{ "exercise": "bodyweight_walking_lunge", "sets": 3, "reps": 12, "rest_seconds": 0 },
+				{ "exercise": "mountain_climbers", "sets": 3, "reps": 20, "rest_seconds": 0 },
+				{ "exercise": "plank", "sets": 3, "duration_seconds": 40, "rest_seconds": 60, "notes": "The only rest in the round comes after this. Pace the whole lap accordingly." }
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{ "exercise": "childs_pose", "sets": 1, "duration_seconds": 45, "rest_seconds": 0 },
+				{ "exercise": "runners_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "overhead_stretch", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 }
+			]
+		}
+	]
+}

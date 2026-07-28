@@ -527,7 +527,7 @@ Built-in presets are files in `static/presets/*.json` using the **exact import f
 
 This is deliberate: the preset loading path is the import path, so the importer is exercised on every fresh install and any drift between them fails loudly.
 
-Ship at least: hip flexibility, lower back relief, upper body strength, full body 15 minutes, desk decompression.
+Ship at least: hip flexibility, lower back relief, upper body strength, full body 15 minutes, desk decompression. Added 2026-07-28: push–pull supersets and a full-body circuit, both using circuit blocks (§4.2) so the feature is exercised by a preset on every fresh install.
 
 ---
 

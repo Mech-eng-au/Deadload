@@ -37,5 +37,7 @@ export const PRESET_FILES = [
 	'lower-back-relief.json',
 	'upper-body-strength.json',
 	'full-body-15.json',
-	'desk-decompression.json'
+	'desk-decompression.json',
+	'push-pull-supersets.json',
+	'full-body-circuit.json'
 ] as const;
