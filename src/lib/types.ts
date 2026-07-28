@@ -54,6 +54,12 @@ export interface Block {
 	id: string;
 	label?: string; // "Warm-up", "Main", "Cooldown"
 	items: RoutineItem[];
+	/**
+	 * 'circuit' runs the block round-robin: one set of each item in order, then
+	 * the next round. Absent means straight through, all sets of an item before
+	 * the next. A superset is a two-item circuit block.
+	 */
+	mode?: 'circuit';
 }
 
 export interface RoutineItem {

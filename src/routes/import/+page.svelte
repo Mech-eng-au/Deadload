@@ -202,9 +202,12 @@
 
 		{#each review.blocks as block (block.key)}
 			<section>
-				{#if block.label}
+				{#if block.label || block.circuit}
 					<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-						{block.label}
+						{block.label || 'Circuit'}
+						{#if block.circuit && block.label}
+							<span class="ml-1 font-normal text-zinc-500 normal-case">· circuit</span>
+						{/if}
 					</h2>
 				{/if}
 				<ul class="flex flex-col gap-2">

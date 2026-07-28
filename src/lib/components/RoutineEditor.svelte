@@ -94,6 +94,20 @@
 				{/if}
 			</div>
 
+			{#if block.items.length > 1}
+				<label class="mb-3 flex min-h-11 items-center gap-2 px-1">
+					<input
+						type="checkbox"
+						checked={block.mode === 'circuit'}
+						onchange={(e) => (block.mode = e.currentTarget.checked ? 'circuit' : undefined)}
+						class="h-5 w-5 rounded border-zinc-700 bg-zinc-950"
+					/>
+					<span class="text-sm text-zinc-400">
+						Circuit — one set of each exercise, then the next round
+					</span>
+				</label>
+			{/if}
+
 			<ul class="flex flex-col gap-2">
 				{#each block.items as item, itemIndex (item.id)}
 					{@const exercise = getExercise(item.exerciseId)}

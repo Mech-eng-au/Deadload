@@ -20,40 +20,69 @@ export interface Step {
 	restSeconds: number;
 	notes?: string;
 	tempo?: string;
+	/** Set on steps from a circuit block: 0-based round, and the block's total. */
+	round?: number;
+	roundCount?: number;
 }
 
 export function expandRoutine(routine: Routine): Step[] {
 	const steps: Step[] = [];
 
 	for (const block of routine.blocks) {
-		for (const item of block.items) {
-			for (let setIndex = 0; setIndex < Math.max(1, item.sets); setIndex++) {
-				const sides: (('left' | 'right') | undefined)[] = item.perSide
-					? ['left', 'right']
-					: [undefined];
+		const pushSet = (item: (typeof block.items)[number], setIndex: number, round?: RoundInfo) => {
+			const sides: (('left' | 'right') | undefined)[] = item.perSide
+				? ['left', 'right']
+				: [undefined];
 
-				sides.forEach((side, sideIndex) => {
-					// Rest belongs after the whole set, so the second side follows the
-					// first immediately rather than resting in between.
-					const isLastOfSet = sideIndex === sides.length - 1;
-					steps.push({
-						itemId: item.id,
-						exerciseId: item.exerciseId,
-						blockLabel: block.label,
-						setIndex,
-						setCount: Math.max(1, item.sets),
-						side,
-						target: item.target,
-						restSeconds: isLastOfSet ? item.restSeconds : 0,
-						notes: item.notes,
-						tempo: item.tempo
-					});
+			sides.forEach((side, sideIndex) => {
+				// Rest belongs after the whole set, so the second side follows the
+				// first immediately rather than resting in between.
+				const isLastOfSet = sideIndex === sides.length - 1;
+				steps.push({
+					itemId: item.id,
+					exerciseId: item.exerciseId,
+					blockLabel: block.label,
+					setIndex,
+					setCount: Math.max(1, item.sets),
+					side,
+					target: item.target,
+					restSeconds: isLastOfSet ? item.restSeconds : 0,
+					notes: item.notes,
+					tempo: item.tempo,
+					round: round?.index,
+					roundCount: round?.count
 				});
+			});
+		};
+
+		if (block.mode === 'circuit') {
+			// Round-robin: one set of each item in order, then the next round.
+			// Items with fewer sets simply drop out of later rounds, so an item's
+			// setIndex always equals the round it was performed in — which keeps
+			// the entries-per-step invariant the player resumes by.
+			const rounds = Math.max(1, ...block.items.map((i) => Math.max(1, i.sets)));
+			for (let round = 0; round < rounds; round++) {
+				for (const item of block.items) {
+					if (round < Math.max(1, item.sets)) {
+						pushSet(item, round, { index: round, count: rounds });
+					}
+				}
+			}
+		} else {
+			for (const item of block.items) {
+				for (let setIndex = 0; setIndex < Math.max(1, item.sets); setIndex++) {
+					pushSet(item, setIndex);
+				}
 			}
 		}
 	}
 
 	return steps;
+}
+
+interface RoundInfo {
+	index: number;
+	count: number;
 }
 
 /** "Set 2 of 3 · 45 s per side" — the line under the exercise name. */
@@ -73,7 +102,14 @@ export function describeStep(step: Step): string {
 			target = 'as many as possible';
 			break;
 	}
-	const set = step.setCount > 1 ? `Set ${step.setIndex + 1} of ${step.setCount} · ` : '';
+	// In a circuit the round is the number worth knowing; the per-item set
+	// counter would just restate it.
+	const set =
+		step.round !== undefined && step.roundCount !== undefined && step.roundCount > 1
+			? `Round ${step.round + 1} of ${step.roundCount} · `
+			: step.setCount > 1
+				? `Set ${step.setIndex + 1} of ${step.setCount} · `
+				: '';
 	const side = step.side ? ` · ${step.side}` : '';
 	return `${set}${target}${side}`;
 }

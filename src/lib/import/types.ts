@@ -45,7 +45,11 @@ export const wireBlockSchema = z
 		label: z.string().optional(),
 		items: z.array(wireItemSchema).optional(),
 		// "accept `exercises` as a synonym for `items`"
-		exercises: z.array(wireItemSchema).optional()
+		exercises: z.array(wireItemSchema).optional(),
+		// A circuit block: one set of each item per round. Accept either
+		// `"circuit": true` or `"mode": "circuit"`.
+		circuit: looseBool.optional(),
+		mode: z.string().optional()
 	})
 	.loose();
 

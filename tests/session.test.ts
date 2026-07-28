@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { describeStep, expandRoutine, prefillFor, totalSets } from '../src/lib/session/steps.js';
 import type { Routine } from '../src/lib/types.js';
 
-function routine(items: Partial<Routine['blocks'][0]['items'][0]>[], label?: string): Routine {
+function routine(
+	items: Partial<Routine['blocks'][0]['items'][0]>[],
+	label?: string,
+	mode?: 'circuit'
+): Routine {
 	return {
 		id: 'r',
 		name: 'Test',
@@ -14,6 +18,7 @@ function routine(items: Partial<Routine['blocks'][0]['items'][0]>[], label?: str
 			{
 				id: 'b',
 				label,
+				mode,
 				items: items.map((i, n) => ({
 					id: `i${n}`,
 					exerciseId: `e${n}`,
@@ -67,6 +72,63 @@ describe('step expansion (§7)', () => {
 		const r = routine([{ sets: 3, perSide: true }, { sets: 2 }]);
 		expect(expandRoutine(r)).toHaveLength(totalSets(r));
 		expect(totalSets(r)).toBe(8);
+	});
+});
+
+describe('circuit blocks (§7)', () => {
+	it('interleaves items round-robin instead of finishing one first', () => {
+		const steps = expandRoutine(routine([{ sets: 3 }, { sets: 3 }], undefined, 'circuit'));
+		expect(steps.map((s) => s.itemId)).toEqual(['i0', 'i1', 'i0', 'i1', 'i0', 'i1']);
+		expect(steps.map((s) => s.setIndex)).toEqual([0, 0, 1, 1, 2, 2]);
+	});
+
+	it('keeps setIndex equal to the round, so the player invariants hold', () => {
+		const steps = expandRoutine(routine([{ sets: 2 }, { sets: 3 }], undefined, 'circuit'));
+		expect(steps.every((s) => s.setIndex === s.round)).toBe(true);
+	});
+
+	it('drops an item with fewer sets out of later rounds', () => {
+		const steps = expandRoutine(routine([{ sets: 2 }, { sets: 3 }], undefined, 'circuit'));
+		expect(steps.map((s) => s.itemId)).toEqual(['i0', 'i1', 'i0', 'i1', 'i1']);
+		// The step count is unchanged by circuit ordering.
+		expect(steps).toHaveLength(totalSets(routine([{ sets: 2 }, { sets: 3 }])));
+	});
+
+	it('keeps both sides of a per-side set together within a round', () => {
+		const steps = expandRoutine(
+			routine([{ sets: 2, perSide: true }, { sets: 2 }], undefined, 'circuit')
+		);
+		expect(steps.map((s) => `${s.itemId}${s.side ? ':' + s.side : ''}`)).toEqual([
+			'i0:left',
+			'i0:right',
+			'i1',
+			'i0:left',
+			'i0:right',
+			'i1'
+		]);
+	});
+
+	it('still rests after each set as the item says', () => {
+		const steps = expandRoutine(
+			routine([{ sets: 2, restSeconds: 0 }, { sets: 2, restSeconds: 60 }], undefined, 'circuit')
+		);
+		expect(steps.map((s) => s.restSeconds)).toEqual([0, 60, 0, 60]);
+	});
+
+	it('labels circuit steps by round, not by set', () => {
+		const [first] = expandRoutine(routine([{ sets: 3 }, { sets: 3 }], undefined, 'circuit'));
+		expect(describeStep(first)).toBe('Round 1 of 3 · 10 reps');
+	});
+
+	it('does not label rounds on a single-round circuit', () => {
+		const [only] = expandRoutine(routine([{ sets: 1 }, { sets: 1 }], undefined, 'circuit'));
+		expect(describeStep(only)).toBe('10 reps');
+	});
+
+	it('leaves plain blocks exactly as before', () => {
+		const sequence = expandRoutine(routine([{ sets: 2 }, { sets: 2 }]));
+		expect(sequence.map((s) => s.itemId)).toEqual(['i0', 'i0', 'i1', 'i1']);
+		expect(sequence.every((s) => s.round === undefined)).toBe(true);
 	});
 });
 

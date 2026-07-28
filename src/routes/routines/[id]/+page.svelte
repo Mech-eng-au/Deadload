@@ -75,10 +75,16 @@
 
 		{#each routine.blocks as block (block.id)}
 			{#if block.items.length}
+				{@const rounds = Math.max(1, ...block.items.map((i) => Math.max(1, i.sets)))}
 				<section>
-					{#if block.label}
+					{#if block.label || block.mode === 'circuit'}
 						<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-							{block.label}
+							{block.label || 'Circuit'}
+							{#if block.mode === 'circuit'}
+								<span class="ml-1 font-normal text-zinc-500 normal-case">
+									· {block.label ? 'circuit, ' : ''}{rounds} round{rounds === 1 ? '' : 's'}
+								</span>
+							{/if}
 						</h2>
 					{/if}
 					<ul class="flex flex-col gap-2">

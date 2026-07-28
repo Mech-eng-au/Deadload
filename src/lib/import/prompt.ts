@@ -20,6 +20,8 @@ Output a single JSON object, no prose, no markdown fences, matching this shape:
 
 Per item, use exactly one of \`reps\`, \`duration_seconds\`, \`reps_min\` + \`reps_max\`, or \`"amrap": true\`. Set \`per_side: true\` for anything performed one side at a time. All durations in seconds. Use metric units throughout.
 
+To alternate exercises as a circuit or superset, set \`"circuit": true\` on the block: each round performs one set of every item in order. Rest is still taken after each set as its \`rest_seconds\` says, so for rest only between rounds give every item 0 except the block's last.
+
 Goal: [describe the goal here]
 Target duration: [minutes]
 Constraints: [injuries, available space, floor only, pull-up bar available, and so on]`;
