@@ -1,0 +1,49 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Push–pull supersets",
+	"goal": "upper body strength",
+	"description": "Paired pulling and pushing with no rest inside the pair, a real rest after it. Needs a pull-up bar.",
+	"tags": ["strength", "upper body", "superset"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{ "exercise": "arm_circles", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "shoulder_circles", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "scapular_pull_up", "sets": 2, "reps": 8, "rest_seconds": 30 }
+			]
+		},
+		{
+			"label": "Superset A",
+			"circuit": true,
+			"items": [
+				{ "exercise": "pullups", "sets": 4, "amrap": true, "rest_seconds": 0, "notes": "Stop two short of failure on every round but the last." },
+				{ "exercise": "pushups", "sets": 4, "reps_min": 8, "reps_max": 12, "rest_seconds": 90 }
+			]
+		},
+		{
+			"label": "Superset B",
+			"circuit": true,
+			"items": [
+				{ "exercise": "inverted_row", "sets": 3, "reps_min": 8, "reps_max": 12, "rest_seconds": 0 },
+				{ "exercise": "push_ups_close_triceps_position", "sets": 3, "reps_min": 6, "reps_max": 10, "rest_seconds": 75 }
+			]
+		},
+		{
+			"label": "Core finisher",
+			"circuit": true,
+			"items": [
+				{ "exercise": "plank", "sets": 3, "duration_seconds": 45, "rest_seconds": 0 },
+				{ "exercise": "russian_twist", "sets": 3, "reps": 20, "rest_seconds": 45 }
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{ "exercise": "shoulder_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "one_arm_against_wall", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 },
+				{ "exercise": "triceps_stretch", "sets": 1, "duration_seconds": 30, "per_side": true, "rest_seconds": 0 }
+			]
+		}
+	]
+}
