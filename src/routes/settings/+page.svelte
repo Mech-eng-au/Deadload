@@ -14,6 +14,7 @@
 	} from '$lib/db/settings.js';
 	import { armAudio, cue, setSoundEnabled } from '$lib/session/audio.js';
 	import { DB_VERSION } from '$lib/db/schema.js';
+	import { BUILD_LABEL } from '$lib/build-info.js';
 	import {
 		BackupError,
 		parseBackup,
@@ -295,6 +296,7 @@
 			<div class="flex justify-between"><dt>Learned names</dt><dd>{aliasCount}</dd></div>
 			<div class="flex justify-between"><dt>Space used</dt><dd>{mb(usage)}</dd></div>
 			<div class="flex justify-between"><dt>Database version</dt><dd>{DB_VERSION}</dd></div>
+			<div class="flex justify-between"><dt>App build</dt><dd>{BUILD_LABEL}</dd></div>
 		</dl>
 		<p class="mt-3 text-xs text-zinc-500">Everything stays on this device.</p>
 	</div>

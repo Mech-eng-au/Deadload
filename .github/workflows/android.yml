@@ -40,9 +40,13 @@ jobs:
       - run: npm ci
 
       - name: Build web assets
-        run: npm run build
+        # The build stamp shows up under Settings → Data, so the phone can
+        # always answer "did the update actually install?".
+        run: VITE_BUILD_DATE="$(date -u +%Y-%m-%d)" npm run build
         env:
           VITE_CAPACITOR: '1'
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
+          VITE_BUILD_SHA: ${{ github.sha }}
 
       - name: Copy web assets into the Android project
         run: npx cap sync android
