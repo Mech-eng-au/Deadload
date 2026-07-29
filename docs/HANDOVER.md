@@ -36,9 +36,10 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage |
 | History | Browse past sessions, inspect every logged set, delete |
+| Speech | Announces the next exercise as rest begins, own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **131 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **137 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -75,7 +76,7 @@ scripts/build-catalog.ts     generates the catalog; run by hand, output committe
 src/lib/catalog/             catalog.json + typed loader; ladders.ts is the one hand-authored bit
 src/lib/db/                  IndexedDB: schema, routines, sessions, aliases, settings, backup
 src/lib/import/              parsers + resolver — pure, no Svelte, no database
-src/lib/session/             player state machine, steps, audio, wake lock, last-time
+src/lib/session/             player state machine, steps, audio, speech, wake lock, last-time
 src/lib/stats/               statistics and CSV — pure functions over the session log
 src/routes/                  the screens
 tests/                       vitest; fixtures/imports holds the deliberately ugly LLM output
@@ -123,6 +124,11 @@ so the user chooses which are worth it. Measurements are in `M0-findings.md` §3
 **Rest comes after a whole set, not between the two sides of a per-side set.** Resting between
 left and right would be wrong in the gym.
 
+**The next exercise is spoken as rest *begins*, never as it ends.** The end of rest belongs to the
+`done` cue, which is the one sound that has to carry across a room; a sentence on top of it buries
+it. Rest is also the moment the user is free to listen. Same reason the announcement is not
+repeated when rest is skipped.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -151,7 +157,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 131 unit tests
+npm test           # 137 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```

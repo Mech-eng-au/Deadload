@@ -13,6 +13,7 @@
 		storageEstimate
 	} from '$lib/db/settings.js';
 	import { armAudio, cue, setSoundEnabled } from '$lib/session/audio.js';
+	import { armSpeech, setSpeechEnabled, speak, speechAvailable } from '$lib/session/speech.js';
 	import { DB_VERSION } from '$lib/db/schema.js';
 	import { BUILD_LABEL } from '$lib/build-info.js';
 	import {
@@ -26,6 +27,8 @@
 	import type { Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
+	// Read once on mount rather than during render: it touches window.
+	let canSpeak = $state(false);
 	let usage = $state<number | undefined>();
 	let routineCount = $state(0);
 	let sessionCount = $state(0);
@@ -50,6 +53,7 @@
 	}
 
 	onMount(async () => {
+		canSpeak = speechAvailable();
 		settings = await ensureStoragePersisted();
 		await refresh();
 	});
@@ -62,6 +66,17 @@
 		if (next) {
 			await armAudio();
 			cue('done');
+		}
+	}
+
+	async function toggleSpeech() {
+		const next = !(settings?.speechEnabled ?? true);
+		settings = await putSettings({ ...(await getSettings()), speechEnabled: next });
+		setSpeechEnabled(next);
+		// Same rule as the tones: hear the choice rather than read about it.
+		if (next) {
+			armSpeech();
+			speak('Next up, Side Plank. 45 seconds. Left side.');
 		}
 	}
 
@@ -162,6 +177,30 @@
 				{settings?.soundEnabled === false ? 'Off' : 'On'}
 			</span>
 		</button>
+
+		<p class="mt-5 text-sm text-zinc-400">
+			The tones say that something changed. Speech says what: the next exercise, its set and its
+			target, spoken as the rest starts. It is the last reason to look at the phone mid-workout.
+		</p>
+		{#if canSpeak}
+			<button
+				onclick={toggleSpeech}
+				class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
+			>
+				<span class="font-medium">Speak the next exercise</span>
+				<span
+					class="rounded-full px-3 py-1 text-sm {settings?.speechEnabled === false
+						? 'bg-zinc-800 text-zinc-400'
+						: 'bg-zinc-100 font-medium text-zinc-900'}"
+				>
+					{settings?.speechEnabled === false ? 'Off' : 'On'}
+				</span>
+			</button>
+		{:else}
+			<p class="mt-4 text-sm text-zinc-500">
+				This device has no speech engine, so there is nothing to turn on.
+			</p>
+		{/if}
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
