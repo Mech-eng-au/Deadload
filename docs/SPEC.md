@@ -466,7 +466,7 @@ stateDiagram-v2
 
 ### Requirements
 
-- **Manual advance only.** No auto-progression through exercises. The user presses to continue.
+- **Manual advance only.** No auto-progression through exercises. The user presses to continue. Relaxed 2026-07-29 by *Auto mode* below, which is opt-in and off by default: this still describes the app as it arrives.
 - Current screen shows: exercise media (large, primary visual element), name, target for this set (`Set 2 of 3 - 45 s per side`), the countdown when the set is timed, the cue instructions collapsed behind a tap, and the log control. Order amended 2026-07-29, see below.
 - Circuit blocks (§4.2) change only the *order* the flattened steps come out in — the state machine, logging, resume and undo are order-blind. Their steps read `Round 2 of 3` instead of `Set 2 of 3`, because in a circuit the round is the number worth knowing. Added 2026-07-25.
 
@@ -525,6 +525,27 @@ It appears wherever a set would otherwise begin the instant the previous one end
 It does **not** appear after rest. Rest is already the gap, it already shows and speaks what is coming, and its last three seconds are counted out loud — so the user is ready at zero by design. Adding a tap there would be asking a question that has already been answered.
 
 The state is not stored as a flag. It is implied: mid-session with neither `activeStepStartedAt` nor `restEndsAt` set means *waiting to begin*. That falls out of §4.3's wall-clock rule and gives a better resume for free — killing the app on the preview returns to the preview, rather than to a timed set whose clock started while the phone was in a pocket.
+
+#### Auto mode
+
+Added 2026-07-29, at the user's request, once the spoken cues and the preview made a hands-free session nearly possible: *"a setting for auto mode, where the exercises go to the next after the reading is over, or after a timed exercise reaches the set time"*.
+
+This is the one place the app is allowed to advance on its own, so it is **two independent switches in Settings, both off by default**, rather than a single mode:
+
+| Switch | What it does |
+|---|---|
+| **Start sets by itself** | The preview begins the set when the announcement finishes — a beat later, so the set does not start on the last syllable. With speech off there is nothing to wait for, so a fixed get-ready window is used instead. |
+| **Log timed sets by itself** | A hold logs its target at zero and moves straight on to rest or the next preview. |
+
+Independent because the useful combinations are all four: hands-free holds, hands-free starts with a deliberate finish, and neither.
+
+Three rules keep this honest:
+
+1. **Reps sets are never advanced or logged automatically.** The app cannot see you finish twelve push-ups. Guessing would write numbers into the history that nobody performed, and §4.3's log is a record of what happened — a mode that quietly invents entries would poison every statistic downstream. In auto mode a reps set simply waits, exactly as it does now.
+2. **The tap always beats the timer.** `Start` is still on screen and still works; the pending auto-start is cancelled by it, by leaving, by undo, and by swapping to another rung of a ladder.
+3. **The screen says what it is about to do.** The preview reads *"Starts when the reading is over"*, then *"Starting on its own…"* once the countdown to begin is running. A screen that acts by itself has to admit it.
+
+The cost, stated plainly: **auto-logging a timed set gives up overtime.** Today a hold past its target keeps counting and the longer hold is what gets measured. With this switch on, the target is logged at zero. That is the point of the mode — but it means the two switches answer different questions, and the overtime-preserving behaviour is still there with the second switch off.
 
 #### Timing
 

@@ -16,6 +16,14 @@ export type Phase = 'ready' | 'preview' | 'working' | 'resting' | 'finished';
 const TICK_MS = 250;
 
 /**
+ * Auto mode (§7). A beat after the announcement finishes, so the set does not
+ * begin on the last syllable while the user is still lowering to the floor.
+ */
+const AUTO_START_AFTER_SPEECH_MS = 1200;
+/** Used when nothing was spoken: the whole get-ready window has to fit here. */
+const AUTO_START_SILENT_MS = 3500;
+
+/**
  * Session state machine (docs/SPEC.md §7).
  *
  *   Ready -> Preview -> Working -> (log) -> Resting -> Working -> ... -> Finished
@@ -44,8 +52,16 @@ export class SessionPlayer {
 	elapsed = $state(0);
 	/** Seconds left of rest, never below zero. */
 	restRemaining = $state(0);
+	/** True while auto mode is counting down to begin the set (§7). */
+	autoStartPending = $state(false);
 
 	#ticker: ReturnType<typeof setInterval> | null = null;
+	#autoStartTimer: ReturnType<typeof setTimeout> | null = null;
+	/** Auto mode, read from settings when the session is armed (§7). */
+	#autoStart = false;
+	#autoLogTimed = false;
+	/** So a timed set at zero logs itself once rather than every tick. */
+	#autoLogged = false;
 	/** Last whole second announced during rest, so a 250 ms tick beeps once. */
 	#lastRestCueAt = -1;
 	/** The same, for the countdown on a timed set. */
@@ -170,6 +186,13 @@ export class SessionPlayer {
 					this.#lastSetCueAt = 0;
 					cue('done');
 				}
+				// Auto mode: the target is reached, so record it and move on. The
+				// logged value is the target rather than the overtime, which is the
+				// trade this mode makes (§7).
+				if (left <= 0 && this.#autoLogTimed && !this.#autoLogged) {
+					this.#autoLogged = true;
+					void this.log({ seconds: this.targetSeconds });
+				}
 			}
 		}
 	}
@@ -186,10 +209,10 @@ export class SessionPlayer {
 	 * ends — by then it has already been said, and repeating it would talk over
 	 * the `done` cue that means "go".
 	 */
-	#announce(step: Step | undefined): void {
-		if (!step) return;
+	#announce(step: Step | undefined, onDone?: () => void): boolean {
+		if (!step) return false;
 		const name = getExercise(step.exerciseId)?.name;
-		if (name) speak(announcementFor(step, name));
+		return name ? speak(announcementFor(step, name), onDone) : false;
 	}
 
 	#startTicking(): void {
@@ -213,6 +236,7 @@ export class SessionPlayer {
 
 	detach(): void {
 		this.#stopTicking();
+		this.#clearAutoStart();
 	}
 
 	async #persist(): Promise<void> {
@@ -240,12 +264,40 @@ export class SessionPlayer {
 		this.elapsed = 0;
 		this.#lastSetCueAt = -1;
 		this.#stopTicking();
-		this.#announce(this.step);
+		this.#clearAutoStart();
+
+		if (!this.#autoStart) {
+			this.#announce(this.step);
+			return;
+		}
+		// "Start when the reading is over" (§7): wait for the engine to finish, or
+		// for a fixed window when there is nothing to wait for.
+		const speaking = this.#announce(this.step, () =>
+			this.#armAutoStart(AUTO_START_AFTER_SPEECH_MS)
+		);
+		if (!speaking) this.#armAutoStart(AUTO_START_SILENT_MS);
+	}
+
+	#armAutoStart(delayMs: number): void {
+		this.#clearAutoStart();
+		this.autoStartPending = true;
+		this.#autoStartTimer = setTimeout(() => {
+			this.#autoStartTimer = null;
+			void this.beginStep();
+		}, delayMs);
+	}
+
+	#clearAutoStart(): void {
+		if (this.#autoStartTimer) clearTimeout(this.#autoStartTimer);
+		this.#autoStartTimer = null;
+		this.autoStartPending = false;
 	}
 
 	/** The user is in position: start the set, and the clock with it. */
 	async beginStep(): Promise<void> {
 		if (this.phase !== 'preview') return;
+		this.#clearAutoStart();
+		this.#autoLogged = false;
 		this.phase = 'working';
 		this.session.activeStepStartedAt = new Date().toISOString();
 		this.elapsed = 0;
@@ -258,6 +310,10 @@ export class SessionPlayer {
 		const settings = await getSettings();
 		setSoundEnabled(settings.soundEnabled ?? true);
 		setSpeechEnabled(settings.speechEnabled ?? true);
+		// Both default off: manual advance is the rule, and auto mode relaxes it
+		// only where the user has said so.
+		this.#autoStart = settings.autoStartSets ?? false;
+		this.#autoLogTimed = settings.autoLogTimedSets ?? false;
 		await armAudio();
 		await armSpeech();
 	}
@@ -266,6 +322,13 @@ export class SessionPlayer {
 	async resumeFromStored(): Promise<void> {
 		await this.#armSound();
 		await keepScreenAwake();
+		// Reopening on a preview says it again and re-arms auto mode: otherwise a
+		// resumed session in auto mode would wait on a timer that died with the app.
+		if (this.phase === 'preview') {
+			this.#toPreview();
+			await this.#persist();
+			return;
+		}
 		// A set that was under way keeps its deadline; one that had not begun
 		// waits on the preview rather than starting a clock nobody asked for.
 		if (this.phase === 'working' && !this.session.activeStepStartedAt) {
@@ -312,6 +375,11 @@ export class SessionPlayer {
 			completedAt: new Date().toISOString()
 		});
 		await this.#advance(0);
+	}
+
+	/** Whether auto mode will begin this set without a tap (§7). */
+	get autoStartOn(): boolean {
+		return this.#autoStart;
 	}
 
 	/** The rung below the current exercise, if the ladders know one (§4.1). */
@@ -415,6 +483,7 @@ export class SessionPlayer {
 
 	async finish(): Promise<void> {
 		this.#stopTicking();
+		this.#clearAutoStart();
 		cancelSpeech();
 		cue('finished');
 		this.phase = 'finished';
@@ -428,6 +497,7 @@ export class SessionPlayer {
 	/** Leaving without finishing: the session stays open and resumable. */
 	async suspend(): Promise<void> {
 		this.#stopTicking();
+		this.#clearAutoStart();
 		cancelSpeech();
 		await allowScreenSleep();
 	}

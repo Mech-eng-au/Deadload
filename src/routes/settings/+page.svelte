@@ -80,6 +80,16 @@
 		}
 	}
 
+	async function toggleAutoStart() {
+		const next = !(settings?.autoStartSets ?? false);
+		settings = await putSettings({ ...(await getSettings()), autoStartSets: next });
+	}
+
+	async function toggleAutoLog() {
+		const next = !(settings?.autoLogTimedSets ?? false);
+		settings = await putSettings({ ...(await getSettings()), autoLogTimedSets: next });
+	}
+
 	async function doExport() {
 		exporting = true;
 		error = null;
@@ -201,6 +211,47 @@
 				This device has no speech engine, so there is nothing to turn on.
 			</p>
 		{/if}
+	</div>
+
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Auto mode</h2>
+		<p class="mt-2 text-sm text-zinc-400">
+			Normally the app waits for you at every set. These two hand it the parts it can be sure
+			about. They work independently, and take effect on the next session you start.
+		</p>
+		<button
+			onclick={toggleAutoStart}
+			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
+		>
+			<span class="font-medium">Start sets by itself</span>
+			<span
+				class="rounded-full px-3 py-1 text-sm {settings?.autoStartSets
+					? 'bg-zinc-100 font-medium text-zinc-900'
+					: 'bg-zinc-800 text-zinc-400'}"
+			>
+				{settings?.autoStartSets ? 'On' : 'Off'}
+			</span>
+		</button>
+		<p class="mt-2 text-xs text-zinc-500">
+			The set begins once the announcement has been read, instead of waiting for Start.
+		</p>
+		<button
+			onclick={toggleAutoLog}
+			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
+		>
+			<span class="font-medium">Log timed sets by itself</span>
+			<span
+				class="rounded-full px-3 py-1 text-sm {settings?.autoLogTimedSets
+					? 'bg-zinc-100 font-medium text-zinc-900'
+					: 'bg-zinc-800 text-zinc-400'}"
+			>
+				{settings?.autoLogTimedSets ? 'On' : 'Off'}
+			</span>
+		</button>
+		<p class="mt-2 text-xs text-zinc-500">
+			A hold logs its target at zero and moves on. Overtime is not recorded in this mode, and reps
+			sets are untouched — the app cannot see you finish those.
+		</p>
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
