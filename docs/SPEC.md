@@ -445,7 +445,7 @@ stateDiagram-v2
 ### Requirements
 
 - **Manual advance only.** No auto-progression through exercises. The user presses to continue.
-- Current screen shows: exercise media (large, primary visual element), name, target for this set (`Set 2 of 3 - 45 s per side`), the cue instructions collapsed behind a tap, and the log control.
+- Current screen shows: exercise media (large, primary visual element), name, target for this set (`Set 2 of 3 - 45 s per side`), the countdown when the set is timed, the cue instructions collapsed behind a tap, and the log control. Order amended 2026-07-29, see below.
 - Circuit blocks (§4.2) change only the *order* the flattened steps come out in — the state machine, logging, resume and undo are order-blind. Their steps read `Round 2 of 3` instead of `Set 2 of 3`, because in a circuit the round is the number worth knowing. Added 2026-07-25.
 
 #### Media on the session screen
@@ -461,6 +461,18 @@ Decided 2026-07-25, measured against the real catalog (see `docs/M0-findings.md`
 A tap-to-swap control degrades correctly for the exercises that have only one frame, needs no new catalog field, and still reclaims the vertical space.
 
 **Revised 2026-07-25 after the first real workout.** Alternation is worth having, but as something the user asks for rather than something the screen does on its own. Single tap swaps one frame; **double tap alternates them every 1.4 s until tapped again**. This keeps the original objection intact — the pairs where the camera moved would be a jump cut, so nothing animates unless asked — while letting the user play the ones that do read as a movement. It adds one gesture and no chrome.
+
+#### The working screen fits on one screen
+
+Added 2026-07-29, measured at 360 × 808 dp, the smallest phone the app is aimed at. The countdown on a timed set started *below the fold*: the app header, a full-width 3:2 photo and the fixed log sheet (~290 dp) used the budget up, and the countdown was rendered last, under the cues. A timer you have to scroll to is not a timer — it is exactly the failure the sound cues were added to cover.
+
+Three changes, in order of what each one buys:
+
+1. **No app chrome during a session.** The global header — the wordmark and the Catalog/Stats/Settings nav — is suppressed on the session route and on no other route: ~80 dp back, and nothing on it is worth a tap mid-set. The player therefore owns the full height *including the top safe-area inset*, and the row holding **Leave** and the set counter is sticky, so it keeps its own strip under the status bar instead of sliding beneath it when the cues are open.
+2. **Countdown above the cues.** The order is name → target → countdown → *How to do it*. The cues are read once, before the first set of an exercise; the countdown is glanced at all the way through it, and §12 puts it among the largest type in the app.
+3. **The photo is capped at 30 dvh**, cropped to fill (§12). It was the single biggest consumer of height and the only element that could give any back without losing information.
+
+The cues drop below the fold in exchange, which is the right way round for something read once. The spacer under the content clears the log sheet with the RPE row open, so they can always be scrolled to.
 
 #### Timing
 
@@ -576,6 +588,8 @@ Not a full visual system, but enough to avoid generic defaults:
 - **Legibility at 1 m beats density.** Set numbers, rep counts, and the rest countdown are the largest type in the app by a wide margin. Everything else is secondary.
 - Primary session controls are at the **bottom third** of the screen, reachable one-handed, minimum 56 px touch targets.
 - Media is displayed large and uncropped. The image is the reason the catalog exists; do not reduce it to a thumbnail on the session screen.
+  - Amended 2026-07-29. On the *session* screen only, the photo is capped at 30 dvh and cropped to fill, because the countdown has to be on the same screen as it (§7) and the photo was what stood in the way. It is still full width and still the largest visual element there; browse and detail keep it uncropped.
+- The session player runs without the app header. Mid-workout there is nothing to navigate to, and the height is worth more than the wordmark. Added 2026-07-29.
 - Type: one characterful display face for numerals and headings, one neutral body face. Avoid a warm-cream-and-terracotta palette; it is the current AI-design default and reads as such.
 - Motion: only the rest countdown, set-completion, and **navigation between screens** get animation. Respect `prefers-reduced-motion`.
   - Amended 2026-07-25. Screens slide in the direction travelled — forward from the right, back from the left — because the direction carries meaning that an instant swap does not, particularly with the Android back gesture where the app should feel like it moved rather than blinked. 190 ms, and skipped where the View Transitions API is absent. This is the only decorative-looking motion allowed, and it is allowed because it is not decorative.
