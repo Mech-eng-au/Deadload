@@ -453,11 +453,11 @@ The core screen. Assume: phone on the floor or a bench, roughly 1 m away, user i
 ```mermaid
 stateDiagram-v2
     [*] --> Ready
-    Ready --> Working: Start
+    Ready --> Preview: Start
+    Preview --> Working: Start set
     Working --> Logging: Set done
     Logging --> Resting: log written, rest > 0
-    Logging --> Working: log written, rest = 0, sets remain
-    Logging --> Working: next exercise
+    Logging --> Preview: log written, rest = 0
     Resting --> Working: timer done or Skip rest
     Working --> Finished: last set logged
     Working --> Finished: End session
@@ -509,6 +509,22 @@ Three rules make this safe to do mid-set:
 The finished screen then offers, once, to **keep the swap in the routine** — the calm moment, when nothing is urgent, per §15's "fewer taps during a session and more taps during setup". Keeping it takes the sides from the new exercise, the same default an exercise added by hand gets. Declining leaves the routine untouched, and next time starts where today did.
 
 Not built, and worth stating so it is a decision rather than an omission: **double progression** — hitting the top of a rep range on every set and being offered the next rung automatically. It is a rule over data that now exists, and it should be argued on its own rather than smuggled in with the ladders.
+
+#### Get ready: the preview state
+
+Added 2026-07-29, from the first workout with speech turned on: *"a timer on a timed exercise should not start before the exercise is read aloud"*. Quite right, and the announcement was only the visible half of it — with no rest between sets, the previous version started a hold the instant the last set was logged, while the user was still standing up, still getting onto the floor, and now also still being told what the exercise was.
+
+**Preview** sits between one set and the next: the photo, the name, the target and the cues, with **no clock running at all**, and one large button — `Start set`, or `Start 0:45` for a timed set — that begins the set when the user is in position. Manual advance, which is the rule §7 already sets for exercises, applied to sets.
+
+It appears wherever a set would otherwise begin the instant the previous one ended:
+
+- After **Start**, so the session opens on the first exercise rather than on a running timer.
+- After logging or skipping a set with **no rest** — including every set of a circuit, and every zero-rest mobility routine, which is precisely where the problem was.
+- After **Back a set**, because redoing a set means setting up for it again.
+
+It does **not** appear after rest. Rest is already the gap, it already shows and speaks what is coming, and its last three seconds are counted out loud — so the user is ready at zero by design. Adding a tap there would be asking a question that has already been answered.
+
+The state is not stored as a flag. It is implied: mid-session with neither `activeStepStartedAt` nor `restEndsAt` set means *waiting to begin*. That falls out of §4.3's wall-clock rule and gives a better resume for free — killing the app on the preview returns to the preview, rather than to a timed set whose clock started while the phone was in a pocket.
 
 #### Timing
 
@@ -563,7 +579,7 @@ The wording is a pure function (`src/lib/session/announce.ts`) and unit-tested, 
 - **As the step begins, when there is no rest**, so zero-rest routines and circuits are not silent.
 - On starting a session, on swapping to another rung of a ladder (§4.1), and on **Back a set** — each is a moment where what you are about to do has just changed.
 
-One honest cost: with no rest, the clock is already running while the sentence plays, so a timed set loses a second or two of its hold. The alternative — delaying the clock until the speech finishes — would make the logged duration a lie, and §7 keeps the log honest.
+This originally cost something: with no rest, the clock was already running while the sentence played, so a timed set lost a second or two of its hold. **Fixed the same day by the preview state below** — the answer was not to delay the clock, which would have made the logged duration a lie, but to stop starting the set on the app's schedule at all.
 
 Speech has **its own switch**, separate from the tones, because it is more intrusive: a beep in a room with other people in it is different from a voice announcing side planks. Both default on. Where the device has no speech engine the toggle is replaced by a line saying so, rather than a control that does nothing. A local (offline) voice is preferred over a network one, so it keeps working in airplane mode.
 
@@ -571,7 +587,9 @@ Speech has **its own switch**, separate from the tones, because it is more intru
 
 So speech goes through **two engines**: `@capacitor-community/text-to-speech` to the OS text-to-speech service on Android, and `speechSynthesis` in a browser. Which one is resolved once, by platform, the same way the back-button handler decides whether Capacitor is present (§7 *System back*).
 
-The general lesson, worth more than the fix: **a browser API being present in Chromium does not mean it is present in the WebView this app ships in.** Anything reached through `window` that is not plain DOM — speech, wake lock, storage persistence, share — needs checking against the WebView, and the only way to check is on the phone.
+**Also corrected 2026-07-29**, from the same phone, which is set to Danish: the engine was handed `navigator.language`, so a Danish voice read out "Next up, Side Bridge". The language passed to the engine describes **the words, not the phone**. Everything spoken is English, because the catalog's exercise names are English, so `en-US` is fixed rather than read from the device. The device locale is a statement about the interface the user wants, not about which voice can pronounce this text.
+
+The general lesson, worth more than either fix: **a browser API being present in Chromium does not mean it is present in the WebView this app ships in.** Anything reached through `window` that is not plain DOM — speech, wake lock, storage persistence, share — needs checking against the WebView, and the only way to check is on the phone.
 
 #### Timed sets count down
 

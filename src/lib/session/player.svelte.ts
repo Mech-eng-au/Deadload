@@ -10,7 +10,7 @@ import { expandRoutine, type Step } from './steps.js';
 import { easierVariant, harderVariant } from '../catalog/ladders.js';
 import { allowScreenSleep, keepScreenAwake } from './wake-lock.js';
 
-export type Phase = 'ready' | 'working' | 'resting' | 'finished';
+export type Phase = 'ready' | 'preview' | 'working' | 'resting' | 'finished';
 
 /** How often the clock is re-read. Only affects display smoothness. */
 const TICK_MS = 250;
@@ -18,7 +18,9 @@ const TICK_MS = 250;
 /**
  * Session state machine (docs/SPEC.md §7).
  *
- *   Ready -> Working -> (log) -> Resting -> Working -> ... -> Finished
+ *   Ready -> Preview -> Working -> (log) -> Resting -> Working -> ... -> Finished
+ *                  ^                    |
+ *                  +---- no rest -------+
  *
  * Manual advance only. Two rules matter more than the rest:
  *
@@ -83,9 +85,13 @@ export class SessionPlayer {
 			if (restLeft > 0) {
 				this.phase = 'resting';
 				this.restRemaining = restLeft;
-			} else {
+			} else if (session.activeStepStartedAt) {
 				this.phase = 'working';
-				// Rest that expired while the app was closed is simply over.
+			} else {
+				// Neither clock is running, so the set had not been begun: come back
+				// to the preview rather than to a timer that started while the app
+				// was closed.
+				this.phase = 'preview';
 				this.session.restEndsAt = undefined;
 			}
 			this.#syncFromClock();
@@ -217,11 +223,34 @@ export class SessionPlayer {
 	async start(): Promise<void> {
 		await this.#armSound();
 		await keepScreenAwake();
+		this.#toPreview();
+		await this.#persist();
+	}
+
+	/**
+	 * Wait, showing what is coming, with no clock running (§7). Entered wherever
+	 * the next set would otherwise begin the instant the last one ended: there is
+	 * no rest to reposition in, and a timed set that starts while the phone is
+	 * still talking has already eaten two seconds of the hold.
+	 */
+	#toPreview(): void {
+		this.phase = 'preview';
+		this.session.activeStepStartedAt = undefined;
+		this.session.restEndsAt = undefined;
+		this.elapsed = 0;
+		this.#lastSetCueAt = -1;
+		this.#stopTicking();
+		this.#announce(this.step);
+	}
+
+	/** The user is in position: start the set, and the clock with it. */
+	async beginStep(): Promise<void> {
+		if (this.phase !== 'preview') return;
 		this.phase = 'working';
 		this.session.activeStepStartedAt = new Date().toISOString();
+		this.elapsed = 0;
 		await this.#persist();
 		this.#enterStep();
-		this.#announce(this.step);
 		this.#startTicking();
 	}
 
@@ -237,11 +266,13 @@ export class SessionPlayer {
 	async resumeFromStored(): Promise<void> {
 		await this.#armSound();
 		await keepScreenAwake();
-		if (!this.session.activeStepStartedAt) {
+		// A set that was under way keeps its deadline; one that had not begun
+		// waits on the preview rather than starting a clock nobody asked for.
+		if (this.phase === 'working' && !this.session.activeStepStartedAt) {
 			this.session.activeStepStartedAt = new Date().toISOString();
 			await this.#persist();
 		}
-		this.#startTicking();
+		if (this.phase === 'working' || this.phase === 'resting') this.#startTicking();
 	}
 
 	async log(value: { reps?: number; seconds?: number; rpe?: number }): Promise<void> {
@@ -328,17 +359,12 @@ export class SessionPlayer {
 		if (!this.canUndo) return;
 		this.session.entries.pop();
 		this.stepIndex = Math.max(0, Math.min(this.session.entries.length, this.steps.length - 1));
-		this.phase = 'working';
 		this.restRemaining = 0;
 		this.#lastRestCueAt = -1;
-		this.#lastSetCueAt = -1;
-		this.session.restEndsAt = undefined;
 		this.session.endedAt = undefined;
-		this.session.activeStepStartedAt = new Date().toISOString();
-		this.#announce(this.step);
+		this.#toPreview();
 		await this.#persist();
 		await keepScreenAwake();
-		this.#startTicking();
 	}
 
 	async #advance(restSeconds: number): Promise<void> {
@@ -356,16 +382,14 @@ export class SessionPlayer {
 			this.session.restEndsAt = new Date(Date.now() + restSeconds * 1000).toISOString();
 			this.session.activeStepStartedAt = undefined;
 			this.#lastSetCueAt = -1;
-		} else {
-			this.phase = 'working';
-			this.session.restEndsAt = undefined;
-			this.session.activeStepStartedAt = new Date().toISOString();
-			this.#enterStep();
+			this.#announce(this.step);
+			await this.#persist();
+			this.#startTicking();
+			return;
 		}
-		this.#announce(this.step);
 
+		this.#toPreview();
 		await this.#persist();
-		this.#startTicking();
 	}
 
 	adjustRest(delta: number): void {
