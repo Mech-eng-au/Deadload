@@ -11,6 +11,18 @@
 /** Returns true if the guard consumed the press. */
 export type BackGuard = () => boolean;
 
+/**
+ * The root screen of each tab other than home. Back from one of these means
+ * "out of this tab", which is home — the alternative is leaving the app, since
+ * switching tabs replaces rather than stacks. Back from anywhere *deeper* than
+ * a tab root is left alone: it should go up one level, the way it already does.
+ */
+const TAB_ROOTS = ['/catalog', '/stats', '/settings'];
+
+export function isTabRoot(routeId: string | null | undefined): boolean {
+	return !!routeId && TAB_ROOTS.includes(routeId);
+}
+
 const guards: BackGuard[] = [];
 
 export function pushBackGuard(guard: BackGuard): () => void {

@@ -81,7 +81,7 @@
 			<p class="text-zinc-300">Nothing logged yet.</p>
 			<p class="mt-1 text-sm text-zinc-500">Finish a session and the numbers start here.</p>
 			<a
-				href="{base}/"
+				href="{base}/" data-sveltekit-replacestate
 				class="mt-5 inline-block min-h-12 rounded-xl bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-900"
 			>
 				Go to routines
@@ -170,7 +170,7 @@
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 			<div class="flex items-baseline justify-between">
 				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Recent sessions</h2>
-				<a href="{base}/history/" class="text-sm text-zinc-400 underline">See all</a>
+				<a href="{base}/history/" data-sveltekit-replacestate class="text-sm text-zinc-400 underline">See all</a>
 			</div>
 			<ul class="mt-3 flex flex-col gap-2 text-sm">
 				{#each recent as row (row.id)}

@@ -32,7 +32,7 @@
 		adding = preset.file;
 		try {
 			const { routine } = await commitReview(preset.review, 'builtin');
-			await goto(`${base}/routines/${routine.id}/`);
+			await goto(`${base}/routines/${routine.id}/`, { replaceState: true });
 		} finally {
 			adding = null;
 		}
@@ -43,7 +43,7 @@
 	<title>Built-in routines · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" class="text-sm text-zinc-400">← Routines</a>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
 <h1 class="mt-2 font-display text-2xl font-bold">Built-in routines</h1>
 <p class="mt-2 mb-5 text-sm text-zinc-500">
 	These are general training routines, not medical advice.

@@ -39,7 +39,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **144 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **145 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -134,6 +134,11 @@ necessarily present in the WebView*, and the only place to find out is the devic
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
 English words. The locale says what interface the user wants, not what can pronounce this text.
 
+**A backward link replaces, it does not push.** Every `←`, every sideways hop and every `goto`
+after a commit uses `replaceState`; only drilling into something pushes. Adding a plain
+`<a href>` back to a parent is how the app grew four separate navigation loops (§12), and it is
+an easy mistake to make again because the markup looks harmless.
+
 **Pausing shifts the deadline, it does not stop a clock.** `pausedAt` is recorded and resuming
 moves `activeStepStartedAt` forward by the length of the pause. Anything that "stops the timer" by
 counting in memory breaks the wall-clock rule and loses the set when the app is killed.
@@ -182,7 +187,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 144 unit tests
+npm test           # 145 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```

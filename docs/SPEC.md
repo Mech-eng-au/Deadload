@@ -701,6 +701,20 @@ Not a full visual system, but enough to avoid generic defaults:
   - Still excluded: anything animating during a set. The rep count and the countdown must be the only things moving while the user is working.
 - Copy: active voice, sentence case. "Log set", not "Submit". Empty states say what to do next, not that nothing exists.
 
+#### Navigation: a backward link must not go forward
+
+Added 2026-07-29, from the phone: *"you can end up in a long loop where you go further inside several layers of the same page, like a babushka doll"*. Exactly right, and the cause was one mistake repeated in nine places — **every `←` affordance was an anchor to a parent URL, which is a forward navigation.** It looks like going up and behaves like going deeper. With the Android back gesture walking real history rather than the user's mental model, the two disagree until the app feels like a hall of mirrors.
+
+Four loops existed, all instances of the same bug: `catalog/[id]` → *Progression* → `catalog/[id]` (added the same day with the ladders, and the worst of them, since every rung looks alike); routine → edit → save → routine → edit; presets → add → routine → "← Routines" → a *second* home on top of the first; and stats ↔ history, bouncing forever.
+
+The rules now:
+
+- **Backward and sideways navigation replaces; only drilling in pushes.** Every `←`, every ladder rung, every stats↔history hop and every `goto` after a save or delete uses `replaceState`. Going *into* something — a routine, an exercise, a logged session — still pushes, because that is a real step down.
+- **Navigation lives in a bottom tab bar**, on every screen except the player. Four destinations: Routines, Catalog, Stats, Settings. However deep you are, getting out is one tap and never depends on what the back stack happens to contain. It also puts navigation at thumb height, which §12 asked for and the old top header ignored.
+- **Back from the root of a tab goes home**; back from anything deeper goes up one level as it always did; back from home exits. Switching tabs replaces, so there is nothing behind a tab root — without this rule the gesture would drop out of the app from any tab.
+
+The header is gone, which also returns ~80 dp to every screen, the same trade §7 made for the player.
+
 #### Amended 2026-07-29, after reviewing a popular home-workout app
 
 Twenty screenshots of Leap Fitness's *Home Workout* were read for ideas. Five were worth taking, and they are all applications of rules §12 already had:

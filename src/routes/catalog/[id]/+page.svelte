@@ -14,7 +14,7 @@
 
 <article class="flex flex-col gap-6">
 	<div>
-		<a href="{base}/catalog/" class="text-sm text-zinc-400 hover:text-zinc-100">← Catalog</a>
+		<a href="{base}/catalog/" data-sveltekit-replacestate class="text-sm text-zinc-400 hover:text-zinc-100">← Catalog</a>
 		<h1 class="mt-2 font-display text-3xl font-bold">{e.name}</h1>
 		<div class="mt-2 flex flex-wrap gap-2 text-xs">
 			<span class="rounded-full bg-zinc-800 px-3 py-1">{e.category}</span>
@@ -75,6 +75,7 @@
 					<li>
 						<a
 							href="{base}/catalog/{id}/"
+							data-sveltekit-replacestate
 							class="flex min-h-11 items-center gap-3 rounded-lg px-3 {id === e.id
 								? 'bg-zinc-800 text-zinc-100'
 								: 'text-zinc-400'}"
