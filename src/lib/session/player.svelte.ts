@@ -230,7 +230,7 @@ export class SessionPlayer {
 		setSoundEnabled(settings.soundEnabled ?? true);
 		setSpeechEnabled(settings.speechEnabled ?? true);
 		await armAudio();
-		armSpeech();
+		await armSpeech();
 	}
 
 	/** Re-arm after a resume, since the AudioContext did not survive. */

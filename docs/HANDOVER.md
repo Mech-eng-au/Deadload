@@ -36,7 +36,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage |
 | History | Browse past sessions, inspect every logged set, delete |
-| Speech | Announces the next exercise as rest begins, own Settings switch (added 2026-07-29) |
+| Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
 Verification: **137 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
@@ -123,6 +123,12 @@ so the user chooses which are worth it. Measurements are in `M0-findings.md` §3
 
 **Rest comes after a whole set, not between the two sides of a per-side set.** Resting between
 left and right would be wrong in the gym.
+
+**Speech goes through Capacitor on Android, not the Web Speech API.** `window.speechSynthesis`
+does not exist in the Android System WebView — a Chromium issue open since 2015 — so a browser-only
+implementation is silent in the APK while working perfectly in `vite dev`. This was shipped and
+caught on the phone the same day. The wider rule: *a browser API present in Chromium is not
+necessarily present in the WebView*, and the only place to find out is the device.
 
 **The next exercise is spoken as rest *begins*, never as it ends.** The end of rest belongs to the
 `done` cue, which is the one sound that has to carry across a room; a sentence on top of it buries
