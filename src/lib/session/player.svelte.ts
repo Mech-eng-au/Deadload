@@ -54,6 +54,10 @@ export class SessionPlayer {
 	restRemaining = $state(0);
 	/** True while auto mode is counting down to begin the set (§7). */
 	autoStartPending = $state(false);
+	/** Milliseconds left of that countdown, for the ring on the preview. */
+	autoStartRemaining = $state(0);
+	autoStartTotal = $state(0);
+	#autoStartEndsAt = 0;
 
 	#ticker: ReturnType<typeof setInterval> | null = null;
 	#autoStartTimer: ReturnType<typeof setTimeout> | null = null;
@@ -171,7 +175,23 @@ export class SessionPlayer {
 				}
 				this.endRest();
 			}
+		} else if (this.phase === 'preview') {
+			// Only the ring on the get-ready screen needs this; there is no clock.
+			this.autoStartRemaining = Math.max(0, this.#autoStartEndsAt - Date.now());
 		} else if (this.phase === 'working') {
+			if (this.session.pausedAt) {
+				// Frozen: the elapsed time is what it was when the pause began, and
+				// no cue may fire while nothing is moving.
+				this.elapsed = Math.max(
+					0,
+					Math.floor(
+						(Date.parse(this.session.pausedAt) -
+							Date.parse(this.session.activeStepStartedAt ?? this.session.pausedAt)) /
+							1000
+					)
+				);
+				return;
+			}
 			this.elapsed = this.#secondsSince(this.session.activeStepStartedAt);
 
 			// A timed set is the case where the user cannot look at the screen at
@@ -261,6 +281,7 @@ export class SessionPlayer {
 		this.phase = 'preview';
 		this.session.activeStepStartedAt = undefined;
 		this.session.restEndsAt = undefined;
+		this.session.pausedAt = undefined;
 		this.elapsed = 0;
 		this.#lastSetCueAt = -1;
 		this.#stopTicking();
@@ -281,16 +302,23 @@ export class SessionPlayer {
 	#armAutoStart(delayMs: number): void {
 		this.#clearAutoStart();
 		this.autoStartPending = true;
+		this.autoStartTotal = delayMs;
+		this.autoStartRemaining = delayMs;
+		this.#autoStartEndsAt = Date.now() + delayMs;
 		this.#autoStartTimer = setTimeout(() => {
 			this.#autoStartTimer = null;
 			void this.beginStep();
 		}, delayMs);
+		// The ring needs a tick of its own: the preview has no clock otherwise.
+		this.#startTicking();
 	}
 
 	#clearAutoStart(): void {
 		if (this.#autoStartTimer) clearTimeout(this.#autoStartTimer);
 		this.#autoStartTimer = null;
 		this.autoStartPending = false;
+		this.autoStartRemaining = 0;
+		this.#autoStartEndsAt = 0;
 	}
 
 	/** The user is in position: start the set, and the clock with it. */
@@ -298,6 +326,7 @@ export class SessionPlayer {
 		if (this.phase !== 'preview') return;
 		this.#clearAutoStart();
 		this.#autoLogged = false;
+		this.session.pausedAt = undefined;
 		this.phase = 'working';
 		this.session.activeStepStartedAt = new Date().toISOString();
 		this.elapsed = 0;
@@ -380,6 +409,33 @@ export class SessionPlayer {
 	/** Whether auto mode will begin this set without a tap (§7). */
 	get autoStartOn(): boolean {
 		return this.#autoStart;
+	}
+
+	get paused(): boolean {
+		return !!this.session.pausedAt;
+	}
+
+	/**
+	 * Pause a timed set, and resume it (§7). There is no counter to stop: the
+	 * pause is a timestamp, and resuming moves the start of the set forward by
+	 * exactly as long as the pause lasted, so the remaining time is unchanged
+	 * and the whole thing survives the app being killed while paused.
+	 */
+	async togglePause(): Promise<void> {
+		if (this.phase !== 'working' || this.targetSeconds === undefined) return;
+
+		if (this.session.pausedAt) {
+			const paused = Date.now() - Date.parse(this.session.pausedAt);
+			const startedAt = Date.parse(this.session.activeStepStartedAt ?? new Date().toISOString());
+			this.session.activeStepStartedAt = new Date(startedAt + Math.max(0, paused)).toISOString();
+			this.session.pausedAt = undefined;
+			// The last three seconds should tick again if the pause crossed them.
+			this.#lastSetCueAt = -1;
+		} else {
+			this.session.pausedAt = new Date().toISOString();
+		}
+		await this.#persist();
+		this.#syncFromClock();
 	}
 
 	/** The rung below the current exercise, if the ladders know one (§4.1). */
@@ -474,6 +530,7 @@ export class SessionPlayer {
 		this.phase = 'working';
 		this.session.restEndsAt = undefined;
 		this.session.activeStepStartedAt = new Date().toISOString();
+		this.session.pausedAt = undefined;
 		this.elapsed = 0;
 		this.#lastRestCueAt = -1;
 		void this.#persist();

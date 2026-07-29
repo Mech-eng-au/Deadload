@@ -98,6 +98,13 @@ export interface Session {
 	activeStepStartedAt?: string;
 	/** When the current rest period is due to end. */
 	restEndsAt?: string;
+	/**
+	 * When a timed set was paused (§7). Pausing does not stop a counter — there
+	 * is none — it records the moment, and resuming pushes `activeStepStartedAt`
+	 * forward by however long the pause lasted, so the deadline stays wall-clock
+	 * and survives the app being killed mid-pause.
+	 */
+	pausedAt?: string;
 
 	/**
 	 * Exercises substituted during this session: `RoutineItem.id` -> the

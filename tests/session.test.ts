@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	applySwaps,
 	describeStep,
+	estimateSeconds,
 	expandRoutine,
 	prefillFor,
 	totalSets
@@ -220,5 +221,28 @@ describe('keeping a swap in the routine', () => {
 		const r = routine([{ perSide: false }]);
 		expect(applySwaps(r, { i0: 'side_bridge' }).blocks[0].items[0].perSide).toBe(false);
 		expect(expandRoutine(r, { i0: 'side_bridge' })).toHaveLength(expandRoutine(r).length);
+	});
+});
+
+describe('routine length estimate', () => {
+	it('adds every target and the rest owed after it', () => {
+		// 2 sets x 30 s + 20 s rest after each.
+		const r = routine([{ sets: 2, target: { kind: 'duration', seconds: 30 }, restSeconds: 20 }]);
+		expect(estimateSeconds(r)).toBe(100);
+	});
+
+	it('counts both sides of a per-side set', () => {
+		const r = routine([{ perSide: true, target: { kind: 'duration', seconds: 30 } }]);
+		expect(estimateSeconds(r)).toBe(60);
+	});
+
+	it('turns reps into time at a single assumed tempo', () => {
+		expect(estimateSeconds(routine([{ target: { kind: 'reps', reps: 10 } }]))).toBe(30);
+		// A range is estimated at its top, which is what the log control prefills.
+		expect(estimateSeconds(routine([{ target: { kind: 'reps_range', min: 5, max: 10 } }]))).toBe(30);
+	});
+
+	it('gives an amrap set a nominal length rather than zero', () => {
+		expect(estimateSeconds(routine([{ target: { kind: 'amrap' } }]))).toBe(30);
 	});
 });

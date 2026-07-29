@@ -547,6 +547,12 @@ Three rules keep this honest:
 
 The cost, stated plainly: **auto-logging a timed set gives up overtime.** Today a hold past its target keeps counting and the longer hold is what gets measured. With this switch on, the target is logged at zero. That is the point of the mode — but it means the two switches answer different questions, and the overtime-preserving behaviour is still there with the second switch off.
 
+#### Pausing a timed set
+
+Added 2026-07-29. There was no way to stop a hold once it started: if the doorbell went mid-plank the only options were to log a set you had not finished or to watch the overtime climb. **Tapping the countdown pauses it, and tapping again resumes.** The countdown is the largest thing on the screen, which makes it the easiest thing to hit while out of breath, and the sub-label says which state you are in.
+
+Pausing does **not** stop a counter, because there is no counter (§4.3). It records `pausedAt`, and resuming pushes `activeStepStartedAt` forward by exactly as long as the pause lasted — so the remaining time is unchanged, the deadline stays wall-clock, and a pause survives the app being killed. No cue sounds while paused, and auto mode cannot log a paused set.
+
 #### Timing
 
 Both the count-up on a timed set and the rest countdown are derived from **wall-clock deadlines persisted on the session** (`activeStepStartedAt`, `restEndsAt` in §4.3), never counted down in memory. Counting ticks loses the clock when the app is killed and drifts while the screen is off; deadlines survive both, and a rest period that expired while the app was closed is simply over on return.
@@ -694,6 +700,18 @@ Not a full visual system, but enough to avoid generic defaults:
   - Amended 2026-07-25. Screens slide in the direction travelled — forward from the right, back from the left — because the direction carries meaning that an instant swap does not, particularly with the Android back gesture where the app should feel like it moved rather than blinked. 190 ms, and skipped where the View Transitions API is absent. This is the only decorative-looking motion allowed, and it is allowed because it is not decorative.
   - Still excluded: anything animating during a set. The rep count and the countdown must be the only things moving while the user is working.
 - Copy: active voice, sentence case. "Log set", not "Submit". Empty states say what to do next, not that nothing exists.
+
+#### Amended 2026-07-29, after reviewing a popular home-workout app
+
+Twenty screenshots of Leap Fitness's *Home Workout* were read for ideas. Five were worth taking, and they are all applications of rules §12 already had:
+
+- **Numbers, not sentences about numbers.** The finished screen said "12 sets logged"; it now shows sets, exercises and minutes as three large numerals. §12 already said numerals are the largest type in the app — the finished screen simply was not obeying it.
+- **Progress as a bar.** A 4 px line under the Leave row, filling as the session goes. `7 / 21` stays for the exact count, but the bar is what reads at 1 m.
+- **Facts as chips.** A routine now leads with `~5 min · 8 exercises · 11 sets` instead of a sentence. The duration estimate is information the app could always compute and never showed.
+- **Thumbnails on the routine cards.** The catalog ships an image for every exercise; four of them say more about a routine than its name does.
+- **A ring, not a sentence, for the auto-mode countdown.** How long you have is a quantity, so it gets a shape rather than the words "Starting on its own…".
+
+**Deliberately not taken**, recorded so the decision is not silently revisited: the light theme and blue gradients (dark is a §12 decision, made for a dim bedroom); calorie counts (we do not measure them, and a number nobody measured is the same dishonesty as auto-logging reps — §7); weight and BMI capture (a §1 non-goal); streak flames, PRO badges and "customised for you" cards (retention machinery for an app with a business model, which this one does not have); confetti on completion (§12 allows motion only for the rest countdown, set completion and navigation); and **ALL-CAPS exercise names**, which wrap badly and read worse at a glance — exactly the legibility §12 exists to protect.
 
 ---
 

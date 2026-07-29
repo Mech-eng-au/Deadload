@@ -10,6 +10,7 @@
 	import { formatSet, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
 	import { SessionPlayer } from '$lib/session/player.svelte.js';
 	import { applySwaps, describeStep, itemOf, prefillFor } from '$lib/session/steps.js';
+	import { finishedTotals } from '$lib/stats/compute.js';
 	import NumberWheel from '$lib/components/NumberWheel.svelte';
 	import { pushBackGuard } from '$lib/nav/back.js';
 	import type { Routine, Session } from '$lib/types.js';
@@ -52,6 +53,14 @@
 			.filter((s) => s.from && s.from !== s.to)
 	);
 	let keptSwaps = $state(false);
+
+	// How far through the whole session, for the bar under the top row.
+	const progress = $derived(
+		player && player.steps.length
+			? Math.min(1, player.stepIndex / player.steps.length)
+			: 0
+	);
+	const totals = $derived(player ? finishedTotals(player.session) : null);
 
 	const lastTime = $derived(
 		step && player
@@ -190,12 +199,18 @@
 	<!-- Sticky: the row keeps its own strip under the status bar instead of
 		 sliding beneath it once the cues are open. -->
 	<div
-		class="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
+		class="sticky top-0 z-10 -mx-4 bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
 	>
-		<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
-		<span class="text-sm text-zinc-500 tabular-nums">
-			{(player?.stepIndex ?? 0) + 1} / {player?.steps.length ?? 0}
-		</span>
+		<div class="flex items-center justify-between">
+			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
+			<span class="text-sm text-zinc-500 tabular-nums">
+				{(player?.stepIndex ?? 0) + 1} / {player?.steps.length ?? 0}
+			</span>
+		</div>
+		<!-- How far through the session, readable without counting. -->
+		<div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+			<div class="h-full rounded-full bg-zinc-400" style="width: {progress * 100}%"></div>
+		</div>
 	</div>
 {/snippet}
 
@@ -323,10 +338,21 @@
 	<section class="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),1rem)]">
 		<div>
 			<h1 class="font-display text-3xl font-bold">Done.</h1>
-			<p class="mt-2 text-zinc-400">
-				{player.done} set{player.done === 1 ? '' : 's'} logged for {player.session.routineName}.
-			</p>
+			<p class="mt-2 text-zinc-400">{player.session.routineName}</p>
 		</div>
+
+		<!-- The numbers are the largest type in the app (§12), so the summary is
+			 numbers rather than a sentence about them. -->
+		{#if totals}
+			<div class="grid grid-cols-3 rounded-2xl border border-zinc-800 bg-zinc-900 py-5">
+				{#each [{ label: 'Sets', value: totals.sets }, { label: 'Exercises', value: totals.exercises }, { label: 'Minutes', value: totals.minutes }] as stat (stat.label)}
+					<div class="border-zinc-800 text-center not-last:border-r">
+						<div class="font-display text-4xl font-bold tabular-nums">{stat.value}</div>
+						<div class="mt-1 text-xs tracking-wide text-zinc-500 uppercase">{stat.label}</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 		{#if swapped.length}
 			<!-- The swap was this session's; keeping it is a separate, deliberate
 				 decision, made when nothing is urgent (§7). -->
@@ -402,11 +428,32 @@
 				{timed ? `Start ${mmss(player.targetSeconds ?? 0)}` : 'Start set'}
 			</button>
 			{#if player.autoStartOn}
-				<!-- Auto mode (§7). Said plainly, because a screen that is about to act
-					 on its own should say so; the button still beats the timer. -->
-				<p class="text-center text-xs text-zinc-500">
-					{player.autoStartPending ? 'Starting on its own…' : 'Starts when the reading is over'}
-				</p>
+				<!-- Auto mode (§7). A screen about to act on its own has to say so, and
+					 a ring says how long you have without being read. -->
+				{#if player.autoStartPending && player.autoStartTotal > 0}
+					{@const left = player.autoStartRemaining / player.autoStartTotal}
+					<div class="flex items-center justify-center gap-2 text-xs text-zinc-500">
+						<svg viewBox="0 0 36 36" class="h-5 w-5 -rotate-90" aria-hidden="true">
+							<circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="4" class="text-zinc-800" />
+							<circle
+								cx="18"
+								cy="18"
+								r="16"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="4"
+								stroke-linecap="round"
+								class="text-zinc-300"
+								stroke-dasharray="100"
+								stroke-dashoffset={100 - left * 100}
+								pathLength="100"
+							/>
+						</svg>
+						Starting on its own
+					</div>
+				{:else}
+					<p class="text-center text-xs text-zinc-500">Starts when the reading is over</p>
+				{/if}
 			{/if}
 			<div class="flex gap-3 text-sm">
 				<button
@@ -489,22 +536,32 @@
 		{#if timed}
 			<!-- Counts down to the target (§7), then keeps going as overtime so a
 				 longer hold is still measured rather than clamped at zero. Above the
-				 cues: the cues are read once, the countdown is glanced at constantly. -->
+				 cues: the cues are read once, the countdown is glanced at constantly.
+				 Tapping it pauses: the biggest thing on the screen is also the
+				 easiest thing to hit when you are out of breath. -->
 			{@const left = player.remaining ?? 0}
-			<div class="text-center">
+			<button onclick={() => player?.togglePause()} class="block w-full text-center">
 				<p
-					class="font-display text-7xl font-bold tabular-nums {left <= 0
-						? 'text-zinc-100'
-						: left <= 3
-							? 'text-amber-300'
-							: 'text-zinc-100'}"
+					class="font-display text-7xl font-bold tabular-nums {player.paused
+						? 'text-zinc-500'
+						: left <= 0
+							? 'text-zinc-100'
+							: left <= 3
+								? 'text-amber-300'
+								: 'text-zinc-100'}"
 				>
 					{left < 0 ? `+${mmss(-left)}` : mmss(left)}
 				</p>
-				<p class="mt-1 text-xs text-zinc-500">
-					{left > 0 ? 'left' : left === 0 ? 'time — log the set' : 'over the target'}
+				<p class="mt-1 text-xs {player.paused ? 'text-amber-300' : 'text-zinc-500'}">
+					{player.paused
+						? 'paused — tap to resume'
+						: left > 0
+							? 'left · tap to pause'
+							: left === 0
+								? 'time — log the set'
+								: 'over the target'}
 				</p>
-			</div>
+			</button>
 		{/if}
 
 		{#if exercise.instructions.length}
