@@ -31,9 +31,16 @@ let checked = false;
 /** Slightly slower than default: heard across a room, out of breath. */
 const RATE = 0.95;
 
-function lang(): string {
-	return (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
-}
+/**
+ * The language of the *words*, not of the phone. Everything spoken is English —
+ * the catalog's exercise names are English, and so is every sentence
+ * `announce.ts` builds. Handing the engine `navigator.language` instead asks a
+ * Danish voice to read "Next up, Side Bridge", which is what it sounds like:
+ * found 2026-07-29 on a Danish-locale phone. The device locale describes the
+ * user's interface preference, and has nothing to say about which voice can
+ * pronounce this text.
+ */
+const SPOKEN_LANG = 'en-US';
 
 function synth(): SpeechSynthesis | null {
 	if (typeof window === 'undefined') return null;
@@ -75,18 +82,17 @@ export function setSpeechEnabled(value: boolean): void {
  * Pick a voice once, web path only. Browsers load them asynchronously, so this
  * is called on arming and again on `voiceschanged`; until one is chosen the
  * engine's default is used, which is correct more often than not. The native
- * engine picks its own voice from the system language.
+ * engine is told the language directly.
  */
 function chooseVoice(): void {
 	const s = synth();
 	if (!s) return;
 	const voices = s.getVoices();
 	if (!voices.length) return;
-	const want = lang();
 	voice =
-		voices.find((v) => v.lang === want && v.localService) ??
-		voices.find((v) => v.lang.startsWith(want.slice(0, 2)) && v.localService) ??
-		voices.find((v) => v.lang.startsWith(want.slice(0, 2))) ??
+		voices.find((v) => v.lang.replace('_', '-') === SPOKEN_LANG && v.localService) ??
+		voices.find((v) => v.lang.startsWith('en') && v.localService) ??
+		voices.find((v) => v.lang.startsWith('en')) ??
 		null;
 }
 
@@ -119,7 +125,7 @@ export function speak(text: string): void {
 		void native
 			.stop()
 			.catch(() => {})
-			.then(() => native?.speak({ text, lang: lang(), rate: RATE }))
+			.then(() => native?.speak({ text, lang: SPOKEN_LANG, rate: RATE }))
 			.catch(() => {});
 		return;
 	}
@@ -130,6 +136,9 @@ export function speak(text: string): void {
 		s.cancel();
 		const utterance = new SpeechSynthesisUtterance(text);
 		if (voice) utterance.voice = voice;
+		// Set even when a voice was chosen: on a non-English device it is what
+		// stops the browser falling back to the page or system locale.
+		utterance.lang = SPOKEN_LANG;
 		utterance.rate = RATE;
 		s.speak(utterance);
 	} catch {

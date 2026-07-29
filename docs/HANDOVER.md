@@ -130,6 +130,10 @@ implementation is silent in the APK while working perfectly in `vite dev`. This 
 caught on the phone the same day. The wider rule: *a browser API present in Chromium is not
 necessarily present in the WebView*, and the only place to find out is the device.
 
+**The spoken language is fixed to English, not `navigator.language`.** Everything the app says is
+English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
+English words. The locale says what interface the user wants, not what can pronounce this text.
+
 **The next exercise is spoken as rest *begins*, never as it ends.** The end of rest belongs to the
 `done` cue, which is the one sound that has to carry across a room; a sentence on top of it buries
 it. Rest is also the moment the user is free to listen. Same reason the announcement is not

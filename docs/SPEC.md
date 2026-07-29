@@ -571,7 +571,9 @@ Speech has **its own switch**, separate from the tones, because it is more intru
 
 So speech goes through **two engines**: `@capacitor-community/text-to-speech` to the OS text-to-speech service on Android, and `speechSynthesis` in a browser. Which one is resolved once, by platform, the same way the back-button handler decides whether Capacitor is present (§7 *System back*).
 
-The general lesson, worth more than the fix: **a browser API being present in Chromium does not mean it is present in the WebView this app ships in.** Anything reached through `window` that is not plain DOM — speech, wake lock, storage persistence, share — needs checking against the WebView, and the only way to check is on the phone.
+**Also corrected 2026-07-29**, from the same phone, which is set to Danish: the engine was handed `navigator.language`, so a Danish voice read out "Next up, Side Bridge". The language passed to the engine describes **the words, not the phone**. Everything spoken is English, because the catalog's exercise names are English, so `en-US` is fixed rather than read from the device. The device locale is a statement about the interface the user wants, not about which voice can pronounce this text.
+
+The general lesson, worth more than either fix: **a browser API being present in Chromium does not mean it is present in the WebView this app ships in.** Anything reached through `window` that is not plain DOM — speech, wake lock, storage persistence, share — needs checking against the WebView, and the only way to check is on the phone.
 
 #### Timed sets count down
 
