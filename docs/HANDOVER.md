@@ -36,8 +36,9 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage |
 | History | Browse past sessions, inspect every logged set, delete |
+| Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **102 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **131 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -71,7 +72,7 @@ Capacitor into an APK. Directory layout follows SPEC §3.
 
 ```
 scripts/build-catalog.ts     generates the catalog; run by hand, output committed
-src/lib/catalog/             catalog.json + typed loader
+src/lib/catalog/             catalog.json + typed loader; ladders.ts is the one hand-authored bit
 src/lib/db/                  IndexedDB: schema, routines, sessions, aliases, settings, backup
 src/lib/import/              parsers + resolver — pure, no Svelte, no database
 src/lib/session/             player state machine, steps, audio, wake lock, last-time
@@ -150,7 +151,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 102 unit tests
+npm test           # 131 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
@@ -180,14 +181,16 @@ regression. Add a settle wait after navigation.
 
 In the order I would argue for.
 
-**Progression ladders.** The one change that would alter what the app is *for*. Calisthenics
-progresses by leverage, not load: incline push-up → push-up → feet elevated → single-arm. The
-catalog has `level` but no links between variants. Adding `easier`/`harder` lets the session
-screen offer "too easy / too hard" and swap, remembering it next time. The cost is honest:
-roughly thirty chains to hand-author, the same curation work as the original catalog.
+~~**Progression ladders.**~~ **Built 2026-07-29** (SPEC §4.1, §7). The cost estimate above was
+wrong in a useful direction: this catalog honestly supports **eight** chains, not thirty, because
+free-exercise-db simply does not contain most of the intermediate rungs. Writing them took an
+afternoon, not a curation pass. What took the thinking was the invariant — a swap must not change
+the *number* of steps, or the player loses its place on resume, which is why swaps live on the
+session and `perSide` only follows the new exercise once the session is over.
 
-**Double progression.** Once ladders exist: hit the top of the rep range on every set, and the
-app suggests raising the target. A simple rule over data that already exists.
+**Double progression.** Now unblocked: hit the top of the rep range on every set, and the app
+suggests raising the target. A simple rule over data that already exists. Deliberately left out of
+the ladders change so it can be argued on its own.
 
 **Editing a past session.** History can view and delete but not correct. A mislogged set is
 currently permanent. SPEC M6 parks this; it is the obvious next gap.

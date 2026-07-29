@@ -4,6 +4,7 @@ import type { Routine, Session, SetEntry } from '../types.js';
 import { armAudio, cue, setSoundEnabled } from './audio.js';
 import { getSettings } from '../db/settings.js';
 import { expandRoutine, type Step } from './steps.js';
+import { easierVariant, harderVariant } from '../catalog/ladders.js';
 import { allowScreenSleep, keepScreenAwake } from './wake-lock.js';
 
 export type Phase = 'ready' | 'working' | 'resting' | 'finished';
@@ -28,7 +29,8 @@ const TICK_MS = 250;
  */
 export class SessionPlayer {
 	readonly routine: Routine;
-	readonly steps: Step[];
+	/** Rebuilt when an exercise is swapped, so the screen follows the change. */
+	steps = $state<Step[]>([]);
 
 	session = $state<Session>()!;
 	phase = $state<Phase>('ready');
@@ -46,7 +48,9 @@ export class SessionPlayer {
 
 	constructor(routine: Routine, session?: Session) {
 		this.routine = routine;
-		this.steps = expandRoutine(routine);
+		// Swaps come off the stored session, so an exercise substituted before the
+		// app was killed is still substituted after it is reopened.
+		this.steps = expandRoutine(routine, session?.swaps ?? {});
 
 		this.session = session ?? {
 			id: uid(),
@@ -258,6 +262,41 @@ export class SessionPlayer {
 			completedAt: new Date().toISOString()
 		});
 		await this.#advance(0);
+	}
+
+	/** The rung below the current exercise, if the ladders know one (§4.1). */
+	get easier(): string | undefined {
+		return this.step && easierVariant(this.step.exerciseId);
+	}
+
+	get harder(): string | undefined {
+		return this.step && harderVariant(this.step.exerciseId);
+	}
+
+	/**
+	 * Perform a different exercise for the rest of this item: the next rung on
+	 * the ladder when a set was too easy or too hard, or any catalog exercise
+	 * when something hurts today.
+	 *
+	 * Sets already logged keep the exercise they were actually done with — the
+	 * log is what happened, not what was planned. The routine is left alone
+	 * until the user says to keep the change on the finished screen.
+	 */
+	async swapTo(exerciseId: string): Promise<void> {
+		const step = this.step;
+		if (!step || this.phase === 'finished' || exerciseId === step.exerciseId) return;
+
+		this.session.swaps = { ...this.session.swaps, [step.itemId]: exerciseId };
+		this.steps = expandRoutine(this.routine, this.session.swaps);
+
+		// The set begins again: you are not carrying the seconds already spent on
+		// a movement you have just decided against into its replacement.
+		if (this.phase === 'working') {
+			this.session.activeStepStartedAt = new Date().toISOString();
+			this.elapsed = 0;
+			this.#enterStep();
+		}
+		await this.#persist();
 	}
 
 	/**

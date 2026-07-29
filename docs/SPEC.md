@@ -179,6 +179,27 @@ interface Attribution {
 }
 ```
 
+#### Progression ladders
+
+Added 2026-07-29. Calisthenics progresses by **leverage, not load**: a push-up gets harder by changing the angle, not by adding a plate. Without that, the app can describe a workout but not a training progression — the user is left editing the routine by hand to find out whether they are ready for the next variant.
+
+A ladder is one movement's variants, easiest first:
+
+```ts
+// src/lib/catalog/ladders.ts
+const ladders: ExerciseId[][] = [
+  ['incline_push_up', 'pushups', 'push_ups_with_feet_elevated', 'single_arm_push_up'],
+  ['scapular_pull_up', 'inverted_row', 'chin_up', 'pullups'],
+  // ...
+];
+```
+
+**Hand-authored, and deliberately not in `catalog.json`.** The catalog is generated from free-exercise-db, which has no notion of one exercise being a harder version of another; the ordering is editorial and belongs in a file a person is expected to argue with rather than in generated output. `level` cannot stand in for it — it ranks an exercise against the whole catalog, not against its own siblings.
+
+Rules, enforced by `tests/ladders.test.ts` the way the build script enforces `curation.yaml`: every id exists, no exercise is on two ladders, every ladder has at least two rungs and stays inside one category, and `level` never falls as a ladder rises.
+
+**Eight ladders is what this catalog honestly supports**, covering about half the strength exercises. Where a rung is missing it is left missing: there is no bodyweight pike push-up in the source data, so `handstand_push_ups` is on no ladder rather than sitting one rung above something four rungs easier. A rung the user cannot feel is worse than no rung, so near-duplicates (`push_up_wide` beside `pushups`) are left off too.
+
 ### 4.2 Routines (user data)
 
 ```ts
@@ -238,6 +259,7 @@ interface Session {
   endedAt?: string;                   // absent => session abandoned or in progress
   entries: SetEntry[];
   notes?: string;
+  swaps?: Record<string, ExerciseId>; // RoutineItem.id -> exercise actually performed (§7)
 }
 
 interface SetEntry {
@@ -473,6 +495,20 @@ Three changes, in order of what each one buys:
 3. **The photo is capped at 30 dvh**, cropped to fill (§12). It was the single biggest consumer of height and the only element that could give any back without losing information.
 
 The cues drop below the fold in exchange, which is the right way round for something read once. The spacer under the content clears the log sheet with the RPE row open, so they can always be scrolled to.
+
+#### Too easy, too hard
+
+Added 2026-07-29, with the progression ladders in §4.1. Two pills sit on the exercise photo — `↓ Easier` and `↑ Harder` — whenever the current exercise has a rung either side of it. One tap performs the neighbouring variant for the rest of that exercise: the photo, the cues and the log control all follow it, and a timed set restarts, because the seconds already spent on a movement you have just decided against do not belong to its replacement.
+
+Three rules make this safe to do mid-set:
+
+1. **The swap is stored on the session, not applied to the routine** (`Session.swaps`, §4.3). The routine is the user's, and rewriting it in the middle of a workout is not ours to do. It also has to survive the app being killed, which an in-memory override would not.
+2. **A swap changes the exercise and nothing else.** Sets, target, rest and sides stay the item's. That keeps the step sequence exactly the same length, which is what lets the player find its place again by counting logged entries — the invariant the whole resume path rests on. The visible cost: swapping a bilateral exercise for a unilateral one performs it as the routine has it until the change is kept.
+3. **Logged sets keep the exercise they were actually done with.** The log is what happened, not what was planned, so statistics see three sets of push-ups and two of incline push-ups rather than five of either.
+
+The finished screen then offers, once, to **keep the swap in the routine** — the calm moment, when nothing is urgent, per §15's "fewer taps during a session and more taps during setup". Keeping it takes the sides from the new exercise, the same default an exercise added by hand gets. Declining leaves the routine untouched, and next time starts where today did.
+
+Not built, and worth stating so it is a decision rather than an omission: **double progression** — hitting the top of a rep range on every set and being offered the next rung automatically. It is a rule over data that now exists, and it should be argued on its own rather than smuggled in with the ladders.
 
 #### Timing
 

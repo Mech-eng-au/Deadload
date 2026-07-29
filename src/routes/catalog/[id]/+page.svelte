@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { getExercise } from '$lib/catalog/index.js';
+	import { ladderFor } from '$lib/catalog/ladders.js';
 
 	let { data } = $props();
 	const e = $derived(data.exercise);
+	const ladder = $derived(ladderFor(e.id));
 </script>
 
 <svelte:head>
@@ -58,6 +61,28 @@
 			<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-zinc-200">
 				{#each e.instructions as step, i (i)}
 					<li>{step}</li>
+				{/each}
+			</ol>
+		</section>
+	{/if}
+
+	{#if ladder.length}
+		<!-- The whole progression, easiest first, with where this one sits (§4.1). -->
+		<section>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Progression</h2>
+			<ol class="mt-2 flex flex-col gap-1">
+				{#each ladder as id, i (id)}
+					<li>
+						<a
+							href="{base}/catalog/{id}/"
+							class="flex min-h-11 items-center gap-3 rounded-lg px-3 {id === e.id
+								? 'bg-zinc-800 text-zinc-100'
+								: 'text-zinc-400'}"
+						>
+							<span class="font-display text-sm text-zinc-500">{i + 1}</span>
+							{getExercise(id)?.name ?? id}
+						</a>
+					</li>
 				{/each}
 			</ol>
 		</section>

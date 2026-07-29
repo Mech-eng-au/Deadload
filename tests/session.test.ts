@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { describeStep, expandRoutine, prefillFor, totalSets } from '../src/lib/session/steps.js';
+import {
+	applySwaps,
+	describeStep,
+	expandRoutine,
+	prefillFor,
+	totalSets
+} from '../src/lib/session/steps.js';
 import type { Routine } from '../src/lib/types.js';
 
 function routine(
@@ -160,5 +166,59 @@ describe('log control prefill', () => {
 		// The top of a range: easier to count down than up when you fell short.
 		expect(prefillFor({ kind: 'reps_range', min: 8, max: 12 })).toBe(12);
 		expect(prefillFor({ kind: 'amrap' })).toBeUndefined();
+	});
+});
+
+describe('exercise swaps (§7)', () => {
+	it('substitutes the exercise without changing the shape of the session', () => {
+		// The invariant that makes a mid-session swap safe: the player resumes by
+		// counting entries, so the step sequence must not gain or lose steps.
+		const r = routine([{ sets: 3, perSide: true }, { sets: 2 }]);
+		const before = expandRoutine(r);
+		const after = expandRoutine(r, { i0: 'pushups' });
+
+		expect(after).toHaveLength(before.length);
+		expect(after.map((s) => [s.itemId, s.setIndex, s.side, s.restSeconds])).toEqual(
+			before.map((s) => [s.itemId, s.setIndex, s.side, s.restSeconds])
+		);
+		expect(after.filter((s) => s.itemId === 'i0').every((s) => s.exerciseId === 'pushups')).toBe(
+			true
+		);
+		expect(after.find((s) => s.itemId === 'i1')?.exerciseId).toBe('e1');
+	});
+
+	it('ignores a swap for an item that is not in the routine', () => {
+		const steps = expandRoutine(routine([{}]), { gone: 'pushups' });
+		expect(steps[0].exerciseId).toBe('e0');
+	});
+
+	it('keeps swaps in the routine without touching anything else', () => {
+		const r = routine([{ sets: 3 }, {}]);
+		const kept = applySwaps(r, { i0: 'incline_push_up' });
+
+		expect(kept.blocks[0].items[0].exerciseId).toBe('incline_push_up');
+		expect(kept.blocks[0].items[0].sets).toBe(3);
+		expect(kept.blocks[0].items[1].exerciseId).toBe('e1');
+		// The original is untouched: keeping is a decision made after the fact.
+		expect(r.blocks[0].items[0].exerciseId).toBe('e0');
+	});
+
+	it('drops a swap for an item deleted since the session ran', () => {
+		const r = routine([{}]);
+		expect(applySwaps(r, { deleted: 'pushups' })).toEqual(r);
+	});
+});
+
+describe('keeping a swap in the routine', () => {
+	it('takes the sides from the new exercise, as adding it by hand would', () => {
+		const r = routine([{ perSide: false }]);
+		const kept = applySwaps(r, { i0: 'side_bridge' }, (id) => id === 'side_bridge');
+		expect(kept.blocks[0].items[0].perSide).toBe(true);
+	});
+
+	it('leaves the sides alone mid-session, where the step count must not move', () => {
+		const r = routine([{ perSide: false }]);
+		expect(applySwaps(r, { i0: 'side_bridge' }).blocks[0].items[0].perSide).toBe(false);
+		expect(expandRoutine(r, { i0: 'side_bridge' })).toHaveLength(expandRoutine(r).length);
 	});
 });

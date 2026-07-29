@@ -4,11 +4,12 @@
 	import { page } from '$app/state';
 	import { onMount, onDestroy } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
-	import { getRoutine } from '$lib/db/routines.js';
+	import { getRoutine, putRoutine } from '$lib/db/routines.js';
 	import { getSession, listSessions, putSession } from '$lib/db/sessions.js';
+	import { variantName } from '$lib/catalog/ladders.js';
 	import { formatSet, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
 	import { SessionPlayer } from '$lib/session/player.svelte.js';
-	import { describeStep, prefillFor } from '$lib/session/steps.js';
+	import { applySwaps, describeStep, itemOf, prefillFor } from '$lib/session/steps.js';
 	import NumberWheel from '$lib/components/NumberWheel.svelte';
 	import { pushBackGuard } from '$lib/nav/back.js';
 	import type { Routine, Session } from '$lib/types.js';
@@ -36,6 +37,21 @@
 	const step = $derived(player?.step);
 	const exercise = $derived(step ? getExercise(step.exerciseId) : undefined);
 	const timed = $derived(step?.target.kind === 'duration');
+
+	// The rungs either side of the current exercise, when it is on a ladder (§4.1).
+	const easier = $derived(player?.easier);
+	const harder = $derived(player?.harder);
+
+	// Swaps made during this session, as names, for the finished screen.
+	const swapped = $derived(
+		Object.entries(player?.session.swaps ?? {})
+			.map(([itemId, to]) => ({
+				from: itemOf(player!.routine, itemId)?.exerciseId,
+				to
+			}))
+			.filter((s) => s.from && s.from !== s.to)
+	);
+	let keptSwaps = $state(false);
 
 	const lastTime = $derived(
 		step && player
@@ -148,6 +164,19 @@
 		await goto(`${base}/`, { replaceState: true });
 	}
 
+	/** Fold this session's swaps into the routine, so next time starts here. */
+	async function keepSwaps() {
+		if (!player) return;
+		await putRoutine(
+			applySwaps(
+				player.routine,
+				player.session.swaps ?? {},
+				(id) => getExercise(id)?.unilateral ?? false
+			)
+		);
+		keptSwaps = true;
+	}
+
 	function mmss(seconds: number): string {
 		const m = Math.floor(Math.abs(seconds) / 60);
 		const s = Math.abs(seconds) % 60;
@@ -199,6 +228,36 @@
 				{player.done} set{player.done === 1 ? '' : 's'} logged for {player.session.routineName}.
 			</p>
 		</div>
+		{#if swapped.length}
+			<!-- The swap was this session's; keeping it is a separate, deliberate
+				 decision, made when nothing is urgent (§7). -->
+			<div class="rounded-2xl border border-zinc-700 bg-zinc-900 p-5">
+				<p class="font-medium">
+					{swapped.length === 1 ? 'You swapped an exercise.' : `You swapped ${swapped.length} exercises.`}
+				</p>
+				<ul class="mt-2 flex flex-col gap-1 text-sm text-zinc-400">
+					{#each swapped as s (s.from)}
+						<li>{variantName(s.from!)} → <span class="text-zinc-200">{variantName(s.to)}</span></li>
+					{/each}
+				</ul>
+				{#if keptSwaps}
+					<p class="mt-4 text-sm text-zinc-500">
+						Kept in {player.session.routineName}.
+					</p>
+				{:else}
+					<button
+						onclick={keepSwaps}
+						class="mt-4 min-h-14 w-full rounded-xl border border-zinc-700 font-medium"
+					>
+						Keep in {player.session.routineName}
+					</button>
+					<p class="mt-2 text-xs text-zinc-500">
+						Otherwise the routine is unchanged and next time starts where it did today.
+					</p>
+				{/if}
+			</div>
+		{/if}
+
 		<textarea
 			placeholder="Session notes (optional)"
 			rows="3"
@@ -275,24 +334,56 @@
 		<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. The
 			 height is capped so the countdown below it stays above the fold on a
 			 short phone; the photo is still the widest thing on the screen. -->
-		<button onclick={onImageTap} class="relative block w-full" aria-label="Swap photo, double tap to play">
-			<img
-				src="{base}{exercise.media[frame].path}"
-				alt={exercise.name}
-				width={exercise.media[frame].width}
-				height={exercise.media[frame].height}
-				class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
-			/>
+		<div class="relative">
+			<button
+				onclick={onImageTap}
+				class="block w-full"
+				aria-label="Swap photo, double tap to play"
+			>
+				<img
+					src="{base}{exercise.media[frame].path}"
+					alt={exercise.name}
+					width={exercise.media[frame].width}
+					height={exercise.media[frame].height}
+					class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
+				/>
+			</button>
 			{#if exercise.media.length > 1}
 				<span
-					class="absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
+					class="pointer-events-none absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
 						? 'bg-zinc-100 font-medium text-zinc-900'
 						: 'bg-zinc-950/80 text-zinc-200'}"
 				>
 					{playing ? 'playing · double tap to stop' : `${frame + 1}/${exercise.media.length} · double tap to play`}
 				</span>
 			{/if}
-		</button>
+			<!-- Progression ladder (§4.1): one rung down or up the same movement, for
+				 the rest of this exercise. Over the photo because that height is
+				 already paid for — a row of its own would push the countdown back
+				 under the fold, which is the thing §7 just bought. -->
+			{#if easier || harder}
+				<div class="absolute bottom-3 left-3 flex gap-2">
+					{#if easier}
+						<button
+							onclick={() => player?.swapTo(easier)}
+							aria-label="Easier: {variantName(easier)}"
+							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
+						>
+							↓ Easier
+						</button>
+					{/if}
+					{#if harder}
+						<button
+							onclick={() => player?.swapTo(harder)}
+							aria-label="Harder: {variantName(harder)}"
+							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
+						>
+							↑ Harder
+						</button>
+					{/if}
+				</div>
+			{/if}
+		</div>
 
 		<div>
 			{#if step.blockLabel}
