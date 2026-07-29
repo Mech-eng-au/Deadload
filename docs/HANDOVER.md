@@ -30,7 +30,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 |---|---|
 | Catalog | 108 bodyweight exercises, every one with at least one image, generated and committed |
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
-| Session player | Per-set logging, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
+| Session player | Per-set logging, get-ready preview before each set, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
@@ -133,6 +133,12 @@ necessarily present in the WebView*, and the only place to find out is the devic
 **The spoken language is fixed to English, not `navigator.language`.** Everything the app says is
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
 English words. The locale says what interface the user wants, not what can pronounce this text.
+
+**A set never starts on the app's schedule.** The preview state (§7) holds between sets with no
+clock running until the user presses Start. It is implied rather than stored — mid-session with
+neither `activeStepStartedAt` nor `restEndsAt` means "waiting to begin" — so a killed app resumes
+onto the preview instead of into a timer that ran in someone's pocket. It deliberately does not
+appear after rest, which is already the gap and already counts down out loud.
 
 **The next exercise is spoken as rest *begins*, never as it ends.** The end of rest belongs to the
 `done` cue, which is the one sound that has to carry across a room; a sentence on top of it buries

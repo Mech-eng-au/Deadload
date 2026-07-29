@@ -83,7 +83,7 @@
 
 		// A resumed session is already under way: restart the clocks and re-arm
 		// audio, which did not survive the app being closed.
-		if (player.phase === 'working' || player.phase === 'resting') {
+		if (player.phase === 'working' || player.phase === 'resting' || player.phase === 'preview') {
 			await player.resumeFromStored();
 		}
 	});
@@ -184,6 +184,105 @@
 	}
 </script>
 
+<!-- Shared by the preview and the working screen: the same exercise, before and
+	 during the set. One copy, so they cannot drift apart. -->
+{#snippet topRow()}
+	<!-- Sticky: the row keeps its own strip under the status bar instead of
+		 sliding beneath it once the cues are open. -->
+	<div
+		class="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
+	>
+		<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
+		<span class="text-sm text-zinc-500 tabular-nums">
+			{(player?.stepIndex ?? 0) + 1} / {player?.steps.length ?? 0}
+		</span>
+	</div>
+{/snippet}
+
+{#snippet photo()}
+	{#if exercise}
+	<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. The
+		 height is capped so the countdown below it stays above the fold on a
+		 short phone; the photo is still the widest thing on the screen. -->
+	<div class="relative">
+		<button
+			onclick={onImageTap}
+			class="block w-full"
+			aria-label="Swap photo, double tap to play"
+		>
+			<img
+				src="{base}{exercise.media[frame].path}"
+				alt={exercise.name}
+				width={exercise.media[frame].width}
+				height={exercise.media[frame].height}
+				class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
+			/>
+		</button>
+		{#if exercise.media.length > 1}
+			<span
+				class="pointer-events-none absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
+					? 'bg-zinc-100 font-medium text-zinc-900'
+					: 'bg-zinc-950/80 text-zinc-200'}"
+			>
+				{playing ? 'playing · double tap to stop' : `${frame + 1}/${exercise.media.length} · double tap to play`}
+			</span>
+		{/if}
+		<!-- Progression ladder (§4.1): one rung down or up the same movement, for
+			 the rest of this exercise. Over the photo because that height is
+			 already paid for — a row of its own would push the countdown back
+			 under the fold, which is the thing §7 just bought. -->
+		{#if easier || harder}
+			<div class="absolute bottom-3 left-3 flex gap-2">
+				{#if easier}
+					<button
+						onclick={() => player?.swapTo(easier)}
+						aria-label="Easier: {variantName(easier)}"
+						class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
+					>
+						↓ Easier
+					</button>
+				{/if}
+				{#if harder}
+					<button
+						onclick={() => player?.swapTo(harder)}
+						aria-label="Harder: {variantName(harder)}"
+						class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
+					>
+						↑ Harder
+					</button>
+				{/if}
+			</div>
+		{/if}
+	</div>
+	{/if}
+{/snippet}
+
+{#snippet heading()}
+	{#if step && exercise}
+	<div>
+		{#if step.blockLabel}
+			<p class="text-xs tracking-wide text-zinc-500 uppercase">{step.blockLabel}</p>
+		{/if}
+		<h1 class="font-display text-2xl font-bold">{exercise.name}</h1>
+		<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
+		{#if lastTime}
+			<!-- What you did for this exercise last time, side matched. The set
+				 you are on now is emphasised. -->
+			<p class="mt-2 text-sm text-zinc-500">
+				Last time, {formatWhen(lastTime.performedAt)}:
+				{#each lastTime.sets as entry, i (entry.setIndex + '-' + i)}<span
+						class={entry.setIndex === step.setIndex ? 'font-semibold text-zinc-200' : ''}
+						>{formatSet(entry)}</span
+					>{#if i < lastTime.sets.length - 1}<span class="pr-1">,</span>{/if}{/each}
+			</p>
+		{/if}
+		{#if step.notes}
+			<p class="mt-2 text-sm text-zinc-400">{step.notes}</p>
+		{/if}
+	</div>
+	{/if}
+{/snippet}
+
 <svelte:head>
 	<title>{player?.session.routineName ?? 'Session'} · Deadload</title>
 </svelte:head>
@@ -271,6 +370,60 @@
 			Back to routines
 		</a>
 	</section>
+{:else if player.phase === 'preview' && step && exercise}
+	<!-- Get ready (§7). No clock runs here: the set begins when the user says so,
+		 which is what stops a timed hold starting while the phone is still saying
+		 what the exercise is, or while they are still getting onto the floor. -->
+	<section class="flex flex-col gap-4 pb-64">
+		{@render topRow()}
+		{@render photo()}
+		{@render heading()}
+
+		{#if exercise.instructions.length}
+			<details class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
+				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
+				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
+					{#each exercise.instructions as line, i (i)}
+						<li>{line}</li>
+					{/each}
+				</ol>
+			</details>
+		{/if}
+	</section>
+
+	<div
+		class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur"
+	>
+		<div class="mx-auto flex max-w-2xl flex-col gap-3">
+			<button
+				onclick={() => player?.beginStep()}
+				class="min-h-20 w-full rounded-2xl bg-zinc-100 py-5 font-display text-2xl font-bold text-zinc-900"
+			>
+				{timed ? `Start ${mmss(player.targetSeconds ?? 0)}` : 'Start set'}
+			</button>
+			<div class="flex gap-3 text-sm">
+				<button
+					onclick={() => player?.undo()}
+					disabled={!player.canUndo}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400 disabled:opacity-30"
+				>
+					← Back a set
+				</button>
+				<button
+					onclick={() => player?.skip()}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+				>
+					Skip set
+				</button>
+				<button
+					onclick={endEarly}
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+				>
+					End
+				</button>
+			</div>
+		</div>
+	</div>
 {:else if player.phase === 'resting'}
 	<!-- Rest: the countdown is the largest thing on the screen (§12). -->
 	<section
@@ -320,92 +473,11 @@
 	<!-- The spacer has to clear the log sheet, RPE row open, or the cues below the
 		 countdown end up under it with nothing left to scroll. -->
 	<section class="flex flex-col gap-4 pb-96">
-		<!-- Sticky: the row keeps its own strip under the status bar instead of
-			 sliding beneath it once the cues are open. -->
-		<div
-			class="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
-		>
-			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
-			<span class="text-sm text-zinc-500 tabular-nums">
-				{player.stepIndex + 1} / {player.steps.length}
-			</span>
-		</div>
+		{@render topRow()}
 
-		<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. The
-			 height is capped so the countdown below it stays above the fold on a
-			 short phone; the photo is still the widest thing on the screen. -->
-		<div class="relative">
-			<button
-				onclick={onImageTap}
-				class="block w-full"
-				aria-label="Swap photo, double tap to play"
-			>
-				<img
-					src="{base}{exercise.media[frame].path}"
-					alt={exercise.name}
-					width={exercise.media[frame].width}
-					height={exercise.media[frame].height}
-					class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
-				/>
-			</button>
-			{#if exercise.media.length > 1}
-				<span
-					class="pointer-events-none absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
-						? 'bg-zinc-100 font-medium text-zinc-900'
-						: 'bg-zinc-950/80 text-zinc-200'}"
-				>
-					{playing ? 'playing · double tap to stop' : `${frame + 1}/${exercise.media.length} · double tap to play`}
-				</span>
-			{/if}
-			<!-- Progression ladder (§4.1): one rung down or up the same movement, for
-				 the rest of this exercise. Over the photo because that height is
-				 already paid for — a row of its own would push the countdown back
-				 under the fold, which is the thing §7 just bought. -->
-			{#if easier || harder}
-				<div class="absolute bottom-3 left-3 flex gap-2">
-					{#if easier}
-						<button
-							onclick={() => player?.swapTo(easier)}
-							aria-label="Easier: {variantName(easier)}"
-							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
-						>
-							↓ Easier
-						</button>
-					{/if}
-					{#if harder}
-						<button
-							onclick={() => player?.swapTo(harder)}
-							aria-label="Harder: {variantName(harder)}"
-							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
-						>
-							↑ Harder
-						</button>
-					{/if}
-				</div>
-			{/if}
-		</div>
+		{@render photo()}
 
-		<div>
-			{#if step.blockLabel}
-				<p class="text-xs tracking-wide text-zinc-500 uppercase">{step.blockLabel}</p>
-			{/if}
-			<h1 class="font-display text-2xl font-bold">{exercise.name}</h1>
-			<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
-			{#if lastTime}
-				<!-- What you did for this exercise last time, side matched. The set
-					 you are on now is emphasised. -->
-				<p class="mt-2 text-sm text-zinc-500">
-					Last time, {formatWhen(lastTime.performedAt)}:
-					{#each lastTime.sets as entry, i (entry.setIndex + '-' + i)}<span
-							class={entry.setIndex === step.setIndex ? 'font-semibold text-zinc-200' : ''}
-							>{formatSet(entry)}</span
-						>{#if i < lastTime.sets.length - 1}<span class="pr-1">,</span>{/if}{/each}
-				</p>
-			{/if}
-			{#if step.notes}
-				<p class="mt-2 text-sm text-zinc-400">{step.notes}</p>
-			{/if}
-		</div>
+		{@render heading()}
 
 		{#if timed}
 			<!-- Counts down to the target (§7), then keeps going as overtime so a
