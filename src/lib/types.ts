@@ -98,6 +98,16 @@ export interface Session {
 	activeStepStartedAt?: string;
 	/** When the current rest period is due to end. */
 	restEndsAt?: string;
+
+	/**
+	 * Exercises substituted during this session: `RoutineItem.id` -> the
+	 * exercise actually performed (§7). Stored on the session rather than
+	 * applied to the routine, for two reasons: the routine is the user's, and
+	 * changing it mid-workout without asking is not ours to do; and the swap has
+	 * to survive the app being killed, which an in-memory override would not.
+	 * The finished screen offers to keep it.
+	 */
+	swaps?: Record<string, ExerciseId>;
 }
 
 export interface SetEntry {

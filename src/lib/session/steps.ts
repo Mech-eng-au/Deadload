@@ -1,4 +1,7 @@
-import type { Routine, RoutineItem, Target } from '../types.js';
+import type { ExerciseId, Routine, RoutineItem, Target } from '../types.js';
+
+/** `RoutineItem.id` -> the exercise actually being performed (§4.3, §7). */
+export type Swaps = Record<string, ExerciseId>;
 
 /**
  * A routine flattened into the exact sequence of things the user will be asked
@@ -25,7 +28,14 @@ export interface Step {
 	roundCount?: number;
 }
 
-export function expandRoutine(routine: Routine): Step[] {
+/**
+ * `swaps` substitutes the exercise on an item without touching anything else
+ * about it: the number of sets, the target, the sides and the rest are the
+ * item's, not the exercise's. That is what makes a swap safe mid-session — the
+ * step sequence keeps its shape, so `entries.length` still identifies where the
+ * user is on resume.
+ */
+export function expandRoutine(routine: Routine, swaps: Swaps = {}): Step[] {
 	const steps: Step[] = [];
 
 	for (const block of routine.blocks) {
@@ -40,7 +50,7 @@ export function expandRoutine(routine: Routine): Step[] {
 				const isLastOfSet = sideIndex === sides.length - 1;
 				steps.push({
 					itemId: item.id,
-					exerciseId: item.exerciseId,
+					exerciseId: swaps[item.id] ?? item.exerciseId,
 					blockLabel: block.label,
 					setIndex,
 					setCount: Math.max(1, item.sets),
@@ -142,6 +152,39 @@ export function totalSets(routine: Routine): number {
 /** Item-level progress, for the "3 of 12" line rather than per-side counting. */
 export function stepLabelIndex(steps: Step[], index: number): { done: number; total: number } {
 	return { done: index + 1, total: steps.length };
+}
+
+/**
+ * Fold a session's swaps into the routine, for when the user keeps them (§7).
+ * Returns a new routine; items with no swap are left alone, and a swap for an
+ * item that has since been deleted is dropped rather than resurrecting it.
+ *
+ * `isUnilateral` lets `perSide` follow the new exercise — the same default an
+ * exercise added by hand gets. Mid-session it deliberately does not: changing
+ * the number of sides would change the number of steps, and the player finds
+ * its place on resume by counting logged entries against them. Here the session
+ * is over, so the routine can take the shape the exercise actually wants.
+ */
+export function applySwaps(
+	routine: Routine,
+	swaps: Swaps,
+	isUnilateral?: (id: ExerciseId) => boolean
+): Routine {
+	return {
+		...routine,
+		blocks: routine.blocks.map((block) => ({
+			...block,
+			items: block.items.map((item) => {
+				const exerciseId = swaps[item.id];
+				if (!exerciseId) return item;
+				return {
+					...item,
+					exerciseId,
+					perSide: isUnilateral ? isUnilateral(exerciseId) : item.perSide
+				};
+			})
+		}))
+	};
 }
 
 export function itemOf(routine: Routine, itemId: string): RoutineItem | undefined {
