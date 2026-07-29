@@ -165,7 +165,11 @@
 	<p class="mt-8 text-zinc-300">That session is no longer here.</p>
 	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
 {:else if player.phase === 'ready'}
-	<section class="flex min-h-[70dvh] flex-col justify-between">
+	<!-- The layout hands the player a bare screen (no header), so every phase
+		 below pads itself clear of the status bar. -->
+	<section
+		class="flex min-h-[70dvh] flex-col justify-between pt-[max(env(safe-area-inset-top),1rem)]"
+	>
 		<div>
 			<button onclick={leave} class="text-sm text-zinc-400">← Leave</button>
 			<h1 class="mt-4 font-display text-3xl font-bold">{player.session.routineName}</h1>
@@ -188,7 +192,7 @@
 		</button>
 	</section>
 {:else if player.phase === 'finished'}
-	<section class="flex flex-col gap-6 pt-4">
+	<section class="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),1rem)]">
 		<div>
 			<h1 class="font-display text-3xl font-bold">Done.</h1>
 			<p class="mt-2 text-zinc-400">
@@ -210,7 +214,9 @@
 	</section>
 {:else if player.phase === 'resting'}
 	<!-- Rest: the countdown is the largest thing on the screen (§12). -->
-	<section class="flex min-h-[80dvh] flex-col items-center justify-center gap-8">
+	<section
+		class="flex min-h-[80dvh] flex-col items-center justify-center gap-8 pt-[env(safe-area-inset-top)]"
+	>
 		<p class="text-sm tracking-wide text-zinc-400 uppercase">Rest</p>
 		<p class="font-display text-8xl font-bold tabular-nums">{mmss(player.restRemaining)}</p>
 		{#if step && exercise}
@@ -252,22 +258,30 @@
 		</div>
 	</section>
 {:else if step && exercise}
-	<section class="flex flex-col gap-4 pb-64">
-		<div class="flex items-center justify-between">
+	<!-- The spacer has to clear the log sheet, RPE row open, or the cues below the
+		 countdown end up under it with nothing left to scroll. -->
+	<section class="flex flex-col gap-4 pb-96">
+		<!-- Sticky: the row keeps its own strip under the status bar instead of
+			 sliding beneath it once the cues are open. -->
+		<div
+			class="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
+		>
 			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
 			<span class="text-sm text-zinc-500 tabular-nums">
 				{player.stepIndex + 1} / {player.steps.length}
 			</span>
 		</div>
 
-		<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. -->
+		<!-- One frame large. Tap swaps, double tap plays: opt-in, per SPEC §7. The
+			 height is capped so the countdown below it stays above the fold on a
+			 short phone; the photo is still the widest thing on the screen. -->
 		<button onclick={onImageTap} class="relative block w-full" aria-label="Swap photo, double tap to play">
 			<img
 				src="{base}{exercise.media[frame].path}"
 				alt={exercise.name}
 				width={exercise.media[frame].width}
 				height={exercise.media[frame].height}
-				class="w-full rounded-2xl bg-white"
+				class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
 			/>
 			{#if exercise.media.length > 1}
 				<span
@@ -302,20 +316,10 @@
 			{/if}
 		</div>
 
-		{#if exercise.instructions.length}
-			<details bind:open={showCues} class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
-				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
-					{#each exercise.instructions as line, i (i)}
-						<li>{line}</li>
-					{/each}
-				</ol>
-			</details>
-		{/if}
-
 		{#if timed}
 			<!-- Counts down to the target (§7), then keeps going as overtime so a
-				 longer hold is still measured rather than clamped at zero. -->
+				 longer hold is still measured rather than clamped at zero. Above the
+				 cues: the cues are read once, the countdown is glanced at constantly. -->
 			{@const left = player.remaining ?? 0}
 			<div class="text-center">
 				<p
@@ -331,6 +335,17 @@
 					{left > 0 ? 'left' : left === 0 ? 'time — log the set' : 'over the target'}
 				</p>
 			</div>
+		{/if}
+
+		{#if exercise.instructions.length}
+			<details bind:open={showCues} class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
+				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
+				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
+					{#each exercise.instructions as line, i (i)}
+						<li>{line}</li>
+					{/each}
+				</ol>
+			</details>
 		{/if}
 	</section>
 
