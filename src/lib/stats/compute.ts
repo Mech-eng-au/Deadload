@@ -154,6 +154,30 @@ export function summarize(sessions: Session[]): SessionSummary[] {
 		.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 }
 
+export interface FinishedTotals {
+	/** Sets actually performed; skipped rows are not an achievement. */
+	sets: number;
+	/** Distinct exercises performed, which is what the routine promised. */
+	exercises: number;
+	/** Wall-clock length of the session, at least one minute. */
+	minutes: number;
+}
+
+/**
+ * The three numbers the finished screen shows large (§12). Wall clock rather
+ * than the sum of the targets, because the time you spent is the time you
+ * spent — rests, faffing and all.
+ */
+export function finishedTotals(session: Session, now = new Date()): FinishedTotals {
+	const done = session.entries.filter((e) => !e.skipped);
+	const ended = session.endedAt ? Date.parse(session.endedAt) : now.getTime();
+	return {
+		sets: done.length,
+		exercises: new Set(done.map((e) => e.exerciseId)).size,
+		minutes: Math.max(1, Math.round((ended - Date.parse(session.startedAt)) / 60000))
+	};
+}
+
 export interface MuscleVolume {
 	muscle: string;
 	sets: number;

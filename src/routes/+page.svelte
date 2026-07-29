@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { catalog } from '$lib/catalog/index.js';
+	import { catalog, getExercise } from '$lib/catalog/index.js';
 	import { countItems, listRoutines } from '$lib/db/routines.js';
 	import { deleteSession, findUnfinishedSession } from '$lib/db/sessions.js';
 	import type { Routine, Session } from '$lib/types.js';
@@ -15,6 +15,22 @@
 		unfinished = (await findUnfinishedSession()) ?? null;
 		loaded = true;
 	});
+
+	/** The first few exercises of a routine, for the thumbnails on its card. */
+	function firstFew(r: Routine, limit = 4) {
+		const seen = new Set<string>();
+		const found = [];
+		for (const block of r.blocks) {
+			for (const item of block.items) {
+				if (seen.has(item.exerciseId)) continue;
+				seen.add(item.exerciseId);
+				const exercise = getExercise(item.exerciseId);
+				if (exercise) found.push(exercise);
+				if (found.length === limit) return found;
+			}
+		}
+		return found;
+	}
 
 	async function discardUnfinished() {
 		if (!unfinished) return;
@@ -96,6 +112,23 @@
 							{countItems(r)} exercise{countItems(r) === 1 ? '' : 's'}
 							{#if r.goal}<span class="text-zinc-500"> · {r.goal}</span>{/if}
 						</div>
+						<!-- What is actually in it. The catalog ships an image for every
+							 exercise; showing four of them tells you more about a routine
+							 than its name does. -->
+						{#if firstFew(r).length}
+							<div class="mt-3 flex gap-2">
+								{#each firstFew(r) as ex (ex.id)}
+									<img
+										src="{base}{ex.media[0].path}"
+										alt=""
+										width={ex.media[0].width}
+										height={ex.media[0].height}
+										loading="lazy"
+										class="h-12 w-16 rounded-md bg-white object-cover"
+									/>
+								{/each}
+							</div>
+						{/if}
 					</a>
 				</li>
 			{/each}

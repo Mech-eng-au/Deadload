@@ -124,6 +124,42 @@ export function describeStep(step: Step): string {
 	return `${set}${target}${side}`;
 }
 
+/**
+ * Roughly how long a reps set takes, for the estimate below. Deliberately one
+ * number rather than a per-exercise tempo: the estimate is a chip on a routine
+ * screen, not a promise, and a table of made-up tempos would look more precise
+ * than it is.
+ */
+const SECONDS_PER_REP = 3;
+/** An AMRAP set has no target to add up, so it is counted as a typical set. */
+const AMRAP_SECONDS = 30;
+
+/**
+ * Estimated length of a routine in seconds: every set's target plus the rest
+ * owed after it. Used for the "~12 min" chip, so it is rounded and honest about
+ * being an estimate — it cannot know how long you take to get onto the floor.
+ */
+export function estimateSeconds(routine: Routine): number {
+	return expandRoutine(routine).reduce((total, step) => {
+		let work: number;
+		switch (step.target.kind) {
+			case 'duration':
+				work = step.target.seconds;
+				break;
+			case 'reps':
+				work = step.target.reps * SECONDS_PER_REP;
+				break;
+			case 'reps_range':
+				work = step.target.max * SECONDS_PER_REP;
+				break;
+			case 'amrap':
+				work = AMRAP_SECONDS;
+				break;
+		}
+		return total + work + step.restSeconds;
+	}, 0);
+}
+
 /** What the log control should start at, so accepting the target is one tap. */
 export function prefillFor(target: Target): number | undefined {
 	switch (target.kind) {

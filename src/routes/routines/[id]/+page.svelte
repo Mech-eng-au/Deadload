@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { countItems, deleteRoutine, describeItem, getRoutine, uid } from '$lib/db/routines.js';
+	import { estimateSeconds, totalSets } from '$lib/session/steps.js';
 	import { putSession } from '$lib/db/sessions.js';
 	import type { Routine } from '$lib/types.js';
 
@@ -57,10 +58,21 @@
 	<article class="mt-2 flex flex-col gap-6 pb-12">
 		<header>
 			<h1 class="font-display text-3xl font-bold">{routine.name}</h1>
-			<p class="mt-1 text-sm text-zinc-400">
-				{countItems(routine)} exercise{countItems(routine) === 1 ? '' : 's'}
-				{#if routine.goal}<span class="text-zinc-500"> · {routine.goal}</span>{/if}
-			</p>
+			<!-- Chips rather than a sentence: three facts read faster stacked than
+				 strung together, and the estimate is information the app had all
+				 along but never showed. -->
+			<div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
+					~{Math.max(1, Math.round(estimateSeconds(routine) / 60))} min
+				</span>
+				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
+					{countItems(routine)} exercise{countItems(routine) === 1 ? '' : 's'}
+				</span>
+				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
+					{totalSets(routine)} set{totalSets(routine) === 1 ? '' : 's'}
+				</span>
+				{#if routine.goal}<span class="text-zinc-500">{routine.goal}</span>{/if}
+			</div>
 			{#if routine.description}
 				<p class="mt-3 text-zinc-300">{routine.description}</p>
 			{/if}

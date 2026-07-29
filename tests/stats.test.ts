@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	currentStreak,
 	dayKey,
+	finishedTotals,
 	exerciseProgress,
 	longestStreak,
 	routineUsage,
@@ -207,5 +208,44 @@ describe('day keys', () => {
 		const evening = new Date(2026, 6, 20, 23, 30).toISOString();
 		const morning = new Date(2026, 6, 20, 6, 15).toISOString();
 		expect(dayKey(evening)).toBe(dayKey(morning));
+	});
+});
+
+describe('finished session totals (§12)', () => {
+	const session = (over: Partial<Session> = {}): Session => ({
+		id: 's',
+		routineId: 'r',
+		routineName: 'Test',
+		startedAt: '2026-07-29T07:00:00.000Z',
+		endedAt: '2026-07-29T07:18:30.000Z',
+		entries: [],
+		...over
+	});
+	const entry = (exerciseId: string, skipped = false) => ({
+		exerciseId,
+		itemId: 'i',
+		setIndex: 0,
+		skipped,
+		completedAt: '2026-07-29T07:05:00.000Z'
+	});
+
+	it('counts performed sets and distinct exercises', () => {
+		const totals = finishedTotals(
+			session({ entries: [entry('pushups'), entry('pushups'), entry('plank')] })
+		);
+		expect(totals).toEqual({ sets: 3, exercises: 2, minutes: 19 });
+	});
+
+	it('does not count skipped sets as done', () => {
+		const totals = finishedTotals(
+			session({ entries: [entry('pushups'), entry('plank', true)] })
+		);
+		expect(totals.sets).toBe(1);
+		expect(totals.exercises).toBe(1);
+	});
+
+	it('never reports a zero-minute session', () => {
+		const totals = finishedTotals(session({ endedAt: '2026-07-29T07:00:10.000Z' }));
+		expect(totals.minutes).toBe(1);
 	});
 });

@@ -30,7 +30,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 |---|---|
 | Catalog | 108 bodyweight exercises, every one with at least one image, generated and committed |
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
-| Session player | Per-set logging, get-ready preview before each set, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
+| Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
@@ -39,7 +39,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **137 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **144 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -134,6 +134,10 @@ necessarily present in the WebView*, and the only place to find out is the devic
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
 English words. The locale says what interface the user wants, not what can pronounce this text.
 
+**Pausing shifts the deadline, it does not stop a clock.** `pausedAt` is recorded and resuming
+moves `activeStepStartedAt` forward by the length of the pause. Anything that "stops the timer" by
+counting in memory breaks the wall-clock rule and loses the set when the app is killed.
+
 **Auto mode never touches a reps set.** The two switches (§7) advance the preview and log timed
 sets; a reps set always waits for the tap, because the app cannot see you finish twelve push-ups
 and a log full of numbers nobody performed would poison every statistic built on it. If a future
@@ -178,7 +182,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 137 unit tests
+npm test           # 144 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
