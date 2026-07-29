@@ -549,6 +549,24 @@ Added 2026-07-25, after a real workout: *"if I can't see the screen, I don't kno
 
 All of it is switchable off in Settings, and the toggle plays the cue when switched on so the choice is audible rather than theoretical.
 
+#### Tones say when, speech says what
+
+Added 2026-07-29. The tones above can say *that* something changed. They cannot say what is coming, so at the end of every rest the user still has to look at the phone to find out what they are about to do — the last remaining reason to look at it mid-workout.
+
+The app speaks the next step: **"Next up, Side Bridge. Set 2 of 3. 45 seconds. Left side."** Name first, because that is what you are waiting to hear, then the position, then the target, then the side.
+
+The wording is a pure function (`src/lib/session/announce.ts`) and unit-tested, because it is the part worth arguing about; the speech engine itself is a thin shell around `speechSynthesis`. It is written **for the ear, not the eye**: `describeStep` renders "Set 2 of 3 · 45 s · left", which an engine reads out as "middot, forty-five s, middot". Everything spoken is spelled out — "45 seconds", "1 minute 30 seconds", "8 to 12 reps", "as many as possible" — and the set counter is dropped when there is only one set, because "set 1 of 1" is noise in a sentence you are listening to rather than reading.
+
+**When it speaks** is the whole design:
+
+- **As rest begins**, not as it ends. Rest is the natural gap, and by the time rest is over the `done` cue means "go" — talking over it would bury the one cue that has to carry across a room.
+- **As the step begins, when there is no rest**, so zero-rest routines and circuits are not silent.
+- On starting a session, on swapping to another rung of a ladder (§4.1), and on **Back a set** — each is a moment where what you are about to do has just changed.
+
+One honest cost: with no rest, the clock is already running while the sentence plays, so a timed set loses a second or two of its hold. The alternative — delaying the clock until the speech finishes — would make the logged duration a lie, and §7 keeps the log honest.
+
+Speech has **its own switch**, separate from the tones, because it is more intrusive: a beep in a room with other people in it is different from a voice announcing side planks. Both default on. Where the device has no speech engine the toggle is replaced by a line saying so, rather than a control that does nothing. A local (offline) voice is preferred over a network one, so it keeps working in airplane mode.
+
 #### Timed sets count down
 
 A timed set counts **down** to its target, not up. Counting up gives the user nothing to act on; counting down ends at a moment worth announcing. Past zero it keeps going and shows overtime (`+0:07`), because a longer hold is worth measuring rather than clamping — the logged value still defaults to the target, so accepting it stays one tap.

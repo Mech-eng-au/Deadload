@@ -2,6 +2,9 @@ import { putSession } from '../db/sessions.js';
 import { uid } from '../db/routines.js';
 import type { Routine, Session, SetEntry } from '../types.js';
 import { armAudio, cue, setSoundEnabled } from './audio.js';
+import { announcementFor } from './announce.js';
+import { armSpeech, cancelSpeech, setSpeechEnabled, speak } from './speech.js';
+import { getExercise } from '../catalog/index.js';
 import { getSettings } from '../db/settings.js';
 import { expandRoutine, type Step } from './steps.js';
 import { easierVariant, harderVariant } from '../catalog/ladders.js';
@@ -171,6 +174,18 @@ export class SessionPlayer {
 		if (this.targetSeconds !== undefined) cue('go');
 	}
 
+	/**
+	 * Say what is coming, at the moment it becomes the next thing to do: as rest
+	 * begins, or as the step itself begins when there is no rest. Not when rest
+	 * ends — by then it has already been said, and repeating it would talk over
+	 * the `done` cue that means "go".
+	 */
+	#announce(step: Step | undefined): void {
+		if (!step) return;
+		const name = getExercise(step.exerciseId)?.name;
+		if (name) speak(announcementFor(step, name));
+	}
+
 	#startTicking(): void {
 		this.#stopTicking();
 		this.#ticker = setInterval(() => this.#syncFromClock(), TICK_MS);
@@ -206,12 +221,16 @@ export class SessionPlayer {
 		this.session.activeStepStartedAt = new Date().toISOString();
 		await this.#persist();
 		this.#enterStep();
+		this.#announce(this.step);
 		this.#startTicking();
 	}
 
 	async #armSound(): Promise<void> {
-		setSoundEnabled((await getSettings()).soundEnabled ?? true);
+		const settings = await getSettings();
+		setSoundEnabled(settings.soundEnabled ?? true);
+		setSpeechEnabled(settings.speechEnabled ?? true);
 		await armAudio();
+		armSpeech();
 	}
 
 	/** Re-arm after a resume, since the AudioContext did not survive. */
@@ -296,6 +315,7 @@ export class SessionPlayer {
 			this.elapsed = 0;
 			this.#enterStep();
 		}
+		this.#announce(this.step);
 		await this.#persist();
 	}
 
@@ -315,6 +335,7 @@ export class SessionPlayer {
 		this.session.restEndsAt = undefined;
 		this.session.endedAt = undefined;
 		this.session.activeStepStartedAt = new Date().toISOString();
+		this.#announce(this.step);
 		await this.#persist();
 		await keepScreenAwake();
 		this.#startTicking();
@@ -341,6 +362,7 @@ export class SessionPlayer {
 			this.session.activeStepStartedAt = new Date().toISOString();
 			this.#enterStep();
 		}
+		this.#announce(this.step);
 
 		await this.#persist();
 		this.#startTicking();
@@ -369,6 +391,7 @@ export class SessionPlayer {
 
 	async finish(): Promise<void> {
 		this.#stopTicking();
+		cancelSpeech();
 		cue('finished');
 		this.phase = 'finished';
 		this.session.endedAt = new Date().toISOString();
@@ -381,6 +404,7 @@ export class SessionPlayer {
 	/** Leaving without finishing: the session stays open and resumable. */
 	async suspend(): Promise<void> {
 		this.#stopTicking();
+		cancelSpeech();
 		await allowScreenSleep();
 	}
 

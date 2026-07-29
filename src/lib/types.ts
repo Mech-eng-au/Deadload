@@ -135,4 +135,6 @@ export interface Settings {
 	lastExportAt?: string;
 	/** Session audio cues (§7). On unless deliberately turned off. */
 	soundEnabled?: boolean;
+	/** Spoken announcement of the next exercise (§7). Same default. */
+	speechEnabled?: boolean;
 }
