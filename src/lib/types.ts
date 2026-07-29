@@ -137,4 +137,13 @@ export interface Settings {
 	soundEnabled?: boolean;
 	/** Spoken announcement of the next exercise (§7). Same default. */
 	speechEnabled?: boolean;
+	/**
+	 * Auto mode (§7), both off by default: the app's rule is manual advance, and
+	 * these relax it deliberately rather than by default. Independent, so all
+	 * four combinations are reachable.
+	 */
+	/** Begin the set once the announcement has finished, with no tap. */
+	autoStartSets?: boolean;
+	/** Log a timed set at its target and move on, with no tap. */
+	autoLogTimedSets?: boolean;
 }

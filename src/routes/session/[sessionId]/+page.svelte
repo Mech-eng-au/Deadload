@@ -401,6 +401,13 @@
 			>
 				{timed ? `Start ${mmss(player.targetSeconds ?? 0)}` : 'Start set'}
 			</button>
+			{#if player.autoStartOn}
+				<!-- Auto mode (§7). Said plainly, because a screen that is about to act
+					 on its own should say so; the button still beats the timer. -->
+				<p class="text-center text-xs text-zinc-500">
+					{player.autoStartPending ? 'Starting on its own…' : 'Starts when the reading is over'}
+				</p>
+			{/if}
 			<div class="flex gap-3 text-sm">
 				<button
 					onclick={() => player?.undo()}

@@ -30,7 +30,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 |---|---|
 | Catalog | 108 bodyweight exercises, every one with at least one image, generated and committed |
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
-| Session player | Per-set logging, get-ready preview before each set, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
+| Session player | Per-set logging, get-ready preview before each set, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
@@ -133,6 +133,11 @@ necessarily present in the WebView*, and the only place to find out is the devic
 **The spoken language is fixed to English, not `navigator.language`.** Everything the app says is
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
 English words. The locale says what interface the user wants, not what can pronounce this text.
+
+**Auto mode never touches a reps set.** The two switches (§7) advance the preview and log timed
+sets; a reps set always waits for the tap, because the app cannot see you finish twelve push-ups
+and a log full of numbers nobody performed would poison every statistic built on it. If a future
+change makes auto mode "complete", that is the line not to cross.
 
 **A set never starts on the app's schedule.** The preview state (§7) holds between sets with no
 clock running until the user presses Start. It is implied rather than stored — mid-session with

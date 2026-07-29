@@ -115,8 +115,15 @@ export async function armSpeech(): Promise<void> {
 	}
 }
 
-export function speak(text: string): void {
-	if (!enabled || !text) return;
+/**
+ * Speak, and say whether anything will actually be spoken. The boolean is what
+ * auto mode waits on (§7): "start when the reading is over" needs to know both
+ * when the reading ends and whether there is one at all.
+ *
+ * `onDone` fires when the engine finishes, or when it fails — never never.
+ */
+export function speak(text: string, onDone?: () => void): boolean {
+	if (!enabled || !text) return false;
 
 	if (native) {
 		// One announcement at a time: the next exercise supersedes the last one
@@ -126,12 +133,13 @@ export function speak(text: string): void {
 			.stop()
 			.catch(() => {})
 			.then(() => native?.speak({ text, lang: SPOKEN_LANG, rate: RATE }))
-			.catch(() => {});
-		return;
+			.then(() => onDone?.())
+			.catch(() => onDone?.());
+		return true;
 	}
 
 	const s = synth();
-	if (!s) return;
+	if (!s) return false;
 	try {
 		s.cancel();
 		const utterance = new SpeechSynthesisUtterance(text);
@@ -140,9 +148,15 @@ export function speak(text: string): void {
 		// stops the browser falling back to the page or system locale.
 		utterance.lang = SPOKEN_LANG;
 		utterance.rate = RATE;
+		if (onDone) {
+			utterance.onend = () => onDone();
+			utterance.onerror = () => onDone();
+		}
 		s.speak(utterance);
+		return true;
 	} catch {
 		// Same rule as a missed tone: silence, never a thrown error mid-set.
+		return false;
 	}
 }
 
