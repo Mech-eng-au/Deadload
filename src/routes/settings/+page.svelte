@@ -53,7 +53,7 @@
 	}
 
 	onMount(async () => {
-		canSpeak = speechAvailable();
+		canSpeak = await speechAvailable();
 		settings = await ensureStoragePersisted();
 		await refresh();
 	});
@@ -75,7 +75,7 @@
 		setSpeechEnabled(next);
 		// Same rule as the tones: hear the choice rather than read about it.
 		if (next) {
-			armSpeech();
+			await armSpeech();
 			speak('Next up, Side Plank. 45 seconds. Left side.');
 		}
 	}

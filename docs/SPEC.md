@@ -567,6 +567,12 @@ One honest cost: with no rest, the clock is already running while the sentence p
 
 Speech has **its own switch**, separate from the tones, because it is more intrusive: a beep in a room with other people in it is different from a voice announcing side planks. Both default on. Where the device has no speech engine the toggle is replaced by a line saying so, rather than a control that does nothing. A local (offline) voice is preferred over a network one, so it keeps working in airplane mode.
 
+**Corrected 2026-07-29, the same day, on a Pixel.** The first implementation used the Web Speech API alone and was silent on the phone — Settings correctly reported "this device has no speech engine" on a device with a perfectly good one. `window.speechSynthesis` **is not implemented in the Android System WebView** ([Chromium issue 40417848](https://issues.chromium.org/issues/40417848), open since 2015). Chrome on Android has it; the WebView the APK is built around does not, so the feature worked in the dev browser and nowhere the app actually runs.
+
+So speech goes through **two engines**: `@capacitor-community/text-to-speech` to the OS text-to-speech service on Android, and `speechSynthesis` in a browser. Which one is resolved once, by platform, the same way the back-button handler decides whether Capacitor is present (§7 *System back*).
+
+The general lesson, worth more than the fix: **a browser API being present in Chromium does not mean it is present in the WebView this app ships in.** Anything reached through `window` that is not plain DOM — speech, wake lock, storage persistence, share — needs checking against the WebView, and the only way to check is on the phone.
+
 #### Timed sets count down
 
 A timed set counts **down** to its target, not up. Counting up gives the user nothing to act on; counting down ends at a moment worth announcing. Past zero it keeps going and shows overtime (`+0:07`), because a longer hold is worth measuring rather than clamping — the logged value still defaults to the target, so accepting it stays one tap.

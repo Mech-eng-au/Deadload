@@ -3,27 +3,67 @@
  * something changed; only speech can say *what* changed, which is the last
  * reason to look at the phone during a workout.
  *
- * Deliberately thin: all the wording lives in `announce.ts`, which is pure and
- * tested. What is left here is the part that cannot be unit-tested — the
- * browser's speech engine — so it is kept small and total, and every failure
- * path is silence rather than an exception. A missed announcement must never
- * interrupt a workout.
+ * **Two engines, because the Web Speech API is not available where this app
+ * actually runs.** `window.speechSynthesis` is absent from the Android System
+ * WebView — a Chromium issue open since 2015 — and the sideloaded APK is a
+ * WebView, so a browser-only implementation is silent on the phone and works
+ * only in the dev browser. Found 2026-07-29 on a Pixel, after shipping exactly
+ * that mistake. On Android the announcement goes through Capacitor to the OS
+ * text-to-speech engine; in a browser it still uses `speechSynthesis`.
+ *
+ * All the wording lives in `announce.ts`, which is pure and tested. What is
+ * left here is the part that cannot be unit-tested, so it is kept small and
+ * total: every failure path is silence rather than an exception, because a
+ * missed announcement must never interrupt a workout.
  */
+
+type NativeTts = {
+	speak(options: { text: string; lang?: string; rate?: number }): Promise<void>;
+	stop(): Promise<void>;
+};
 
 let enabled = true;
 let voice: SpeechSynthesisVoice | null = null;
+/** Resolved once on arming: the native bridge, or null for the web path. */
+let native: NativeTts | null = null;
+let checked = false;
 
 /** Slightly slower than default: heard across a room, out of breath. */
 const RATE = 0.95;
+
+function lang(): string {
+	return (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+}
 
 function synth(): SpeechSynthesis | null {
 	if (typeof window === 'undefined') return null;
 	return 'speechSynthesis' in window ? window.speechSynthesis : null;
 }
 
-/** Whether this device can speak at all, for the Settings screen. */
-export function speechAvailable(): boolean {
-	return synth() !== null;
+/**
+ * Resolve which engine this device has. Dynamic imports, like the back-button
+ * handler: the Capacitor packages must not be pulled into a browser build.
+ */
+async function resolveEngine(): Promise<void> {
+	if (checked) return;
+	checked = true;
+	try {
+		const { Capacitor } = await import('@capacitor/core');
+		if (!Capacitor.isNativePlatform()) return;
+		const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
+		native = TextToSpeech as unknown as NativeTts;
+	} catch {
+		// Not a native build, or the plugin is missing: fall back to the web API.
+	}
+}
+
+/**
+ * Whether this device can speak at all, for the Settings screen. Async because
+ * finding out means asking Capacitor which platform we are on.
+ */
+export async function speechAvailable(): Promise<boolean> {
+	await resolveEngine();
+	return native !== null || synth() !== null;
 }
 
 export function setSpeechEnabled(value: boolean): void {
@@ -32,29 +72,32 @@ export function setSpeechEnabled(value: boolean): void {
 }
 
 /**
- * Pick a voice once. Android loads them asynchronously, so this is called on
- * arming and again on `voiceschanged`; until one is chosen the engine's default
- * is used, which is correct more often than not.
+ * Pick a voice once, web path only. Browsers load them asynchronously, so this
+ * is called on arming and again on `voiceschanged`; until one is chosen the
+ * engine's default is used, which is correct more often than not. The native
+ * engine picks its own voice from the system language.
  */
 function chooseVoice(): void {
 	const s = synth();
 	if (!s) return;
 	const voices = s.getVoices();
 	if (!voices.length) return;
-	const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+	const want = lang();
 	voice =
-		voices.find((v) => v.lang === lang && v.localService) ??
-		voices.find((v) => v.lang.startsWith(lang.slice(0, 2)) && v.localService) ??
-		voices.find((v) => v.lang.startsWith(lang.slice(0, 2))) ??
+		voices.find((v) => v.lang === want && v.localService) ??
+		voices.find((v) => v.lang.startsWith(want.slice(0, 2)) && v.localService) ??
+		voices.find((v) => v.lang.startsWith(want.slice(0, 2))) ??
 		null;
 }
 
 /**
- * Called from the same user gesture that arms the audio. Speaking an empty
- * utterance is what wakes some engines up; without it the first real
- * announcement can be swallowed, exactly like the first beep.
+ * Called from the same user gesture that arms the audio. On the web, speaking
+ * needs waking up or the first announcement can be swallowed, exactly like the
+ * first beep; the native engine needs no gesture.
  */
-export function armSpeech(): void {
+export async function armSpeech(): Promise<void> {
+	await resolveEngine();
+	if (native) return;
 	const s = synth();
 	if (!s) return;
 	try {
@@ -67,11 +110,23 @@ export function armSpeech(): void {
 }
 
 export function speak(text: string): void {
+	if (!enabled || !text) return;
+
+	if (native) {
+		// One announcement at a time: the next exercise supersedes the last one
+		// rather than queueing behind it. Stop first, because the plugin's queue
+		// strategy enum has moved between versions and this does not.
+		void native
+			.stop()
+			.catch(() => {})
+			.then(() => native?.speak({ text, lang: lang(), rate: RATE }))
+			.catch(() => {});
+		return;
+	}
+
 	const s = synth();
-	if (!enabled || !s || !text) return;
+	if (!s) return;
 	try {
-		// One announcement at a time: the next exercise supersedes the last one,
-		// it does not queue behind it.
 		s.cancel();
 		const utterance = new SpeechSynthesisUtterance(text);
 		if (voice) utterance.voice = voice;
@@ -85,7 +140,8 @@ export function speak(text: string): void {
 /** Leaving the session, or turning speech off, stops it mid-sentence. */
 export function cancelSpeech(): void {
 	try {
-		synth()?.cancel();
+		if (native) void native.stop().catch(() => {});
+		else synth()?.cancel();
 	} catch {
 		// Nothing to cancel.
 	}
