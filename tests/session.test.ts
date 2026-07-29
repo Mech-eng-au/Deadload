@@ -7,6 +7,7 @@ import {
 	prefillFor,
 	totalSets
 } from '../src/lib/session/steps.js';
+import { isTabRoot } from '../src/lib/nav/back.js';
 import type { Routine } from '../src/lib/types.js';
 
 function routine(
@@ -244,5 +245,18 @@ describe('routine length estimate', () => {
 
 	it('gives an amrap set a nominal length rather than zero', () => {
 		expect(estimateSeconds(routine([{ target: { kind: 'amrap' } }]))).toBe(30);
+	});
+});
+
+describe('back from a tab root (§12)', () => {
+	it('treats only the tab roots as "go home", not the screens inside them', () => {
+		expect(isTabRoot('/catalog')).toBe(true);
+		expect(isTabRoot('/stats')).toBe(true);
+		expect(isTabRoot('/settings')).toBe(true);
+		// Deeper screens go up one level on their own; home already exits.
+		expect(isTabRoot('/catalog/[id]')).toBe(false);
+		expect(isTabRoot('/history/[id]')).toBe(false);
+		expect(isTabRoot('/')).toBe(false);
+		expect(isTabRoot(null)).toBe(false);
 	});
 });

@@ -42,7 +42,7 @@
 	<title>History · Deadload</title>
 </svelte:head>
 
-<a href="{base}/stats/" class="text-sm text-zinc-400">← Statistics</a>
+<a href="{base}/stats/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Statistics</a>
 <h1 class="mt-2 mb-5 font-display text-3xl font-bold">History</h1>
 
 {#if !loaded}

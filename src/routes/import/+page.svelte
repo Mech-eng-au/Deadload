@@ -82,7 +82,7 @@
 	<title>Import a routine · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" class="text-sm text-zinc-400">← Routines</a>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
 <h1 class="mt-2 mb-5 font-display text-2xl font-bold">Import a routine</h1>
 
 {#if stage === 'input'}
@@ -149,7 +149,7 @@
 		{/if}
 
 		<a
-			href="{base}/presets/"
+			href="{base}/presets/" data-sveltekit-replacestate
 			class="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-300 hover:border-zinc-600"
 		>
 			Or start from a built-in routine →

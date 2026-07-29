@@ -53,7 +53,7 @@
 	<title>{session?.routineName ?? 'Session'} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/history/" class="text-sm text-zinc-400">← History</a>
+<a href="{base}/history/" data-sveltekit-replacestate class="text-sm text-zinc-400">← History</a>
 
 {#if !loaded}
 	<p class="mt-8 text-zinc-500">Loading…</p>

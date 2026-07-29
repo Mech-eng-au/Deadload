@@ -47,13 +47,13 @@
 	<title>{routine?.name ?? 'Routine'} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" class="text-sm text-zinc-400">← Routines</a>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
 
 {#if !loaded}
 	<p class="mt-8 text-zinc-500">Loading…</p>
 {:else if !routine}
 	<p class="mt-8 text-zinc-300">That routine is no longer here.</p>
-	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
+	<a href="{base}/" data-sveltekit-replacestate class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
 {:else}
 	<article class="mt-2 flex flex-col gap-6 pb-12">
 		<header>

@@ -38,7 +38,7 @@
 	<p class="mt-8 text-zinc-300">That routine is no longer here.</p>
 	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
 {:else}
-	<a href="{base}/routines/{routine.id}/" class="text-sm text-zinc-400">← Cancel</a>
+	<a href="{base}/routines/{routine.id}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Cancel</a>
 	<h1 class="mt-2 mb-5 font-display text-2xl font-bold">Edit routine</h1>
 	<RoutineEditor bind:routine={routine as Routine} onsave={save} {saving} />
 {/if}

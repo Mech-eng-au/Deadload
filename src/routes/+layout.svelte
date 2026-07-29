@@ -1,10 +1,10 @@
 <script lang="ts">
 	import '../app.css';
 	import { base } from '$app/paths';
-	import { onNavigate } from '$app/navigation';
+	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { registerBackHandler } from '$lib/nav/back.js';
+	import { isTabRoot, pushBackGuard, registerBackHandler } from '$lib/nav/back.js';
 
 	/**
 	 * Slide between screens in the direction you actually moved: forward from the
@@ -31,11 +31,46 @@
 	let { children } = $props();
 
 	/**
-	 * Everywhere but mid-session. The header is ~80 dp of a 808 dp phone and does
-	 * nothing during a set, and the top inset has to belong to the player itself
-	 * so the Leave row is not painted under the status bar (§7).
+	 * Everywhere but mid-session. The tabs are ~64 dp of a 808 dp phone and
+	 * nothing on them is worth a tap during a set, and the top inset has to
+	 * belong to the player itself so the Leave row is not painted under the
+	 * status bar (§7).
 	 */
 	const chrome = $derived(!page.route.id?.startsWith('/session/'));
+
+	/**
+	 * The four places worth going. Everything else in the app is reached by
+	 * drilling into one of them, so a tab is always the way back out (§12).
+	 */
+	const tabs = [
+		{ href: '/', label: 'Routines', match: (id: string) => id === '/' },
+		{ href: '/catalog/', label: 'Catalog', match: (id: string) => id.startsWith('/catalog') },
+		{
+			href: '/stats/',
+			label: 'Stats',
+			match: (id: string) => id.startsWith('/stats') || id.startsWith('/history')
+		},
+		{
+			href: '/settings/',
+			label: 'Settings',
+			match: (id: string) => id.startsWith('/settings') || id.startsWith('/about')
+		}
+	];
+	const activeTab = $derived(tabs.findIndex((t) => t.match(page.route.id ?? '')));
+
+	/**
+	 * Back from the root of a tab goes home. Switching tabs replaces rather than
+	 * pushes, so there is nothing behind a tab root to go back to and the press
+	 * would otherwise leave the app. Anything deeper is left alone: back from an
+	 * exercise goes up to the catalog, which is what it should do (§12).
+	 */
+	onMount(() =>
+		pushBackGuard(() => {
+			if (!chrome || !isTabRoot(page.route.id)) return false;
+			void goto(`${base}/`, { replaceState: true });
+			return true;
+		})
+	);
 
 	onMount(() => {
 		let unregister: (() => void) | undefined;
@@ -59,17 +94,45 @@
 		? 'pt-[env(safe-area-inset-top)]'
 		: ''}"
 >
-	{#if chrome}
-		<header class="flex items-baseline justify-between py-5">
-			<a href="{base}/" class="font-display text-xl font-bold tracking-tight">Deadload</a>
-			<nav class="flex gap-4 text-sm text-zinc-400">
-				<a href="{base}/catalog/" class="hover:text-zinc-100">Catalog</a>
-				<a href="{base}/stats/" class="hover:text-zinc-100">Stats</a>
-				<a href="{base}/settings/" class="hover:text-zinc-100">Settings</a>
-			</nav>
-		</header>
-	{/if}
-	<main class="flex-1 {chrome ? 'pb-16' : ''}">
+	<main class="flex-1 {chrome ? 'pt-5 pb-28' : ''}">
 		{@render children()}
 	</main>
 </div>
+
+{#if chrome}
+	<!-- Navigation lives at the bottom, within reach of a thumb (§12), and is on
+		 every screen: however deep you are, getting out is one tap and never
+		 depends on what the back stack happens to contain. -->
+	<nav
+		class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur"
+	>
+		<div class="mx-auto flex max-w-2xl">
+			{#each tabs as tab, i (tab.href)}
+				<a
+					href="{base}{tab.href}"
+					data-sveltekit-replacestate
+					aria-current={i === activeTab ? 'page' : undefined}
+					class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 pt-2 text-xs {i ===
+					activeTab
+						? 'text-zinc-100'
+						: 'text-zinc-500'}"
+				>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="h-5 w-5">
+						{#if tab.label === 'Routines'}
+							<path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round" />
+						{:else if tab.label === 'Catalog'}
+							<path d="M4 5h7v14H4zM13 5h7v14h-7z" stroke-linejoin="round" />
+						{:else if tab.label === 'Stats'}
+							<path d="M5 19V11M12 19V5M19 19v-5" stroke-linecap="round" />
+						{:else}
+							<path d="M6 8h12M6 16h12" stroke-linecap="round" />
+							<circle cx="10" cy="8" r="2" />
+							<circle cx="15" cy="16" r="2" />
+						{/if}
+					</svg>
+					{tab.label}
+				</a>
+			{/each}
+		</div>
+	</nav>
+{/if}
