@@ -4,6 +4,8 @@
 	import { getExercise } from '$lib/catalog/index.js';
 	import { ladderFor } from '$lib/catalog/ladders.js';
 	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { muscleInfo, muscleLabel } from '$lib/catalog/muscles.js';
+	import BodyMap from '$lib/components/BodyMap.svelte';
 	import { getSettings } from '$lib/db/settings.js';
 	import type { Settings } from '$lib/types.js';
 
@@ -75,14 +77,43 @@
 		{/each}
 	</div>
 
+	<!-- §4.6. The catalog names muscles the way an anatomy book does, so the
+		 diagram says where they are and the brackets say it in words. -->
 	<section>
 		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Muscles</h2>
-		<p class="mt-1 text-zinc-200">
-			{e.primaryMuscles.join(', ')}
+		<div class="mt-3">
+			<BodyMap primary={e.primaryMuscles} secondary={e.secondaryMuscles} />
+		</div>
+		<dl class="mt-4 flex flex-col gap-2 text-sm">
+			<div>
+				<dt class="text-xs tracking-wide text-zinc-500 uppercase">Works</dt>
+				<dd class="mt-0.5 text-zinc-100">
+					<!-- The space before the dash is a non-breaking one on purpose: Svelte
+						 trims leading whitespace inside an element, so a plain space here
+						 renders as "Adductors— inner thigh". -->
+					{#each e.primaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
+							class="text-zinc-500">{` — ${muscleInfo(m)?.short ?? ''}`}</span
+						>{#if i < e.primaryMuscles.length - 1}<span>, </span>{/if}{/each}
+				</dd>
+			</div>
 			{#if e.secondaryMuscles.length}
-				<span class="text-zinc-500"> · also {e.secondaryMuscles.join(', ')}</span>
+				<div>
+					<dt class="text-xs tracking-wide text-zinc-500 uppercase">Assists</dt>
+					<dd class="mt-0.5 text-zinc-400">
+						{#each e.secondaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
+								class="text-zinc-600">{` — ${muscleInfo(m)?.short ?? ''}`}</span
+							>{#if i < e.secondaryMuscles.length - 1}<span>, </span>{/if}{/each}
+					</dd>
+				</div>
 			{/if}
-		</p>
+		</dl>
+		<a
+			href="{base}/muscles/"
+			data-sveltekit-replacestate
+			class="mt-3 inline-block text-xs text-zinc-500 underline"
+		>
+			What all these muscles are →
+		</a>
 	</section>
 
 	{#if e.instructions.length}

@@ -36,12 +36,13 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
+| Muscles | Plain English for all seventeen catalog muscle names, a schematic front/back body map on the exercise detail, and a `/muscles/` compendium that links through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
 | History | Browse past sessions, inspect every logged set, delete |
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **201 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **212 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -187,6 +188,20 @@ number exists, and `totals()` has no load field — there is a test that fails i
 is no bodyweight-load-as-a-percentage-of-body-mass estimate either. Both are the calorie counter of
 §12 wearing a different hat: a number nobody measured, shown as though somebody had.
 
+**The body map is a schematic, and that was a decision, not a shortcut.** wger ships 16 muscle
+overlays drawn on two Wikimedia figures, which is exactly the right shape of asset — and it was
+rejected twice over. Its `SOURCES` points at two Commons files whose licence could not be read from
+the development environment (the network policy blocks `commons.wikimedia.org`), and SPEC §4.1
+requires a recorded licence per image. Then the coverage: those overlays carry 12 of the 17 muscle
+names and are missing `adductors`, `abductors`, `forearms`, `middle back` and `neck` — nearly the
+exact list of words a beginner needs a picture for, and `adductors` was the example in the original
+request. SPEC §4.6 records the id→name mapping so this is one licence check away from being
+finishable, not a fresh investigation.
+
+**Anatomy never appears during a session.** Mid-set the one available glance belongs to the set
+numbers and the countdown (§12), so the muscle glossary and the body map are catalog- and
+builder-only. `tests/muscles.test.ts` asserts the player does not import `BodyMap`.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -215,7 +230,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 201 unit tests
+npm test           # 212 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```

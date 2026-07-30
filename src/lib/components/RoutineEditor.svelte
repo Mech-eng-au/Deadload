@@ -3,6 +3,7 @@
 	import CatalogPicker from './CatalogPicker.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { isLoadable } from '$lib/catalog/equipment.js';
+	import { muscleInfo } from '$lib/catalog/muscles.js';
 	import { emptyBlock, newItem } from '$lib/db/routines.js';
 	import type { Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
 
@@ -123,7 +124,12 @@
 							{/if}
 							<div class="min-w-0 flex-1">
 								<div class="truncate font-medium">{exercise?.name ?? item.exerciseId}</div>
-								<div class="mt-0.5 text-xs text-zinc-500">{exercise?.category}</div>
+								<!-- Muscles in plain English while the routine is being built (§4.6). -->
+								<div class="mt-0.5 text-xs text-zinc-500">
+									{exercise?.category}{exercise?.primaryMuscles.length
+										? ' · ' + exercise.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')
+										: ''}
+								</div>
 							</div>
 							<div class="flex shrink-0 gap-1">
 								<button
