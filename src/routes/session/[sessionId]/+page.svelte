@@ -311,10 +311,23 @@
 					>{#if i < lastTime.sets.length - 1}<span class="pr-1">,</span>{/if}{/each}
 			</p>
 		{/if}
-		{#if step.notes}
-			<p class="mt-2 text-sm text-zinc-400">{step.notes}</p>
-		{/if}
 	</div>
+	{/if}
+{/snippet}
+
+<!--
+	The item's note, rendered *after* the countdown rather than inside the heading.
+
+	§7's amendment of 2026-07-29 put the countdown above the cues because the cues
+	are read once and the countdown is glanced at throughout. A note is read once
+	too, so it belongs on the same side of that line — and while it sat in the
+	heading, a three-line note pushed the countdown behind the log sheet at
+	360 × 808 and reproduced exactly the bug that amendment was written to fix. The
+	baby presets (§9) have notes that long, which is how this surfaced.
+-->
+{#snippet notes()}
+	{#if step?.notes}
+		<p class="text-sm text-zinc-400">{step.notes}</p>
 	{/if}
 {/snippet}
 
@@ -424,6 +437,7 @@
 		{@render topRow()}
 		{@render photo()}
 		{@render heading()}
+		{@render notes()}
 
 		{#if exercise.instructions.length}
 			<details class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
@@ -583,6 +597,8 @@
 				</p>
 			</button>
 		{/if}
+
+		{@render notes()}
 
 		{#if exercise.instructions.length}
 			<details bind:open={showCues} class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">

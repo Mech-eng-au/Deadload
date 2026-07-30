@@ -1,0 +1,87 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Baby in arms",
+	"goal": "carrying strength",
+	"description": "Standing work for the muscles carrying a baby actually uses, and stretches for the ones it tightens. For the days they will not be put down.",
+	"tags": ["baby", "standing", "posture"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{
+					"exercise": "shoulder_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "Baby down for the warm-up — get your own shoulders moving first."
+				},
+				{ "exercise": "arm_circles", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{ "exercise": "sit_squats", "sets": 1, "duration_seconds": 45, "rest_seconds": 0 }
+			]
+		},
+		{
+			"label": "Main",
+			"items": [
+				{
+					"exercise": "bodyweight_squat",
+					"sets": 3,
+					"reps": 10,
+					"rest_seconds": 40,
+					"notes": "Baby held at your chest, or in the carrier. Down slowly, up as you breathe out."
+				},
+				{
+					"exercise": "bodyweight_walking_lunge",
+					"sets": 2,
+					"reps": 8,
+					"per_side": true,
+					"rest_seconds": 40,
+					"notes": "Carrier for this one — hands free helps your balance far more than you would think."
+				},
+				{
+					"exercise": "side_leg_raises",
+					"sets": 2,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 20,
+					"notes": "Hold a chair with your free hand. This is the one that keeps your hips level when you carry on one side all day."
+				},
+				{
+					"exercise": "front_leg_raises",
+					"sets": 2,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 20,
+					"notes": "Same chair, same free hand."
+				},
+				{
+					"exercise": "elbows_back",
+					"sets": 2,
+					"duration_seconds": 25,
+					"rest_seconds": 20,
+					"notes": "Baby down for this one. It pulls back everything that carrying pulls forward."
+				}
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{
+					"exercise": "kneeling_hip_flexor",
+					"sets": 1,
+					"duration_seconds": 40,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{ "exercise": "standing_toe_touches", "sets": 1, "duration_seconds": 30, "rest_seconds": 0 },
+				{
+					"exercise": "chin_to_chest_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "For a neck that has spent the day looking down."
+				},
+				{ "exercise": "upper_back_stretch", "sets": 1, "duration_seconds": 40, "rest_seconds": 0 }
+			]
+		}
+	]
+}

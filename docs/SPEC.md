@@ -905,6 +905,28 @@ This is deliberate: the preset loading path is the import path, so the importer 
 
 Ship at least: hip flexibility, lower back relief, upper body strength, full body 15 minutes, desk decompression. Added 2026-07-28: push–pull supersets and a full-body circuit, both using circuit blocks (§4.2) so the feature is exercised by a preset on every fresh install.
 
+**Added 2026-07-30: two routines to do with a baby** — *Floor time with the baby* and *Baby in arms*,
+split by what the baby is doing rather than by muscle group, because in a house with a baby that is
+the constraint that actually decides which workout happens.
+
+They are the first presets whose **`notes` carry the instruction that makes the routine what it is**.
+The exercises are ordinary catalog entries — a glute bridge is a glute bridge — and the note says the
+baby sits on your hips for it. This is the honest way to express "exercise with a baby" under §6.3,
+which forbids imports from extending the catalog: there is no `baby_wearing_squat`, and inventing one
+would mean an exercise with no media, which §1's hard constraint refuses. `notes` is free text and
+display-only, so it costs nothing and reaches the session screen.
+
+Consequences worth stating, because both are the kind of thing a later edit could undo:
+
+- **`loadKg` is not used for holding the baby**, even though a baby has a knowable mass. §4.5 limits
+  load to an implement of known mass, and a held child is neither an implement nor stable — the field
+  would stop meaning one thing.
+- **Neither routine contains the crunch family or anything with jumping**, and there is a test
+  asserting it. This is not a medical claim; it is that a routine written for somebody with a small
+  baby has no business handing them sit-ups and jump squats, and the catalog's `core` category is
+  mostly that. Both are also doable with nothing bought beyond a chair, since the person trying them
+  is likely borrowing the phone.
+
 ---
 
 ## 10. Statistics (M5)

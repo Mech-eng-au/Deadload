@@ -33,7 +33,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
 | Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
-| Presets | Five built-in routines, loaded through the import path |
+| Presets | Nine built-in routines, loaded through the import path. Two of them (*Floor time with the baby*, *Baby in arms*) carry per-item `notes` saying where the baby goes — the only way to express that without extending the catalog (added 2026-07-30) |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
 | Muscles | Plain English for all seventeen catalog muscle names, front/back body figures (MIT) with each muscle filled in on a grey-to-red ramp, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
@@ -42,7 +42,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **216 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **226 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -255,7 +255,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 216 unit tests
+npm test           # 226 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
