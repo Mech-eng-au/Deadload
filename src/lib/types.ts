@@ -50,8 +50,8 @@ export interface MediaAsset {
 
 export interface Attribution {
 	id: string;
-	source: 'free-exercise-db' | 'wger' | 'wikimedia' | 'own';
-	license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'own';
+	source: 'free-exercise-db' | 'wger' | 'wikimedia' | 'body-highlighter' | 'own';
+	license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'MIT' | 'own';
 	author?: string;
 	sourceUrl?: string;
 	/**

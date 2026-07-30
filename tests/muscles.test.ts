@@ -3,11 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { attributions, catalog } from '../src/lib/catalog/index.js';
 import {
-	BACK,
-	FIGURE_HEIGHT,
-	FIGURE_WIDTH,
-	FRONT,
-	mappedMuscles
+	APPROXIMATED,
+	MUSCLE_REGIONS,
+	mappedMuscles,
+	slugsFor
 } from '../src/lib/catalog/body-map.js';
 import {
 	MUSCLES,
@@ -82,9 +81,6 @@ describe('muscle glossary (§4.6)', () => {
 		expect(quads.primary).toBe(
 			catalog.filter((e) => e.primaryMuscles.includes('quadriceps')).length
 		);
-		expect(quads.secondary).toBe(
-			catalog.filter((e) => e.secondaryMuscles.includes('quadriceps')).length
-		);
 		expect(muscleUsage).toHaveLength(17);
 		for (let i = 1; i < muscleUsage.length; i++) {
 			expect(muscleUsage[i - 1].primary).toBeGreaterThanOrEqual(muscleUsage[i].primary);
@@ -92,65 +88,97 @@ describe('muscle glossary (§4.6)', () => {
 	});
 });
 
-describe('the body map points at what the glossary explains (§4.6)', () => {
-	it('has a region for every muscle in the glossary', () => {
+describe('the body map colours what the glossary explains (§4.6)', () => {
+	const FIGURES = (['front', 'back'] as const).map((view) => ({
+		view,
+		svg: readFileSync(join(import.meta.dirname, `../static/muscles/${view}.svg`), 'utf8')
+	}));
+
+	/** Every `data-slug` the figures actually contain. */
+	function slugsIn(svg: string): Set<string> {
+		return new Set([...svg.matchAll(/data-slug="([^"]+)"/g)].map((m) => m[1]));
+	}
+
+	it('maps every muscle in the glossary to at least one region', () => {
 		// The failure this exists for: adding a muscle to the glossary and forgetting
-		// to place it, which leaves a compendium entry whose diagram lights nothing.
+		// to map it, which leaves a compendium entry whose figure lights nothing.
 		for (const m of MUSCLES) {
 			expect(mappedMuscles(), `nothing on the figures for ${m.id}`).toContain(m.id);
+			const total = slugsFor([m.id], 'front').length + slugsFor([m.id], 'back').length;
+			expect(total, `${m.id} maps to no region in either view`).toBeGreaterThan(0);
 		}
 	});
 
-	it('points at nothing the glossary does not explain', () => {
+	it('maps nothing the glossary does not explain', () => {
 		const known = new Set(MUSCLES.map((m) => m.id));
 		for (const id of mappedMuscles()) {
-			expect(known.has(id), `the figures highlight "${id}", which is not a known muscle`).toBe(true);
+			expect(known.has(id), `the map knows "${id}", which is not a known muscle`).toBe(true);
 		}
 	});
 
-	it('keeps every region inside the figure', () => {
-		for (const [view, regions] of [
-			['front', FRONT],
-			['back', BACK]
-		] as const) {
-			for (const r of regions) {
-				expect(r.cx - r.rx, `${view} ${r.m} runs off the left`).toBeGreaterThanOrEqual(0);
-				expect(r.cx + r.rx, `${view} ${r.m} runs off the right`).toBeLessThanOrEqual(FIGURE_WIDTH);
-				expect(r.cy - r.ry, `${view} ${r.m} runs off the top`).toBeGreaterThanOrEqual(0);
-				expect(r.cy + r.ry, `${view} ${r.m} runs off the bottom`).toBeLessThanOrEqual(FIGURE_HEIGHT);
+	it('only names regions the figures really have', () => {
+		// A typo like `hamstrings` for `hamstring` would silently colour nothing, and
+		// nothing is exactly what a working diagram also looks like from code.
+		for (const { view, svg } of FIGURES) {
+			const available = slugsIn(svg);
+			for (const [muscle, region] of Object.entries(MUSCLE_REGIONS)) {
+				for (const slug of region[view] ?? []) {
+					expect(available.has(slug), `${view}.svg has no "${slug}" (for ${muscle})`).toBe(true);
+				}
 			}
 		}
 	});
 
 	it('shows a muscle in the view it is actually visible from', () => {
-		// Chest and quads are not on the back; glutes and hamstrings are not on the
-		// front. Getting this wrong would highlight a shape over the wrong anatomy.
-		const front = new Set(FRONT.map((r) => r.m));
-		const back = new Set(BACK.map((r) => r.m));
-		for (const m of ['chest', 'abdominals', 'biceps', 'quadriceps', 'adductors']) {
-			expect(front.has(m), `${m} should be on the front`).toBe(true);
-			expect(back.has(m), `${m} should not be on the back`).toBe(false);
+		for (const m of ['chest', 'abdominals', 'biceps', 'quadriceps']) {
+			expect(slugsFor([m], 'front').length, `${m} should be on the front`).toBeGreaterThan(0);
+			expect(slugsFor([m], 'back'), `${m} should not be on the back`).toEqual([]);
 		}
-		for (const m of ['glutes', 'hamstrings', 'lats', 'triceps', 'lower back', 'middle back']) {
-			expect(back.has(m), `${m} should be on the back`).toBe(true);
-			expect(front.has(m), `${m} should not be on the front`).toBe(false);
+		for (const m of ['glutes', 'hamstrings', 'lats', 'lower back', 'middle back', 'abductors']) {
+			expect(slugsFor([m], 'back').length, `${m} should be on the back`).toBeGreaterThan(0);
+			expect(slugsFor([m], 'front'), `${m} should not be on the front`).toEqual([]);
 		}
-		// Visible from either side.
-		for (const m of ['neck', 'shoulders', 'forearms', 'calves', 'traps', 'abductors']) {
-			expect(front.has(m) && back.has(m), `${m} should be on both views`).toBe(true);
+		for (const m of ['neck', 'shoulders', 'forearms', 'calves', 'traps', 'triceps']) {
+			expect(slugsFor([m], 'front').length && slugsFor([m], 'back').length, m).toBeTruthy();
 		}
 	});
 
-	it('keeps the two adductor shapes apart, and off the crotch', () => {
-		// The regression this is named for: the pair were once one bright bar
-		// straddling the centreline with its top at the pelvis, and it looked like a
-		// penis. Two shapes, a real gap between them, and nothing reaching the hip.
-		const add = FRONT.filter((r) => r.m === 'adductors');
-		expect(add).toHaveLength(2);
-		const [left, right] = [...add].sort((a, b) => a.cx - b.cx);
-		const gap = right.cx - right.rx - (left.cx + left.rx);
-		expect(gap, 'the adductor shapes have merged into one bar').toBeGreaterThanOrEqual(8);
-		expect(left.cy - left.ry, 'the adductor highlight reaches the pelvis').toBeGreaterThan(190);
+	it('records the three approximations rather than hiding them', () => {
+		// 14 of 17 map exactly. The rest share a region or sit on a neighbour, and
+		// that is written down so nobody later reads it as a bug.
+		expect(Object.keys(APPROXIMATED).sort()).toEqual(['abductors', 'lats', 'middle back']);
+		// Each value completes "On the figure this ___." on the compendium, so a
+		// phrase that does not fit the sentence reads as a typo on screen.
+		for (const [muscle, phrase] of Object.entries(APPROXIMATED)) {
+			expect(`On the figure this ${phrase}.`, muscle).toMatch(
+				/^On the figure this (?:is |shares |sits |uses )/
+			);
+		}
+		expect(slugsFor(['lats'], 'back')).toEqual(slugsFor(['middle back'], 'back'));
+		expect(slugsFor(['abductors'], 'back')).toEqual(slugsFor(['glutes'], 'back'));
+	});
+
+	it('deduplicates when two muscles share a region', () => {
+		// A push-pull routine hitting both would otherwise emit the same selector
+		// twice.
+		expect(slugsFor(['lats', 'middle back'], 'back')).toEqual(['upper-back']);
+	});
+
+	it('keeps the figures small enough to inline', () => {
+		// They are inlined into the bundle with ?raw so CSS can reach the muscles, so
+		// the size is paid on every page that shows one.
+		for (const { view, svg } of FIGURES) {
+			expect(svg.length, `${view}.svg is ${Math.round(svg.length / 1024)} kB`).toBeLessThan(60_000);
+		}
+	});
+
+	it('strips the baked-in colours so the stylesheet decides', () => {
+		// Left in place, the inline fill attributes beat the stylesheet in some
+		// engines and the highlight silently does nothing.
+		for (const { view, svg } of FIGURES) {
+			expect(svg, `${view}.svg still has a hard-coded fill`).not.toMatch(/fill="#/);
+			expect(svg, `${view}.svg still has a hard-coded stroke`).not.toMatch(/stroke="#/);
+		}
 	});
 
 	it('is not shown during a session', () => {
@@ -165,14 +193,18 @@ describe('the body map points at what the glossary explains (§4.6)', () => {
 });
 
 describe('the figures are credited (§4.6)', () => {
-	it('records the Wikimedia figures with author and licence', () => {
-		// CC BY-SA 3.0 obliges attribution wherever the work appears, and §4.1 keeps
+	it('records the body model with its authors and licence', () => {
+		// MIT requires the copyright notice to travel with the work, and §4.1 keeps
 		// that in attribution.json. The About page reads this.
-		const figure = attributions.find((a) => a.source === 'wikimedia');
+		const figure = attributions.find((a) => a.source === 'body-highlighter');
 		expect(figure, 'no attribution entry for the body figures').toBeDefined();
-		expect(figure!.license).toBe('CC-BY-SA-3.0');
-		expect(figure!.author).toBe('Termininja');
-		expect(figure!.sourceUrl).toContain('commons.wikimedia.org');
+		expect(figure!.license).toBe('MIT');
+		expect(figure!.author).toContain('ELABBASSI Hicham');
+		expect(figure!.author).toContain('Stefan Poindl');
 		expect(figure!.covers, 'the About page would print "0 exercises" for it').toBeTruthy();
+	});
+
+	it('no longer claims the Wikimedia figures it stopped shipping', () => {
+		expect(attributions.find((a) => a.source === 'wikimedia')).toBeUndefined();
 	});
 });

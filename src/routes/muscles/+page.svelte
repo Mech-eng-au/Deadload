@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import BodyMap from '$lib/components/BodyMap.svelte';
 	import { muscleUsage } from '$lib/catalog/muscles.js';
+	import { APPROXIMATED } from '$lib/catalog/body-map.js';
 
 	/**
 	 * The muscle compendium (docs/SPEC.md §4.6): seventeen words, each with where
@@ -48,7 +49,16 @@
 
 			{#if isOpen}
 				<div class="border-t border-zinc-800 px-4 pt-4 pb-4">
-					<BodyMap primary={[row.muscle.id]} size="small" />
+					<!-- No legend: the row is already titled with the muscle, and only one
+						 colour is in play. -->
+					<BodyMap primary={[row.muscle.id]} size="small" legend={false} />
+					{#if APPROXIMATED[row.muscle.id]}
+						<!-- Say where the figure is imprecise rather than let it quietly
+								 mislead: two of these share a region and one sits on a neighbour. -->
+						<p class="mt-3 text-xs text-zinc-500">
+							On the figure this {APPROXIMATED[row.muscle.id]}.
+						</p>
+					{/if}
 					<p class="mt-4 text-sm text-zinc-200">{row.muscle.where}</p>
 					<p class="mt-2 text-sm text-zinc-400">{row.muscle.does}</p>
 					{#if row.primary > 0}
