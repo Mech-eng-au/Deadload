@@ -59,7 +59,7 @@
 		'w-20 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-2 text-center text-base focus:border-zinc-500 focus:outline-none';
 </script>
 
-<div class="flex flex-col gap-6 pb-32">
+<div class="flex flex-col gap-6 pb-40">
 	<div class="flex flex-col gap-3">
 		<input bind:value={routine.name} placeholder="Routine name" class="{fieldClass} text-lg" />
 		<input bind:value={routine.goal} placeholder="Goal, e.g. hip flexibility" class={fieldClass} />
@@ -245,9 +245,11 @@
 	</button>
 </div>
 
-<!-- Primary action in the bottom third, reachable one-handed (§12). -->
+<!-- Primary action in the bottom third, reachable one-handed (§12). Sits above the
+	 tab bar rather than under it: see --dl-tabbar-height in app.css. -->
 <div
-	class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur"
+	class="fixed inset-x-0 z-30 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-3 backdrop-blur"
+	style="bottom: var(--dl-tabbar-height)"
 >
 	<div class="mx-auto max-w-2xl">
 		<button

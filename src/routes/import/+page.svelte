@@ -10,6 +10,7 @@
 	import { buildPrompt, equipmentSentence, llmCatalogJson } from '$lib/import/prompt.js';
 	import {
 		equipmentLabel,
+		isLoadable,
 		missingEquipment,
 		ownedEquipment,
 		availableCatalog
@@ -223,7 +224,7 @@
 		</details>
 	</div>
 {:else if review}
-	<div class="flex flex-col gap-5 pb-32">
+	<div class="flex flex-col gap-5 pb-40">
 		<input
 			bind:value={review.name}
 			class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-lg focus:border-zinc-500 focus:outline-none"
@@ -281,6 +282,15 @@
 												anyway.
 											</div>
 										{/each}
+										{#if item.raw.load_kg !== undefined && item.raw.load_kg > 0 && !isLoadable(exercise)}
+											<!-- Said here rather than only in the note collected at save time
+												 (§4.5): a dropped number the user never saw dropped is the
+												 same as a silent one. -->
+											<div class="mt-1 text-xs text-amber-200/90">
+												The file put {item.raw.load_kg} kg on this. It is not done with a weight, so the
+												load is dropped.
+											</div>
+										{/if}
 									{:else}
 										<div class="truncate font-medium text-amber-200">“{item.written}”</div>
 										<div class="mt-0.5 text-xs text-zinc-400">
@@ -364,8 +374,10 @@
 		</button>
 	</div>
 
+	<!-- Above the tab bar, not under it: see --dl-tabbar-height in app.css. -->
 	<div
-		class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur"
+		class="fixed inset-x-0 z-30 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-3 backdrop-blur"
+		style="bottom: var(--dl-tabbar-height)"
 	>
 		<div class="mx-auto max-w-2xl">
 			<button
