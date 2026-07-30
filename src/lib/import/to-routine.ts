@@ -1,3 +1,4 @@
+import { isLoadable } from '../catalog/load.js';
 import type { Exercise, ExerciseId, Routine, RoutineItem, Target } from '../types.js';
 import type { ParsedRoutine } from './parse-json.js';
 import { resolve, type ResolveResult, type ResolverIndex } from './resolve.js';
@@ -136,9 +137,33 @@ export function toRoutineItem(
 		target: deriveTarget(raw, exercise),
 		perSide: raw.per_side ?? exercise.unilateral,
 		restSeconds: raw.rest_seconds ?? (isTimed(exercise) ? 0 : 30),
+		loadKg: deriveLoad(raw, exercise, notes),
 		tempo: raw.tempo,
 		notes: raw.notes
 	};
+}
+
+/**
+ * A load survives only for an exercise whose equipment has a mass (§4.5). An LLM
+ * asked for a bodyweight routine will occasionally put `load_kg` on a push-up;
+ * storing that would make the log claim a measurement nobody took, so it is
+ * dropped and said out loud on the review screen rather than silently ignored.
+ */
+export function deriveLoad(
+	raw: WireItem,
+	exercise: Exercise,
+	notes: ImportNote[] = []
+): number | undefined {
+	if (raw.load_kg === undefined) return undefined;
+	if (raw.load_kg <= 0) return undefined;
+	if (!isLoadable(exercise)) {
+		notes.push({
+			level: 'warning',
+			message: `${exercise.name} came with a load of ${raw.load_kg} kg; it is not done with a weight, so the load was dropped.`
+		});
+		return undefined;
+	}
+	return raw.load_kg;
 }
 
 /** Every remaining item must be resolved; the caller enforces that in the UI. */

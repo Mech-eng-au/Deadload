@@ -58,6 +58,25 @@ export function formatSet(entry: SetEntry): string {
 	return '–';
 }
 
+/**
+ * The same, with the load (§4.5): `12 × 10 kg`, then `11 × 10` for the next set
+ * at the same weight. The unit is stated once and again only when the load
+ * changes, because a line read at 1 m out of breath does not need "kg" three
+ * times to make its point — but it does need to know when the weight moved.
+ */
+export function formatSetWithLoad(entry: SetEntry, previous?: SetEntry): string {
+	const base = formatSet(entry);
+	if (entry.loadKg === undefined) return base;
+	const same = previous?.loadKg !== undefined && previous.loadKg === entry.loadKg;
+	const load = Number(entry.loadKg.toFixed(2));
+	return `${base} × ${load}${same ? '' : ' kg'}`;
+}
+
+/** The whole last-time line, in order, so the caller only decides emphasis. */
+export function formatSetList(sets: SetEntry[]): string[] {
+	return sets.map((entry, i) => formatSetWithLoad(entry, sets[i - 1]));
+}
+
 /** Short, unambiguous, and no year unless it is not this one. */
 export function formatWhen(iso: string, now = new Date()): string {
 	const then = new Date(iso);

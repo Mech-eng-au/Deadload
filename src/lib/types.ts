@@ -91,6 +91,13 @@ export interface RoutineItem {
 	restSeconds: number; // rest after each set
 	tempo?: string; // e.g. "3-1-1-0", free text, display only
 	notes?: string;
+	/**
+	 * Mass of the implement in kg, for an exercise that holds one (§4.5). What the
+	 * routine *plans*, exactly as `target` plans the reps; what was actually
+	 * lifted is on `SetEntry.loadKg`. Optional, so every routine written before
+	 * this existed stays valid.
+	 */
+	loadKg?: number;
 }
 
 export type Target =
@@ -145,6 +152,14 @@ export interface SetEntry {
 	reps?: number;
 	seconds?: number;
 	rpe?: number; // 1-10, optional
+	/**
+	 * Mass of the implement actually used, in kg (§4.5). The log is what happened,
+	 * so this is recorded per set rather than read back off the routine — the
+	 * same reason `reps` is. Only ever the mass of a thing that was weighed:
+	 * body weight is not tracked (§1), so a weighted pull-up has no honest number
+	 * and does not get a made-up one.
+	 */
+	loadKg?: number;
 	skipped: boolean;
 	completedAt: string;
 }

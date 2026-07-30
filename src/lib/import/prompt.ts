@@ -48,6 +48,8 @@ To alternate exercises as a circuit or superset, set \`"circuit": true\` on the 
 
 Every exercise in the catalog file lists what it needs in \`equipment\`. The file has already been filtered to what is available, so anything in it can be performed.
 
+For an exercise whose \`equipment\` includes \`dumbbells\` or \`kettlebell\`, you may set \`load_kg\` to the mass of the implement in kilograms. Set it on nothing else: there is no load to record for a band, and a weighted pull-up is not supported because the real load includes body weight, which this app does not track.
+
 Goal: [describe the goal here]
 Target duration: [minutes]
 Equipment available: ${equipmentSentence(owned)}

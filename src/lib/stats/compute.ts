@@ -1,4 +1,4 @@
-import type { Exercise, ExerciseId, Session } from '../types.js';
+import type { Exercise, ExerciseId, Session, SetEntry } from '../types.js';
 
 /**
  * Statistics (docs/SPEC.md §10). Derived entirely from the session log: no
@@ -183,6 +183,80 @@ export interface MuscleVolume {
 	sets: number;
 	reps: number;
 	seconds: number;
+	/**
+	 * Kilogram-reps from loaded sets only (§10.1). Zero for a muscle trained with
+	 * bodyweight work alone, and the UI shows it only where it is non-zero: "0 kg"
+	 * next to a muscle reads as a result rather than as an absence.
+	 */
+	kgReps: number;
+}
+
+/**
+ * Kilogram-reps for one logged set, or 0 (§10.1). Requires **both** a load and a
+ * rep count: a loaded timed set is a loaded set, but kilogram-seconds is a
+ * different quantity and adding the two would be arithmetic on unlike units.
+ */
+export function kgRepsOf(entry: SetEntry): number {
+	if (entry.skipped) return 0;
+	if (entry.loadKg === undefined || entry.reps === undefined) return 0;
+	return entry.loadKg * entry.reps;
+}
+
+/** Whether any set anywhere carries a load — the gate on the whole section. */
+export function hasLoggedLoad(sessions: Session[]): boolean {
+	return completed(sessions).some((s) =>
+		s.entries.some((e) => !e.skipped && e.loadKg !== undefined)
+	);
+}
+
+export interface LoadedWeek {
+	start: Date;
+	label: string;
+	/** Sets performed with a load, whether or not they contribute kg-reps. */
+	sets: number;
+	kgReps: number;
+	/** Heaviest implement used that week, which is the other real progression. */
+	bestKg: number;
+}
+
+/**
+ * Loaded work per week — the "Loaded work" section (§10.1). A second currency,
+ * never added to the set counts and never drawn on their axis: 240 kg-reps and
+ * 24 reps are not comparable quantities.
+ */
+export function loadedWorkPerWeek(
+	sessions: Session[],
+	weeks = 12,
+	now = new Date()
+): LoadedWeek[] {
+	const thisWeek = weekStart(now);
+	const buckets: LoadedWeek[] = [];
+	for (let i = weeks - 1; i >= 0; i--) {
+		const start = new Date(thisWeek);
+		start.setDate(start.getDate() - i * 7);
+		buckets.push({
+			start,
+			label: `${start.getDate()}/${start.getMonth() + 1}`,
+			sets: 0,
+			kgReps: 0,
+			bestKg: 0
+		});
+	}
+
+	const firstStart = buckets[0].start.getTime();
+	for (const session of completed(sessions)) {
+		const started = new Date(session.startedAt).getTime();
+		if (started < firstStart) continue;
+		const index = Math.floor((started - firstStart) / (7 * 24 * 60 * 60 * 1000));
+		if (index < 0 || index >= buckets.length) continue;
+		for (const entry of session.entries) {
+			if (entry.skipped || entry.loadKg === undefined) continue;
+			buckets[index].sets += 1;
+			buckets[index].kgReps += kgRepsOf(entry);
+			buckets[index].bestKg = Math.max(buckets[index].bestKg, entry.loadKg);
+		}
+	}
+	return buckets;
 }
 
 /**
@@ -204,10 +278,11 @@ export function volumeByMuscle(
 			const exercise = byId.get(entry.exerciseId);
 			if (!exercise) continue;
 			for (const muscle of exercise.primaryMuscles) {
-				const row = totals.get(muscle) ?? { muscle, sets: 0, reps: 0, seconds: 0 };
+				const row = totals.get(muscle) ?? { muscle, sets: 0, reps: 0, seconds: 0, kgReps: 0 };
 				row.sets += 1;
 				row.reps += entry.reps ?? 0;
 				row.seconds += entry.seconds ?? 0;
+				row.kgReps += kgRepsOf(entry);
 				totals.set(muscle, row);
 			}
 		}
@@ -224,8 +299,22 @@ export interface ExerciseProgress {
 	bestSeconds: number;
 	totalReps: number;
 	totalSeconds: number;
+	/**
+	 * Heaviest implement used, and total kilogram-reps (§10.1). Safe here in a way
+	 * an app-wide total is not: the series is one exercise, so 8 → 10 → 12 kg on a
+	 * one-arm row means the same thing at every point on the line.
+	 */
+	bestKg: number;
+	kgReps: number;
 	lastPerformed: string;
-	history: { date: string; bestReps: number; bestSeconds: number; sets: number }[];
+	history: {
+		date: string;
+		bestReps: number;
+		bestSeconds: number;
+		sets: number;
+		bestKg: number;
+		kgReps: number;
+	}[];
 }
 
 export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
@@ -244,6 +333,8 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 					bestSeconds: 0,
 					totalReps: 0,
 					totalSeconds: 0,
+					bestKg: 0,
+					kgReps: 0,
 					lastPerformed: session.startedAt,
 					history: []
 				} satisfies ExerciseProgress);
@@ -253,6 +344,8 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 			row.totalSeconds += entry.seconds ?? 0;
 			row.bestReps = Math.max(row.bestReps, entry.reps ?? 0);
 			row.bestSeconds = Math.max(row.bestSeconds, entry.seconds ?? 0);
+			row.bestKg = Math.max(row.bestKg, entry.loadKg ?? 0);
+			row.kgReps += kgRepsOf(entry);
 			if (session.startedAt > row.lastPerformed) row.lastPerformed = session.startedAt;
 
 			const point = row.history.find((h) => h.date === day);
@@ -260,12 +353,16 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 				point.sets += 1;
 				point.bestReps = Math.max(point.bestReps, entry.reps ?? 0);
 				point.bestSeconds = Math.max(point.bestSeconds, entry.seconds ?? 0);
+				point.bestKg = Math.max(point.bestKg, entry.loadKg ?? 0);
+				point.kgReps += kgRepsOf(entry);
 			} else {
 				row.history.push({
 					date: day,
 					sets: 1,
 					bestReps: entry.reps ?? 0,
-					bestSeconds: entry.seconds ?? 0
+					bestSeconds: entry.seconds ?? 0,
+					bestKg: entry.loadKg ?? 0,
+					kgReps: kgRepsOf(entry)
 				});
 			}
 
@@ -347,6 +444,13 @@ export function routineUsage(sessions: Session[]): RoutineUsage[] {
 	);
 }
 
+/**
+ * Deliberately no `kgReps` here, and no "total volume" of any kind (§10.1).
+ * Sets, reps and seconds are three counts of three different things, which is
+ * honest; one number combining a 45-second plank, twelve push-ups and eight rows
+ * with a 10 kg dumbbell would be precise, prominent and meaningless. Loaded work
+ * is reported per week and per exercise, where the unit stays comparable.
+ */
 export interface Totals {
 	sessions: number;
 	sets: number;

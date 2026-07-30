@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import CatalogPicker from './CatalogPicker.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
+	import { isLoadable } from '$lib/catalog/equipment.js';
 	import { emptyBlock, newItem } from '$lib/db/routines.js';
 	import type { Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
 
@@ -196,6 +197,26 @@
 								/>
 								<span class="text-zinc-400">Per side</span>
 							</label>
+
+							{#if exercise && isLoadable(exercise)}
+								<!-- Only where the equipment has a mass (§4.5): the plan for the
+									 weight, which the log can still differ from. -->
+								<label class="flex items-center gap-2">
+									<span class="text-zinc-400">Load kg</span>
+									<input
+										type="number"
+										min="0"
+										step="0.5"
+										value={item.loadKg ?? ''}
+										oninput={(e) => {
+											const n = Number(e.currentTarget.value);
+											item.loadKg = e.currentTarget.value === '' || n <= 0 ? undefined : n;
+										}}
+										placeholder="–"
+										class={numberClass}
+									/>
+								</label>
+							{/if}
 						</div>
 
 						<input

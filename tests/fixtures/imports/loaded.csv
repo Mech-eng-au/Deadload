@@ -1,0 +1,6 @@
+block,exercise,sets,reps,duration_seconds,per_side,rest_seconds,load_kg,notes
+Main,One-Arm Kettlebell Row,3,8,,true,45,12,"Left, then right"
+Main,Standing Dumbbell Press,3,10,,false,60,10,
+Main,Dumbbell Bicep Curl,2,12,,false,45,7.5,
+Main,Pullups,3,6,,false,90,,No load column value: bodyweight
+Cooldown,Latissimus Dorsi-SMR,1,,45,true,0,,Roller

@@ -7,7 +7,8 @@
 	import { getRoutine, putRoutine } from '$lib/db/routines.js';
 	import { getSession, listSessions, putSession } from '$lib/db/sessions.js';
 	import { variantName } from '$lib/catalog/ladders.js';
-	import { formatSet, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
+	import { formatSetList, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
+	import { formatKg, isLoadable } from '$lib/catalog/equipment.js';
 	import { SessionPlayer } from '$lib/session/player.svelte.js';
 	import { applySwaps, describeStep, itemOf, prefillFor } from '$lib/session/steps.js';
 	import { finishedTotals } from '$lib/stats/compute.js';
@@ -25,6 +26,7 @@
 
 	// Log control state, reset for each step.
 	let value = $state(0);
+	let loadKg = $state<number | undefined>(undefined);
 	let rpe = $state<number | undefined>(undefined);
 	let showRpe = $state(false);
 	let showCues = $state(false);
@@ -38,6 +40,8 @@
 	const step = $derived(player?.step);
 	const exercise = $derived(step ? getExercise(step.exerciseId) : undefined);
 	const timed = $derived(step?.target.kind === 'duration');
+	// Whether a load in kilograms is a real measurement here (§4.5).
+	const loadable = $derived(!!exercise && isLoadable(exercise));
 
 	// The rungs either side of the current exercise, when it is on a ladder (§4.1).
 	const easier = $derived(player?.easier);
@@ -144,6 +148,7 @@
 	function resetControl() {
 		const target = player?.step?.target;
 		value = target ? (prefillFor(target) ?? 0) : 0;
+		loadKg = player?.prefillLoadKg();
 		rpe = undefined;
 		showRpe = false;
 		showCues = false;
@@ -158,8 +163,21 @@
 
 	async function logSet() {
 		if (!player || !step) return;
-		const payload = timed ? { seconds: value, rpe } : { reps: value, rpe };
+		// Only for an exercise whose equipment has a mass (§4.5). A load on anything
+		// else would be a number nobody weighed.
+		const load = loadable ? loadKg : undefined;
+		const payload = timed
+			? { seconds: value, rpe, loadKg: load }
+			: { reps: value, rpe, loadKg: load };
 		await player.log(payload);
+	}
+
+	/** Real dumbbell and kettlebell increments, not a continuous dial. */
+	const LOAD_STEP_KG = 2.5;
+
+	function nudgeLoad(delta: number) {
+		const next = (loadKg ?? 0) + delta;
+		loadKg = next <= 0 ? undefined : Number(next.toFixed(2));
 	}
 
 	async function endEarly() {
@@ -282,12 +300,14 @@
 		<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
 		{#if lastTime}
 			<!-- What you did for this exercise last time, side matched. The set
-				 you are on now is emphasised. -->
+				 you are on now is emphasised. Loads read "12 × 10 kg, 11 × 10": the
+				 unit once, and again only when the weight moved (§4.5). -->
+			{@const formatted = formatSetList(lastTime.sets)}
 			<p class="mt-2 text-sm text-zinc-500">
 				Last time, {formatWhen(lastTime.performedAt)}:
 				{#each lastTime.sets as entry, i (entry.setIndex + '-' + i)}<span
 						class={entry.setIndex === step.setIndex ? 'font-semibold text-zinc-200' : ''}
-						>{formatSet(entry)}</span
+						>{formatted[i]}</span
 					>{#if i < lastTime.sets.length - 1}<span class="pr-1">,</span>{/if}{/each}
 			</p>
 		{/if}
@@ -600,6 +620,34 @@
 					+
 				</button>
 			</div>
+
+			{#if loadable}
+				<!-- Load in the same shape as the rep stepper, one row down (§4.5).
+					 Steps of 2.5 kg because that is how dumbbells come, and the whole
+					 row is absent for anything that is not held. -->
+				<div class="flex items-center gap-3">
+					<button
+						onclick={() => nudgeLoad(-LOAD_STEP_KG)}
+						disabled={loadKg === undefined}
+						aria-label="Lighter"
+						class="min-h-14 min-w-14 shrink-0 rounded-xl border border-zinc-700 font-display text-xl disabled:opacity-30"
+					>
+						−
+					</button>
+					<div class="min-w-0 flex-1 text-center">
+						<span class="font-display text-2xl tabular-nums">
+							{loadKg === undefined ? 'No load' : formatKg(loadKg)}
+						</span>
+					</div>
+					<button
+						onclick={() => nudgeLoad(LOAD_STEP_KG)}
+						aria-label="Heavier"
+						class="min-h-14 min-w-14 shrink-0 rounded-xl border border-zinc-700 font-display text-xl"
+					>
+						+
+					</button>
+				</div>
+			{/if}
 
 			{#if showRpe}
 				<div class="flex items-center gap-2">

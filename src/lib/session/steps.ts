@@ -1,3 +1,4 @@
+import { formatKg } from '../catalog/load.js';
 import type { ExerciseId, Routine, RoutineItem, Target } from '../types.js';
 
 /** `RoutineItem.id` -> the exercise actually being performed (§4.3, §7). */
@@ -26,6 +27,8 @@ export interface Step {
 	/** Set on steps from a circuit block: 0-based round, and the block's total. */
 	round?: number;
 	roundCount?: number;
+	/** Planned mass of the implement in kg, from the item (§4.5). */
+	loadKg?: number;
 }
 
 /**
@@ -60,7 +63,8 @@ export function expandRoutine(routine: Routine, swaps: Swaps = {}): Step[] {
 					notes: item.notes,
 					tempo: item.tempo,
 					round: round?.index,
-					roundCount: round?.count
+					roundCount: round?.count,
+					loadKg: item.loadKg
 				});
 			});
 		};
@@ -121,7 +125,8 @@ export function describeStep(step: Step): string {
 				? `Set ${step.setIndex + 1} of ${step.setCount} · `
 				: '';
 	const side = step.side ? ` · ${step.side}` : '';
-	return `${set}${target}${side}`;
+	const load = step.loadKg !== undefined ? ` · ${formatKg(step.loadKg)}` : '';
+	return `${set}${target}${load}${side}`;
 }
 
 /**

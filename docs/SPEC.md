@@ -259,6 +259,7 @@ interface RoutineItem {
   restSeconds: number;                // rest after each set
   tempo?: string;                     // e.g. "3-1-1-0", free text, display only
   notes?: string;
+  loadKg?: number;                    // mass of the implement, planned — see §4.5
 }
 
 type Target =
@@ -298,6 +299,7 @@ interface SetEntry {
   reps?: number;
   seconds?: number;
   rpe?: number;                       // 1-10, optional
+  loadKg?: number;                    // mass of the implement, performed — see §4.5
   skipped: boolean;
   completedAt: string;
 }
@@ -321,6 +323,43 @@ Database `deadload`, version 1:
 `aliasOverrides` maps a normalized imported name to an `ExerciseId`, written whenever the user manually resolves an unknown name (§6.3). Second import of the same phrasing then resolves silently. This is what makes repeated LLM imports stop being tedious.
 
 Write the migration scaffolding in v1 even though there is nothing to migrate. Adding it later, with real data on the device, is worse.
+
+### 4.5 Load
+
+Added 2026-07-30, with §5.1. A dumbbell row is not a heavier push-up — it is a movement the
+catalog has no other way to express — but the number of kilograms in the hand is the one fact about
+it the app would otherwise throw away.
+
+**`loadKg` lives in two places, and that is deliberate.** `RoutineItem.loadKg` is what the routine
+*plans*; `SetEntry.loadKg` is what was *lifted*. This is exactly the relationship `target` has with
+`reps`, and it exists for the same reason: the log is a record of what happened, not a pointer at
+what was intended. A set done with the 8 kg because the 12 was in the other room has to be able to
+say so.
+
+Both are **optional**, so every routine, session, backup and preset written before this existed
+stays valid with no migration. Absent means "not a loaded exercise", which is nearly all of them.
+
+**Only exercises whose equipment has a mass can carry a load: `dumbbells` and `kettlebell`, and
+nothing else.** A resistance band has no kilograms — its tension depends on how far it is stretched
+and manufacturers' colour codes are not a unit — so putting a number on one would be inventing a
+measurement. A pull-up bar has no mass in the sense that matters.
+
+**Weighted pull-ups and dips are out of scope**, and this is the decision worth recording rather
+than rediscovering. Adding a 10 kg plate to a pull-up does not make the work `reps × 10 kg`: the
+load is the plate *plus the body*, and the honest number needs a body weight §1 refuses to track.
+An `addedKg` field would therefore record a figure that looks like load and is not, and every
+statistic built on it would inherit the error. `HANDOVER.md` §7 proposed exactly this; it is
+declined on those grounds.
+
+Consequences, all small because the field is one number:
+
+- The player's log control gains a load stepper next to the rep stepper, prefilled from the plan,
+  and carries a change forward to the rest of that exercise's sets within the session.
+- The last-time line reads `12 × 10 kg, 11 × 10` — the unit is stated once and then only when the
+  load changes, because a repeated unit is noise on a line read at 1 m.
+- `announce.ts` says "at 10 kilos", after the target and before the side.
+- CSV export gains a `load_kg` column; import accepts `load_kg` in JSON and CSV.
+- Statistics treat kg-reps as a **separate currency** from sets — see §10.
 
 ---
 
@@ -785,6 +824,37 @@ Derived entirely from `sessions`. No separate aggregate store, no denormalizatio
 
 Compute on demand in a worker if it gets slow. It will not get slow at the data volumes involved here.
 
+### 10.1 Load in statistics
+
+Added 2026-07-30 with §4.5. **Sets are the common currency and every chart above keeps working
+exactly as it did.** Kilogram-reps are a second, separate currency, and the two are never added
+together or drawn on one axis.
+
+- **A "Loaded work" section that does not exist until it has data.** It appears only once some
+  logged set has a `loadKg`, which for a user who owns no dumbbells is never. An empty section
+  explaining a feature they do not use is worse than no section.
+- **Never stacked with the rep chart, never a shared axis.** 240 kg-reps and 24 reps are not
+  comparable quantities, and putting them on one axis would make the smaller one look like nothing.
+- **Per-exercise progression is where load really belongs**, and it is safe there because the
+  series is one exercise: 8 kg → 10 kg → 12 kg on a one-arm row is a real progression, measured in
+  a unit that means the same thing at every point on the line.
+- **`volumeByMuscle` gains a `kgReps` figure, shown only where it is non-zero.** A muscle trained
+  only with bodyweight work has no load number, and printing `0 kg` next to it would read as a
+  result rather than an absence.
+- kg-reps are summed only over sets that have **both** a load and a rep count. A loaded *timed* set
+  counts as a loaded set and contributes no kg-reps, because kilogram-seconds is not the same
+  quantity and averaging them together would be arithmetic on unlike units.
+
+#### Refused, on purpose
+
+- **Any single app-wide "total volume" number.** There is no unit in which a 45-second plank, twelve
+  push-ups and eight rows with a 10 kg dumbbell add up. A number that combined them would be
+  precise, prominent, and meaningless — and it is the number a user would most readily believe.
+- **Any estimate of bodyweight load as a percentage of body mass.** "A push-up is 64% of your body
+  weight" is a figure from a paper about other people, multiplied by a body weight this app does not
+  have (§1). That is the calorie counter of §12 in a different costume: a number nobody measured,
+  displayed as though somebody had.
+
 ---
 
 ## 11. PWA and platform
@@ -945,6 +1015,8 @@ left to infer it from a file, and it costs nothing to say both.
 > ```
 >
 > Per item, use exactly one of `reps`, `duration_seconds`, `reps_min` + `reps_max`, or `"amrap": true`. Set `per_side: true` for anything performed one side at a time. All durations in seconds. Use metric units throughout.
+>
+> For an exercise whose `equipment` includes `dumbbells` or `kettlebell`, you may set `load_kg` to the mass of the implement in kilograms. Set it on nothing else: there is no load to record for a band, and a weighted pull-up is not supported because the real load includes body weight, which this app does not track (§4.5).
 >
 > To alternate exercises as a circuit or superset, set `"circuit": true` on the block: each round performs one set of every item in order. Rest is still taken after each set as its `rest_seconds` says, so for rest only between rounds give every item 0 except the block's last.
 >

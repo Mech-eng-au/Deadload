@@ -1,3 +1,4 @@
+import { formatKg } from '../catalog/load.js';
 import type { Block, Routine, RoutineItem, Target } from '../types.js';
 import { getDb, toPlain } from './schema.js';
 
@@ -91,7 +92,8 @@ export function describeItem(item: RoutineItem): string {
 			break;
 	}
 	const sets = item.sets > 1 ? `${item.sets} × ` : '';
-	return `${sets}${target}${item.perSide ? ' per side' : ''}`;
+	const load = item.loadKg !== undefined ? ` at ${formatKg(item.loadKg)}` : '';
+	return `${sets}${target}${load}${item.perSide ? ' per side' : ''}`;
 }
 
 export function countItems(routine: Routine): number {

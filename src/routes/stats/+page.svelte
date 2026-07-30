@@ -7,6 +7,8 @@
 		activityCalendar,
 		currentStreak,
 		exerciseProgress,
+		hasLoggedLoad,
+		loadedWorkPerWeek,
 		longestStreak,
 		routineUsage,
 		sessionsPerWeek,
@@ -15,6 +17,7 @@
 		volumeByMuscle,
 		type ExerciseProgress
 	} from '$lib/stats/compute.js';
+	import { formatKg } from '$lib/catalog/load.js';
 	import type { Session } from '$lib/types.js';
 
 	let sessions = $state<Session[]>([]);
@@ -42,6 +45,13 @@
 		Math.max(1, ...calendar.flat().map((d) => d.sets))
 	);
 	const recent = $derived(summarize(sessions).slice(0, 5));
+
+	// The "Loaded work" section does not exist until something has been logged with
+	// a load (§10.1). For somebody who owns no dumbbells that is never, and an
+	// empty section explaining a feature they do not use is worse than no section.
+	const loaded_ = $derived(hasLoggedLoad(sessions));
+	const loadWeeks = $derived(loadedWorkPerWeek(sessions, 12));
+	const peakKgReps = $derived(Math.max(1, ...loadWeeks.map((w) => w.kgReps)));
 
 	/** Four shades: absent, light, medium, heavy, relative to the busiest day. */
 	function shade(sets: number): string {
@@ -196,8 +206,12 @@
 					<li>
 						<div class="flex justify-between text-sm">
 							<span class="text-zinc-300 capitalize">{m.muscle}</span>
+							<!-- kg-reps only where there are some (§10.1): "0 kg" beside a
+								 muscle trained with bodyweight work reads as a result. -->
 							<span class="text-zinc-500 tabular-nums">
-								{m.sets} set{m.sets === 1 ? '' : 's'}{m.reps ? ` · ${m.reps} reps` : ''}
+								{m.sets} set{m.sets === 1 ? '' : 's'}{m.reps ? ` · ${m.reps} reps` : ''}{m.kgReps
+									? ` · ${Math.round(m.kgReps)} kg·reps`
+									: ''}
 							</span>
 						</div>
 						<div class="mt-1 h-2 rounded-full bg-zinc-800">
@@ -215,6 +229,43 @@
 				</p>
 			{/if}
 		</section>
+
+		{#if loaded_}
+			<!-- Loaded work: a separate currency from sets (§10.1). Its own section
+				 with its own axis, never stacked on the rep chart — 240 kg·reps and
+				 24 reps are not comparable quantities. -->
+			<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Loaded work</h2>
+				<p class="mt-1 text-xs text-zinc-500">
+					Kilogram-reps per week, from sets done with a dumbbell or kettlebell. Counted apart from
+					everything above, because there is no unit in which a plank and a 10 kg row add up.
+				</p>
+				<div class="mt-3 flex h-28 items-end gap-1">
+					{#each loadWeeks as w (w.label)}
+						<div class="flex flex-1 flex-col items-center gap-1">
+							<div
+								class="w-full rounded-t bg-amber-300/80"
+								style="height: {(w.kgReps / peakKgReps) * 100}%"
+								title="{w.label}: {Math.round(w.kgReps)} kg·reps, {w.sets} loaded sets"
+							></div>
+						</div>
+					{/each}
+				</div>
+				<div class="mt-1 flex gap-1 text-[10px] text-zinc-600">
+					{#each loadWeeks as w, i (w.label)}
+						<span class="flex-1 text-center">{i % 3 === 0 ? w.label : ''}</span>
+					{/each}
+				</div>
+				{#each [loadWeeks[loadWeeks.length - 1]] as current (current.label)}
+					<p class="mt-3 text-xs text-zinc-500">
+						This week: {Math.round(current.kgReps)} kg·reps over {current.sets} loaded set{current.sets ===
+						1
+							? ''
+							: 's'}{current.bestKg ? `, heaviest ${formatKg(current.bestKg)}` : ''}.
+					</p>
+				{/each}
+			</section>
+		{/if}
 
 		<!-- Per-exercise progression -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
@@ -239,7 +290,9 @@
 									{exercise?.name ?? row.exerciseId}
 								</span>
 								<span class="text-xs text-zinc-500">
-									{row.sets} sets · best {row.bestReps || `${row.bestSeconds} s`}
+									{row.sets} sets · best {row.bestReps || `${row.bestSeconds} s`}{row.bestKg
+										? ` at ${formatKg(row.bestKg)}`
+										: ''}
 								</span>
 							</span>
 							{#if spark(row)}
@@ -263,6 +316,18 @@
 									<dt class="inline">Time held:</dt>
 									<dd class="inline">{minutes(row.totalSeconds)}</dd>
 								</div>
+								{#if row.bestKg}
+									<!-- Load belongs here above all: one exercise, so the unit means
+										 the same thing at every point on the series (§10.1). -->
+									<div>
+										<dt class="inline">Heaviest:</dt>
+										<dd class="inline">{formatKg(row.bestKg)}</dd>
+									</div>
+									<div>
+										<dt class="inline">Kg·reps:</dt>
+										<dd class="inline">{Math.round(row.kgReps)}</dd>
+									</div>
+								{/if}
 								<div><dt class="inline">Sessions:</dt> <dd class="inline">{row.history.length}</dd></div>
 								<div>
 									<dt class="inline">Last:</dt>

@@ -21,6 +21,10 @@ const COLUMNS = [
 	'side',
 	'reps',
 	'seconds',
+	// Mass of the implement, in kg, blank for everything not held (§4.5). Not a
+	// computed volume: the spreadsheet can multiply, and whichever way it chooses
+	// to is at least its own choice rather than ours presented as a fact.
+	'load_kg',
 	'rpe',
 	'skipped'
 ] as const;
@@ -65,6 +69,7 @@ export function sessionsToCsv(
 					entry.side ?? '',
 					entry.reps,
 					entry.seconds,
+					entry.loadKg,
 					entry.rpe,
 					entry.skipped ? 'yes' : 'no'
 				]

@@ -146,3 +146,7 @@ export function exerciseCountLabel(id: EquipmentId): string {
 	const n = countByEquipment[id] ?? 0;
 	return `${n} exercise${n === 1 ? '' : 's'}`;
 }
+
+// Load (§4.5) lives in ./load.ts, which needs no catalog data. Re-exported here
+// so a screen that already imports this module does not need a second import.
+export { LOADABLE_EQUIPMENT, formatKg, isLoadable } from './load.js';
