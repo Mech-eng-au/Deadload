@@ -93,7 +93,7 @@
 						 renders as "Adductors— inner thigh". -->
 					{#each e.primaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
 							class="text-zinc-500">{` — ${muscleInfo(m)?.short ?? ''}`}</span
-						>{#if i < e.primaryMuscles.length - 1}<span>, </span>{/if}{/each}
+						>{#if i < e.primaryMuscles.length - 1}<span>{', '}</span>{/if}{/each}
 				</dd>
 			</div>
 			{#if e.secondaryMuscles.length}
@@ -102,7 +102,7 @@
 					<dd class="mt-0.5 text-zinc-400">
 						{#each e.secondaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
 								class="text-zinc-600">{` — ${muscleInfo(m)?.short ?? ''}`}</span
-							>{#if i < e.secondaryMuscles.length - 1}<span>, </span>{/if}{/each}
+							>{#if i < e.secondaryMuscles.length - 1}<span>{', '}</span>{/if}{/each}
 					</dd>
 				</div>
 			{/if}

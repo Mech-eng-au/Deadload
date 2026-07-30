@@ -17,7 +17,9 @@
 	</div>
 
 	<section>
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Exercise data</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+			Sources and licences
+		</h2>
 		<ul class="mt-2 flex flex-col gap-3">
 			{#each attributions as a (a.id)}
 				<li class="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm">
@@ -32,8 +34,20 @@
 						</a>
 					{/if}
 					<div class="mt-1 text-zinc-500">
-						{catalog.filter((e) => e.attributionId === a.id).length} exercises
+						{#if a.covers}
+							{a.covers}
+						{:else}
+							{catalog.filter((e) => e.attributionId === a.id).length} exercises
+						{/if}
 					</div>
+					{#if a.license.startsWith('CC-BY-SA')}
+						<!-- Share-alike is a condition, not just a credit, so it is stated
+							 rather than implied by the licence code. -->
+						<div class="mt-1 text-xs text-zinc-600">
+							Shared under the same licence, with changes: recoloured and simplified, with our own
+							highlights drawn over it.
+						</div>
+					{/if}
 				</li>
 			{/each}
 		</ul>

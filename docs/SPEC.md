@@ -393,30 +393,41 @@ Three places, and no others:
 countdown (§12). Anatomy is setup-time information, which is §15's rule exactly: fewer taps during a
 session, more during setup.
 
-#### The body map is a diagram, not an illustration
+#### The body map: real anatomy, our own highlights
 
-`BodyMap.svelte`: a connected silhouette, front and back, with one rectangle or ellipse per muscle
-region — bright for a muscle doing the work, mid-grey for one assisting, dim for the rest. 4 kB of
-inline SVG, so §11's media budget stays spent on the photographs.
+Two anatomical figures with a translucent ellipse over each trained muscle — brighter for a muscle
+doing the work, fainter for one assisting, nothing at all on the rest.
 
-**The obvious alternative was investigated and rejected on two counts.** wger ships 16 muscle
-overlays (`wger/core/static/images/muscles/main/muscle-N.svg`) drawn over two Wikimedia figures,
-which is exactly the shape of thing this needs:
+**The figures are `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia
+Commons, by Termininja, CC BY-SA 3.0.** They arrived 2026-07-30, replacing a hand-drawn schematic the
+user did not like — *"I liked the svg's from Wikipedia better"* — and they are unambiguously better:
+the schematic read as an action figure, and one version of it made the adductor highlight look like a
+penis.
 
-1. **Licence unverified.** wger's `SOURCES` names `File:Muscular_system.svg` and
-   `File:Muscular_system-back.svg` on Wikimedia Commons. The network policy of the development
-   environment blocks `commons.wikimedia.org` and `wger.de`, so neither licence could be read.
-   §4.1 requires a recorded licence and author per image, and guessing one into an APK is not a
-   thing to do. Same posture as §5's wger note: verify from an unrestricted network first.
-2. **Coverage is 12 of 17, and the gaps are the words that most need a picture.** The overlays have
-   no `adductors`, `abductors`, `forearms`, `middle back` or `neck` — and `adductors` is the example
-   the request itself used. The base figures are also 321 kB and 404 kB of unoptimised Inkscape SVG.
+Obligations, because CC BY-SA is a condition and not a courtesy: the author, the licence and the
+source URL are recorded in `attribution.json` and shown on the About page, along with a statement
+that the work is modified and shared alike. `Attribution.covers` exists so that entry can say what it
+is for instead of the About page counting zero exercises against it.
 
-So the schematic ships, and the wger route is recorded here as a real upgrade with a known
-first step: read those two Commons pages. If they are usable, the overlays replace the 12 they
-cover and the schematic keeps the other five — the mapping is
-1 biceps, 2 shoulders, 4 chest, 5 triceps, 6 abdominals, 7 calves, 8 glutes, 9 traps,
-10 quadriceps, 11 hamstrings, 12 lats, 16 lower back.
+**Fetched from wger's copies, not from Commons**, for two reasons. The dull one: the network the
+project is built on cannot reach `commons.wikimedia.org`. The real one: wger's copies are already
+flattened to seven tonal layers at 314 kB and 395 kB, where the Commons originals are over 3 MB, and
+§11 has a budget. Share-alike follows the derivative, so the licence and credit are unchanged.
+
+**The highlights are ours.** The figures have no per-muscle paths — seven tonal layers and nothing
+named — so nothing in them can be recoloured by muscle. wger solves that with its own overlay set,
+which is **not used**: it is AGPL, and it covers 12 of the 17 names, missing `adductors`, `abductors`,
+`forearms`, `middle back` and `neck`, very nearly the list of words a beginner needs a picture for.
+Instead `src/lib/catalog/body-map.ts` places an ellipse per muscle in the figures' own 200 × 369
+coordinate space, which covers all seventeen.
+
+The positions were read off a coordinate grid rendered over the figures and then corrected by eye one
+muscle at a time — the first pass had the chest on the collarbone and the "outer hip" on the
+quadriceps. They are **approximate by construction**: an ellipse over a region, not a traced outline.
+That is the honest limit of putting your own highlights on somebody else's drawing, and it is the
+reason the region data sits in a module with tests over it rather than inline in the component.
+
+Cost: 709 kB of SVG, fetched once and cached, against §11's 25 MB.
 
 ---
 

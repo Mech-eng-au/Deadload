@@ -54,6 +54,12 @@ export interface Attribution {
 	license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'own';
 	author?: string;
 	sourceUrl?: string;
+	/**
+	 * What this credit is for, when it is not exercise media — the muscle figures
+	 * of §4.6, for instance. Absent means "the exercises keyed to this id", which
+	 * the About page can count for itself.
+	 */
+	covers?: string;
 }
 
 // ---------------------------------------------------------------- §4.2 routines
