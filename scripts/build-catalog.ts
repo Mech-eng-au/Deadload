@@ -133,6 +133,44 @@ async function fetchWithRetry(url: string, tries = 3): Promise<ArrayBuffer> {
 	throw lastErr;
 }
 
+export const MUSCLE_FIGURE_ATTRIBUTION = 'wikimedia_muscular_system';
+
+/**
+ * The two anatomical figures behind the muscle map (§4.6):
+ * `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia
+ * Commons by Termininja, CC BY-SA 3.0.
+ *
+ * Fetched from wger's copies rather than from Commons, for one dull reason and
+ * one real one. The dull one: `commons.wikimedia.org` is unreachable from the
+ * network this is built on. The real one: wger's copies are already flattened to
+ * seven tonal layers and are 320 kB and 400 kB, where the Commons originals are
+ * over 3 MB — and §11 has a media budget. Both are CC BY-SA 3.0 either way, since
+ * share-alike follows the derivative.
+ *
+ * These are *not* wger's per-muscle overlay SVGs, which are AGPL and cover only
+ * 12 of the 17 muscles. The highlights are ours (`src/lib/catalog/body-map.ts`).
+ */
+const FIGURE_BASE =
+	'https://raw.githubusercontent.com/wger-project/wger/master/wger/core/static/images/muscles/';
+
+async function fetchBodyFigures(): Promise<void> {
+	const dir = join(ROOT, 'static/muscles');
+	await mkdir(dir, { recursive: true });
+	for (const [remote, local] of [
+		['muscular_system_front.svg', 'front.svg'],
+		['muscular_system_back.svg', 'back.svg']
+	]) {
+		const svg = Buffer.from(await fetchWithRetry(FIGURE_BASE + remote));
+		// A truncated download would silently produce a blank figure, and a blank
+		// figure looks like a styling bug rather than a failed fetch.
+		if (svg.length < 100_000 || !svg.subarray(0, 2000).includes(Buffer.from('<svg'))) {
+			throw new Error(`${remote} does not look like a complete SVG (${svg.length} bytes)`);
+		}
+		await writeFile(join(dir, local), svg);
+		console.log(`  muscle figure: ${local} (${Math.round(svg.length / 1024)} kB)`);
+	}
+}
+
 async function main() {
 	const curation = parseYaml(await readFile(join(ROOT, 'scripts/curation.yaml'), 'utf8')) as Curation;
 	const manualAliases = parseYaml(await readFile(join(ROOT, 'scripts/aliases.yaml'), 'utf8')) as Record<
@@ -345,12 +383,26 @@ async function main() {
 
 	catalog.sort((a, b) => a.id.localeCompare(b.id));
 
+	await fetchBodyFigures();
+
 	const attribution: Attribution[] = [
 		{
 			id: attributionId,
 			source: 'free-exercise-db',
 			license: 'PD',
 			sourceUrl: 'https://github.com/yuhonas/free-exercise-db'
+		},
+		// Not keyed to any exercise: these are the two figures behind the muscle map
+		// (§4.6). They are here because attribution.json is this project's licence
+		// register, and CC BY-SA 3.0 obliges us to name the author and the licence
+		// wherever the work appears — the About page reads this file.
+		{
+			id: MUSCLE_FIGURE_ATTRIBUTION,
+			source: 'wikimedia',
+			license: 'CC-BY-SA-3.0',
+			author: 'Termininja',
+			sourceUrl: 'https://commons.wikimedia.org/wiki/File:Muscular_system.svg',
+			covers: 'The front and back body diagrams on the exercise and muscle screens'
 		}
 	];
 

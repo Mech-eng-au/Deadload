@@ -4,5 +4,13 @@
 		"source": "free-exercise-db",
 		"license": "PD",
 		"sourceUrl": "https://github.com/yuhonas/free-exercise-db"
+	},
+	{
+		"id": "wikimedia_muscular_system",
+		"source": "wikimedia",
+		"license": "CC-BY-SA-3.0",
+		"author": "Termininja",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Muscular_system.svg",
+		"covers": "The front and back body diagrams on the exercise and muscle screens"
 	}
 ]

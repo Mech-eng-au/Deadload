@@ -36,13 +36,13 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
-| Muscles | Plain English for all seventeen catalog muscle names, a schematic front/back body map on the exercise detail, and a `/muscles/` compendium that links through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
+| Muscles | Plain English for all seventeen catalog muscle names, front/back anatomical figures (Wikimedia, CC BY-SA 3.0) with our own highlights, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
 | History | Browse past sessions, inspect every logged set, delete |
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **212 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **216 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -188,23 +188,29 @@ number exists, and `totals()` has no load field — there is a test that fails i
 is no bodyweight-load-as-a-percentage-of-body-mass estimate either. Both are the calorie counter of
 §12 wearing a different hat: a number nobody measured, shown as though somebody had.
 
-**The body map is a schematic, and that was a decision, not a shortcut.** wger ships 16 muscle
-overlays drawn on two Wikimedia figures, which is exactly the right shape of asset — and it was
-rejected twice over. Its `SOURCES` points at two Commons files whose licence could not be read from
-the development environment (the network policy blocks `commons.wikimedia.org`), and SPEC §4.1
-requires a recorded licence per image. Then the coverage: those overlays carry 12 of the 17 muscle
-names and are missing `adductors`, `abductors`, `forearms`, `middle back` and `neck` — nearly the
-exact list of words a beginner needs a picture for, and `adductors` was the example in the original
-request. SPEC §4.6 records the id→name mapping so this is one licence check away from being
-finishable, not a fresh investigation.
+**The body figures are CC BY-SA 3.0, and that is an obligation.** `static/muscles/{front,back}.svg`
+are `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia Commons by
+Termininja. Share-alike is a condition, not a courtesy: the author, licence, source URL and a
+statement of modification are in `attribution.json` and rendered on the About page. Do not drop that
+block, and do not swap the figures for something whose licence has not been read — SPEC §4.1 requires
+one recorded per image.
 
-**The two adductor strips on the body map are separated on purpose.** They were one bar straddling
-the centreline starting at the pelvis, and the first screenshot from the phone reported — correctly —
-that it looked like a penis. One highlighted region per thigh, a wide gap down the middle, and
-nothing bright reaching the hip joint. Do not tidy them back into one centred shape. The general
-lesson is the one §3 already makes: a diagram is a picture, and pictures have to be looked at, not
-reasoned about. Every single-muscle highlight has now been rendered and eyeballed; that is the check
-to repeat after editing the SVG.
+**The highlights on those figures are ours, and wger's overlays are deliberately not used.** The
+figures are seven flat tonal layers with no per-muscle paths, so nothing in them can be recoloured by
+name. wger has an overlay set that does exactly this job and it is rejected on two grounds: it is
+AGPL, and it covers 12 of the 17 muscle names — missing `adductors`, `abductors`, `forearms`,
+`middle back` and `neck`, nearly the exact list of words a beginner needs a picture for. Ours live in
+`src/lib/catalog/body-map.ts`, one ellipse per muscle in the figures' 200 × 369 space, all seventeen
+covered, with tests over the coverage.
+
+**The two adductor highlights are separated on purpose.** On the old schematic they were one bar
+straddling the centreline starting at the pelvis, and the screenshot from the phone reported —
+correctly — that it looked like a penis. The rule survived the move to the anatomical figures: one
+region per thigh, a real gap down the middle, nothing reaching the hip joint. `tests/muscles.test.ts`
+fails if the gap closes. The general lesson is the one §3 already makes: a diagram is a picture, and
+pictures have to be looked at rather than reasoned about. Rendering every single-muscle highlight and
+eyeballing it is the check to repeat after touching `body-map.ts` — it is how the chest ended up off
+the collarbone and the "outer hip" off the quadriceps.
 
 **Anatomy never appears during a session.** Mid-set the one available glance belongs to the set
 numbers and the countdown (§12), so the muscle glossary and the body map are catalog- and
@@ -238,7 +244,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 212 unit tests
+npm test           # 216 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```

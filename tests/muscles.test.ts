@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { catalog } from '../src/lib/catalog/index.js';
+import { attributions, catalog } from '../src/lib/catalog/index.js';
+import {
+	BACK,
+	FIGURE_HEIGHT,
+	FIGURE_WIDTH,
+	FRONT,
+	mappedMuscles
+} from '../src/lib/catalog/body-map.js';
 import {
 	MUSCLES,
 	muscleInfo,
@@ -85,27 +92,65 @@ describe('muscle glossary (§4.6)', () => {
 	});
 });
 
-describe('the body map draws what the glossary explains (§4.6)', () => {
-	// A source-level check, because the shapes are literal SVG in a component that
-	// vitest cannot render without a DOM. It still tests the invariant that
-	// actually breaks: adding a muscle to the glossary and forgetting to draw it,
-	// which would leave a compendium entry whose diagram highlights nothing.
-	const source = readFileSync(
-		join(import.meta.dirname, '../src/lib/components/BodyMap.svelte'),
-		'utf8'
-	);
-
+describe('the body map points at what the glossary explains (§4.6)', () => {
 	it('has a region for every muscle in the glossary', () => {
+		// The failure this exists for: adding a muscle to the glossary and forgetting
+		// to place it, which leaves a compendium entry whose diagram lights nothing.
 		for (const m of MUSCLES) {
-			expect(source.includes(`tone('${m.id}')`), `BodyMap.svelte draws no ${m.id}`).toBe(true);
+			expect(mappedMuscles(), `nothing on the figures for ${m.id}`).toContain(m.id);
 		}
 	});
 
-	it('draws both views, and labels every region for a long press', () => {
-		expect(source).toContain("view === 'front'");
-		for (const m of MUSCLES) {
-			expect(source.includes(`title('${m.id}')`), `${m.id} has no <title>`).toBe(true);
+	it('points at nothing the glossary does not explain', () => {
+		const known = new Set(MUSCLES.map((m) => m.id));
+		for (const id of mappedMuscles()) {
+			expect(known.has(id), `the figures highlight "${id}", which is not a known muscle`).toBe(true);
 		}
+	});
+
+	it('keeps every region inside the figure', () => {
+		for (const [view, regions] of [
+			['front', FRONT],
+			['back', BACK]
+		] as const) {
+			for (const r of regions) {
+				expect(r.cx - r.rx, `${view} ${r.m} runs off the left`).toBeGreaterThanOrEqual(0);
+				expect(r.cx + r.rx, `${view} ${r.m} runs off the right`).toBeLessThanOrEqual(FIGURE_WIDTH);
+				expect(r.cy - r.ry, `${view} ${r.m} runs off the top`).toBeGreaterThanOrEqual(0);
+				expect(r.cy + r.ry, `${view} ${r.m} runs off the bottom`).toBeLessThanOrEqual(FIGURE_HEIGHT);
+			}
+		}
+	});
+
+	it('shows a muscle in the view it is actually visible from', () => {
+		// Chest and quads are not on the back; glutes and hamstrings are not on the
+		// front. Getting this wrong would highlight a shape over the wrong anatomy.
+		const front = new Set(FRONT.map((r) => r.m));
+		const back = new Set(BACK.map((r) => r.m));
+		for (const m of ['chest', 'abdominals', 'biceps', 'quadriceps', 'adductors']) {
+			expect(front.has(m), `${m} should be on the front`).toBe(true);
+			expect(back.has(m), `${m} should not be on the back`).toBe(false);
+		}
+		for (const m of ['glutes', 'hamstrings', 'lats', 'triceps', 'lower back', 'middle back']) {
+			expect(back.has(m), `${m} should be on the back`).toBe(true);
+			expect(front.has(m), `${m} should not be on the front`).toBe(false);
+		}
+		// Visible from either side.
+		for (const m of ['neck', 'shoulders', 'forearms', 'calves', 'traps', 'abductors']) {
+			expect(front.has(m) && back.has(m), `${m} should be on both views`).toBe(true);
+		}
+	});
+
+	it('keeps the two adductor shapes apart, and off the crotch', () => {
+		// The regression this is named for: the pair were once one bright bar
+		// straddling the centreline with its top at the pelvis, and it looked like a
+		// penis. Two shapes, a real gap between them, and nothing reaching the hip.
+		const add = FRONT.filter((r) => r.m === 'adductors');
+		expect(add).toHaveLength(2);
+		const [left, right] = [...add].sort((a, b) => a.cx - b.cx);
+		const gap = right.cx - right.rx - (left.cx + left.rx);
+		expect(gap, 'the adductor shapes have merged into one bar').toBeGreaterThanOrEqual(8);
+		expect(left.cy - left.ry, 'the adductor highlight reaches the pelvis').toBeGreaterThan(190);
 	});
 
 	it('is not shown during a session', () => {
@@ -116,5 +161,18 @@ describe('the body map draws what the glossary explains (§4.6)', () => {
 			'utf8'
 		);
 		expect(player).not.toContain('BodyMap');
+	});
+});
+
+describe('the figures are credited (§4.6)', () => {
+	it('records the Wikimedia figures with author and licence', () => {
+		// CC BY-SA 3.0 obliges attribution wherever the work appears, and §4.1 keeps
+		// that in attribution.json. The About page reads this.
+		const figure = attributions.find((a) => a.source === 'wikimedia');
+		expect(figure, 'no attribution entry for the body figures').toBeDefined();
+		expect(figure!.license).toBe('CC-BY-SA-3.0');
+		expect(figure!.author).toBe('Termininja');
+		expect(figure!.sourceUrl).toContain('commons.wikimedia.org');
+		expect(figure!.covers, 'the About page would print "0 exercises" for it').toBeTruthy();
 	});
 });
