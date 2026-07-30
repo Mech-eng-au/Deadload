@@ -122,6 +122,12 @@ export interface Session {
 	endedAt?: string; // absent => abandoned or in progress
 	entries: SetEntry[];
 	notes?: string;
+	/**
+	 * When the log was last corrected by hand (§4.3). Absent means every row is
+	 * exactly as the player wrote it. Statistics are built on this log, so one that
+	 * can be silently rewritten is worth less than one that admits it was.
+	 */
+	editedAt?: string;
 
 	// Timing is stored as wall-clock deadlines rather than counted down in
 	// memory, so a timed set or a rest period survives the app being killed and

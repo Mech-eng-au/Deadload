@@ -119,6 +119,8 @@ export interface SessionSummary {
 	reps: number;
 	seconds: number;
 	finished: boolean;
+	/** Whether the log was corrected by hand (§4.3), so the list can say so too. */
+	edited: boolean;
 }
 
 /** One line per session, for the history list. Newest first. */
@@ -148,7 +150,8 @@ export function summarize(sessions: Session[]): SessionSummary[] {
 				skipped,
 				reps,
 				seconds,
-				finished: !!s.endedAt
+				finished: !!s.endedAt,
+				edited: !!s.editedAt
 			};
 		})
 		.sort((a, b) => b.startedAt.localeCompare(a.startedAt));

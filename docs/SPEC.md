@@ -288,6 +288,7 @@ interface Session {
   endedAt?: string;                   // absent => session abandoned or in progress
   entries: SetEntry[];
   notes?: string;
+  editedAt?: string;                  // absent => every row is as the player wrote it
   swaps?: Record<string, ExerciseId>; // RoutineItem.id -> exercise actually performed (§7)
 }
 
@@ -308,6 +309,35 @@ interface SetEntry {
 **Log one row per set, never one row per exercise.** Statistics in M5 need per-set volume, and you cannot recover it later from an aggregate. This is the single decision in the data model most expensive to get wrong.
 
 Sessions are append-only in spirit: editing a past session is allowed but there is no partial-update path, the whole session is rewritten.
+
+**Amended 2026-07-30: correcting a logged session.** M6 parked this and daily use made it the obvious
+next gap — a mislogged set was permanent, and the only way out was deleting the whole session. The
+rules live in `$lib/session/edit.ts`, pure and unit-tested per §15, and the screen is the session
+detail page in History: tap a set, change what it says, save.
+
+What can be corrected: reps or seconds, load, RPE, whether the set was skipped, and the session
+note. What cannot: the exercise, the side, `completedAt`, and the session's own start and end. Those
+are not corrections but a different session, and the honest way to record a workout that did not
+happen this way is to log the one that did.
+
+Four rules, each of which the UI relies on rather than reimplements:
+
+1. **Only a finished session can be corrected.** An unfinished one belongs to the player, which finds
+   its place on resume by counting entries — removing one underneath it would desync the rest of the
+   workout. The detail page says so instead of offering the edit.
+2. **Marking a set skipped clears its measurements.** Skipped rows mean "not done", and a not-done
+   set carrying eight reps is a contradiction that would then be counted by §10's statistics.
+   Un-skipping therefore has to supply reps or seconds.
+3. **Removing a set renumbers what is left of that exercise**, and by *distinct* `setIndex`, so a
+   per-side pair (§7) keeps sharing one number. Deleting set 2 of 3 and leaving 0 and 2 behind would
+   assert there had been a third set, which is the thing being corrected.
+4. **Every edit stamps `editedAt`**, and it is shown — "Corrected 30 July by hand" on the session,
+   "corrected" in the history list. Statistics are built on this log, so one that can be silently
+   rewritten is worth less than one that admits it was. Nothing in §10 filters corrected sessions
+   out; the label is there so a surprising chart can be traced, not so the number can be discounted.
+
+A correction is saved through the same whole-session rewrite as everything else, so backup, CSV
+export and the statistics need no special case.
 
 ### 4.4 IndexedDB stores
 
@@ -1089,7 +1119,8 @@ The riskiest part, so it goes first. ~~If media sourcing fails, the whole projec
 
 ### M6 - Polish
 
-- Service worker update flow, icons, empty states, session edit, whatever daily use has revealed as annoying.
+- Service worker update flow, icons, empty states, whatever daily use has revealed as annoying.
+- ~~Session edit~~ — done 2026-07-30, see §4.3.
 
 ---
 

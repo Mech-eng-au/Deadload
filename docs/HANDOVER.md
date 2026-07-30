@@ -38,11 +38,11 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
 | Muscles | Plain English for all seventeen catalog muscle names, front/back body figures (MIT) with each muscle filled in on a grey-to-red ramp, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
-| History | Browse past sessions, inspect every logged set, delete |
+| History | Browse past sessions, inspect every logged set, correct a mislogged one, delete. Corrections are marked as such (added 2026-07-30) |
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **226 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **244 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -87,8 +87,8 @@ tests/                       vitest; fixtures/imports holds the deliberately ugl
 
 Load-bearing rules, all of which have already caught something:
 
-- **The pure layers stay pure.** `import/`, `stats/` and `session/steps.ts` take data as
-  arguments rather than reading the database. That is why their rules are unit-testable.
+- **The pure layers stay pure.** `import/`, `stats/`, `session/steps.ts` and `session/edit.ts` take
+  data as arguments rather than reading the database. That is why their rules are unit-testable.
 - **`toPlain()` at the database boundary.** IndexedDB's structured clone rejects Svelte 5's
   reactive proxies with `[object Array] could not be cloned`. Every write is flattened at the
   write boundary rather than at call sites, because a forgotten snapshot fails at runtime while
@@ -227,6 +227,24 @@ than reasoned about.
 numbers and the countdown (§12), so the muscle glossary and the body map are catalog- and
 builder-only. `tests/muscles.test.ts` asserts the player does not import `BodyMap`.
 
+**A logged session can be corrected, but only a finished one, and the correction is admitted.**
+Added 2026-07-30 (SPEC §4.3). Three parts of that sentence are decisions rather than convenience:
+
+- *Only finished.* An unfinished session is the player's, and the player finds its place on resume by
+  counting entries — removing one underneath it would desync the rest of the workout. The screen says
+  why instead of quietly hiding the buttons.
+- *A correction, not authoring.* Reps, seconds, load, RPE, skipped and the session note are editable.
+  The exercise, the side and every timestamp are not. Changing those does not fix a record of what
+  happened, it writes a different workout, and the honest way to have a different workout is to do one.
+- *`editedAt` is stamped and shown.* Statistics are built on this log; one that can be silently
+  rewritten is worth less than one that admits it was. Nothing filters corrected sessions out of §10
+  — the label exists so a surprising chart can be traced, not so the number can be discounted.
+
+Marking a set skipped **clears its numbers**, because a not-done set with eight reps on it is a
+contradiction that §10 would then count; un-skipping therefore has to supply a number. Removing a set
+renumbers the rest of that exercise by *distinct* `setIndex`, so a per-side pair stays one set rather
+than becoming two.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -255,7 +273,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 226 unit tests
+npm test           # 244 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
@@ -265,7 +283,10 @@ they are needed again — they drove real flows against `npx vite preview` on po
 Playwright with `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. They covered: the routine
 flow with a simulated app restart, the session player end to end, the polish round, import and
 presets, backup and restore including a full database wipe, last-time numbers across two
-workouts, page transitions, audio, and history plus CSV.
+workouts, page transitions, audio, and history plus CSV. The 2026-07-30 round added the muscle body
+map, the baby presets, and session correction — the last one seeded a finished session straight into
+IndexedDB rather than performing a whole workout to reach the screen under test, which is worth
+copying for anything that only cares about a logged session.
 
 Two techniques worth reusing:
 
@@ -296,8 +317,14 @@ session and `perSide` only follows the new exercise once the session is over.
 suggests raising the target. A simple rule over data that already exists. Deliberately left out of
 the ladders change so it can be argued on its own.
 
-**Editing a past session.** History can view and delete but not correct. A mislogged set is
-currently permanent. SPEC M6 parks this; it is the obvious next gap.
+~~**Editing a past session.**~~ **Built 2026-07-30** (SPEC §4.3 amendment, `src/lib/session/edit.ts`,
+the History detail page). Tap a set, change reps/seconds, load, RPE or skipped, save; remove a set and
+the rest of that exercise renumbers; the session note is editable in the same place. Four rules are in
+the pure module rather than the screen: only finished sessions are editable, skipping clears the
+numbers, removing renumbers by distinct `setIndex` so per-side pairs stay one set, and every edit
+stamps `editedAt` — which is then shown on the session and in the history list. What is deliberately
+*not* editable: the exercise, the side, the timestamps. Those are a different session, not a
+correction.
 
 ~~**Added load.**~~ **Built 2026-07-30, and narrower than proposed** (SPEC §4.5, §5.1). The spec was
 changed deliberately first, as this entry asked. But the proposal here — `addedKg` for weighted

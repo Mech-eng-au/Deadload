@@ -95,6 +95,13 @@ describe('session summaries', () => {
 		expect(row.minutes).toBeUndefined();
 	});
 
+	it('flags a log that was corrected by hand', () => {
+		expect(summarize([session(0, [entry()])])[0].edited).toBe(false);
+		expect(
+			summarize([session(0, [entry()], { editedAt: '2026-07-30T18:00:00.000Z' })])[0].edited
+		).toBe(true);
+	});
+
 	it('lists newest first', () => {
 		const rows = summarize([session(0, [entry()]), session(3, [entry()])]);
 		expect(rows[0].id).toBe('s3');
