@@ -1,13 +1,130 @@
-# Curation of the free-exercise-db bodyweight pool (docs/SPEC.md §5).
+# Curation of the free-exercise-db pool (docs/SPEC.md §5, §5.1).
 # Matching is on the exact source `name` field.
 # The bodyweight filter (equipment: "body only" | null) yields 188 candidates;
-# this file cuts and augments that pool to stay under the ~120 cap.
+# `exclude` cuts that down, and `equipment` below both admits named rows from
+# outside the filter and records what each one needs.
 
-# Exercises outside the bodyweight filter that need only a wall, floor,
-# chair, or pull-up/fixed bar.
-include:
-  - Dips - Chest Version
-  - Bodyweight Mid Row
+# Budgets, enforced in build-catalog.ts. `ungated` is the number the ~120 cap in
+# §5 is actually about: what somebody who owns nothing can see. The per-type
+# budgets exist so that "one exercise per movement pattern" stays a rule rather
+# than a good intention.
+budgets:
+  ungated: 125
+  pull_up_bar: 10
+  jumping_rope: 2
+  dumbbells: 16
+  kettlebell: 12
+  resistance_band: 12
+  foam_roller: 10
+
+# What each exercise needs beyond a floor and a wall. These lists do two jobs at
+# once: a name here is *admitted* to the pool even when the source tags it
+# `dumbbell`, `bands`, `foam roll` or `other`, and it is *tagged* with what it
+# needs so §5.1's gating can hide it from anyone who does not own it. That is why
+# the old bare `include:` list is gone — a row cannot get in without saying why.
+#
+# An exercise may appear under more than one type (Dumbbell Step Ups needs both
+# dumbbells and something to step onto); Exercise.equipment is an array.
+equipment:
+  # Every one of these hangs from, or braces against, a fixed bar. All eight have
+  # been in the catalog since M0, which is why the Settings box starts ticked.
+  pull_up_bar:
+    - Pullups
+    - Chin-Up
+    - Scapular Pull-Up
+    - Hanging Leg Raise
+    - Hanging Pike
+    - Gorilla Chin/Crunch
+    - Bodyweight Mid Row
+    - Inverted Row
+
+  # Furniture, not a purchase: tagged, never gated. It earns a chip so the user
+  # knows to fetch one.
+  chair:
+    - Bench Dips
+    - Chair Lower Back Stretch
+    - Spinal Stretch
+    - Front Leg Raises          # holds a chair for balance
+    - Side Leg Raises
+    - Leg Lift
+    - Incline Push-Up           # hands on a chair or step
+    - Push-Ups With Feet Elevated
+    - Step-up with Knee Raise
+    - Flutter Kicks             # hips on the edge of a bench
+    - Hyperextensions With No Hyperextension Bench
+    - Standing Gastrocnemius Calf Stretch   # heel on a step
+    # Written for parallel bars in the source, and two sturdy chairs is how it is
+    # done at home. It stays ungated rather than earning a seventh checkbox for a
+    # piece of hardware one exercise uses — and this is the exercise that cannot
+    # be gated anyway: it is a rung of the dip ladder (§4.1) and sits in a preset.
+    # Move it if a dip station ever earns its own box.
+    - Dips - Triceps Version
+    - Dumbbell Step Ups
+
+  # Exactly one, and shipped anyway. `Fast Skipping` is a body-only step-hop
+  # drill with no rope in it, and `Battling Ropes` is a different implement — so
+  # one is the honest count of what this source has for a skipping rope.
+  jumping_rope:
+    - Rope Jumping
+
+  # 20 in the source, 17 once the bench work is out, 10 kept: one per movement
+  # pattern. Skull crushers and band bench presses need a bench.
+  resistance_band:
+    - Band Good Morning           # hinge
+    - Band Pull Apart             # horizontal pull
+    - Shoulder Press - With Bands # vertical push
+    - Cross Over - With Bands     # horizontal push
+    - Lateral Raise - With Bands  # abduction
+    - External Rotation with Band # rotator cuff
+    - Squats - With Bands         # squat
+    - Hip Extension with Bands    # glutes
+    - Monster Walk                # hip abduction, loaded walk
+    - Calf Raises - With Bands    # calves
+
+  # 123 in the source, 49 once anything needing a bench is out, 14 kept. The 49
+  # held nine standing triceps extensions and seven wrist curls; one extension
+  # survives and no wrist curls do.
+  dumbbells:
+    - Dumbbell Squat                        # squat
+    - Dumbbell Lunges                       # lunge
+    - Dumbbell Step Ups                     # step-up
+    - Stiff-Legged Dumbbell Deadlift        # hinge
+    - Dumbbell Clean                        # ballistic pull
+    - Bent Over Two-Dumbbell Row            # horizontal pull
+    - Standing Dumbbell Press               # vertical push
+    - Dumbbell Floor Press                  # horizontal push
+    - Side Lateral Raise                    # abduction
+    - Dumbbell Shrug                        # shrug
+    - Dumbbell Bicep Curl                   # elbow flexion
+    - Standing Dumbbell Triceps Extension   # elbow extension — the only one
+    - Standing Dumbbell Calf Raise          # calves
+    - Dumbbell Side Bend                    # lateral flexion
+
+  # 53 in the source, none needing a bench, 9 kept. The pool is mostly jerk,
+  # snatch and clean variants of each other.
+  kettlebell:
+    - One-Arm Kettlebell Swings              # hinge, ballistic
+    - Goblet Squat                           # squat
+    - Kettlebell One-Legged Deadlift         # single-leg hinge
+    - One-Arm Kettlebell Row                 # horizontal pull
+    - One-Arm Kettlebell Floor Press         # horizontal push
+    - Two-Arm Kettlebell Military Press      # vertical push
+    - Kettlebell Thruster                    # squat to press
+    - Kettlebell Turkish Get-Up (Squat style) # whole body
+    - Kettlebell Windmill                    # loaded lateral flexion
+
+  # 11 self-myofascial-release entries, 8 kept. `Lower Back-SMR` is out: rolling
+  # the lumbar spine is not something to put in front of somebody unsupervised.
+  # `Brachialis-SMR` and `Peroneals-SMR` are covered by their neighbours.
+  foam_roller:
+    - Adductor
+    - Calves-SMR
+    - Hamstring-SMR
+    - Iliotibial Tract-SMR
+    - Latissimus Dorsi-SMR
+    - Piriformis-SMR
+    - Quadriceps-SMR
+    - Rhomboids-SMR
 
 # Cut from the pool. Reasons: equipment despite the "body only"/null tag
 # (bench, ball, dumbbell, towel, partner), near-duplicates of a kept
@@ -27,6 +144,14 @@ exclude:
   - Standing Towel Triceps Extension
   - V-Bar Pullup
   - Bench Jump
+  # Dropped 2026-07-30 by §5.1's own check. It is source `other` — the source
+  # tags it that way because the instructions open "you will need access to
+  # parallel bars" — so the build script refused to ship it with only a `chair`
+  # tag, and it was right to. Keeping it would have meant either a seventh
+  # equipment gate for one exercise or blunting the check on its first run.
+  # `Dips - Triceps Version` is the variant that matters (it is a ladder rung and
+  # sits in a preset), it is source `body only`, and it survives.
+  - Dips - Chest Version
   # require a second person: the instructions have a partner holding a limb
   # down, with no solo alternative given. Solo equivalents are kept instead.
   - Prone Manual Hamstring
@@ -126,6 +251,17 @@ mobility:
   - Sit Squats
   - Split Squats
   - Standing Toe Touches
+  # Self-myofascial release is rolling back and forth over a roller, not a hold.
+  # It is also programmed as preparation rather than as a cooldown stretch, so it
+  # belongs where a user would look for it.
+  - Adductor
+  - Calves-SMR
+  - Hamstring-SMR
+  - Iliotibial Tract-SMR
+  - Latissimus Dorsi-SMR
+  - Piriformis-SMR
+  - Quadriceps-SMR
+  - Rhomboids-SMR
 
 # Performed one side at a time; sets are logged per side.
 unilateral:
@@ -158,3 +294,22 @@ unilateral:
   - Front Leg Raises
   - Side Leg Raises
   - Gorilla Chin/Crunch
+  # Equipment entries (§5.1). One implement in one hand, or one leg at a time.
+  - One-Arm Kettlebell Swings
+  - One-Arm Kettlebell Row
+  - One-Arm Kettlebell Floor Press
+  - Kettlebell One-Legged Deadlift
+  - Kettlebell Turkish Get-Up (Squat style)
+  - Kettlebell Windmill
+  - Dumbbell Step Ups
+  - Dumbbell Side Bend
+  - External Rotation with Band
+  # Rolled one side at a time. Rhomboids-SMR is not here: the upper back is rolled
+  # across, both sides at once.
+  - Adductor
+  - Calves-SMR
+  - Hamstring-SMR
+  - Iliotibial Tract-SMR
+  - Latissimus Dorsi-SMR
+  - Piriformis-SMR
+  - Quadriceps-SMR

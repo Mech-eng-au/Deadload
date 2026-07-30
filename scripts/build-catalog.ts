@@ -12,13 +12,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
-import type { Attribution, Exercise, MediaAsset } from '../src/lib/types.js';
+import type { Attribution, EquipmentId, Exercise, MediaAsset } from '../src/lib/types.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_JSON = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
 // NOTE: images live under main/exercises/, NOT main/dist/exercises/ (verified, see docs/M0-findings.md)
 const IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
-const CATALOG_CAP = 125; // spec says "roughly 120"; hard error above this
 const MAX_EDGE = 800;
 const WEBP_QUALITY = 80;
 // Mean per-pixel difference (0-255) below which two frames count as the same
@@ -41,11 +40,47 @@ interface SourceExercise {
 }
 
 interface Curation {
-	include: string[];
+	/** Per-type exercise budgets, including `ungated` (§5.1). */
+	budgets: Record<string, number>;
+	/** Source `name` -> the equipment it needs. Admits and tags in one place. */
+	equipment: Record<EquipmentId, string[]>;
 	exclude: string[];
 	mobility: string[];
 	unilateral: string[];
 }
+
+/**
+ * The gated types (§5.1). `chair` is deliberately absent: it is tagged but never
+ * gated, so it neither needs a budget nor satisfies the "must declare a purchase"
+ * check below.
+ */
+const GATED: EquipmentId[] = [
+	'pull_up_bar',
+	'jumping_rope',
+	'dumbbells',
+	'kettlebell',
+	'resistance_band',
+	'foam_roller'
+];
+
+const ALL_EQUIPMENT: EquipmentId[] = [...GATED, 'chair'];
+
+/**
+ * Source `equipment` values that mean a gym. §1 puts these out of scope, so a
+ * name in curation.yaml that resolves to one of them is a mistake in the file
+ * rather than a judgement call — hence a hard error rather than a filter.
+ */
+const GYM_EQUIPMENT = new Set([
+	'machine',
+	'cable',
+	'barbell',
+	'e-z curl bar',
+	'medicine ball',
+	'exercise ball'
+]);
+
+/** Source values that need nothing but a floor and a wall. */
+const BODYWEIGHT_EQUIPMENT = new Set(['body only', null] as (string | null)[]);
 
 function slugify(name: string): string {
 	return name
@@ -109,8 +144,27 @@ async function main() {
 	const source = await fetchJson<SourceExercise[]>(SOURCE_JSON);
 	const byName = new Map(source.map((e) => [e.name, e]));
 
+	// Equipment tags: source `name` -> what it needs (§5.1). Built before the
+	// integrity checks so they can report on it.
+	const equipmentOf = new Map<string, EquipmentId[]>();
+	for (const id of ALL_EQUIPMENT) {
+		for (const name of curation.equipment[id] ?? []) {
+			equipmentOf.set(name, [...(equipmentOf.get(name) ?? []), id]);
+		}
+	}
+	for (const id of Object.keys(curation.equipment)) {
+		if (!ALL_EQUIPMENT.includes(id as EquipmentId)) {
+			throw new Error(`curation.yaml: "${id}" is not an EquipmentId`);
+		}
+	}
+
 	// Referential integrity of the curation file: every name must exist.
-	for (const list of [curation.include, curation.exclude, curation.mobility, curation.unilateral]) {
+	for (const list of [
+		curation.exclude,
+		curation.mobility,
+		curation.unilateral,
+		[...equipmentOf.keys()]
+	]) {
 		for (const name of list) {
 			if (!byName.has(name)) throw new Error(`curation.yaml references unknown exercise: "${name}"`);
 		}
@@ -118,19 +172,71 @@ async function main() {
 	for (const name of Object.keys(manualAliases)) {
 		if (!byName.has(name)) throw new Error(`aliases.yaml references unknown exercise: "${name}"`);
 	}
+	for (const id of GATED) {
+		if (curation.budgets[id] === undefined) {
+			throw new Error(`curation.yaml: no budget for "${id}"`);
+		}
+	}
+	if (curation.budgets.ungated === undefined) {
+		throw new Error('curation.yaml: no `ungated` budget');
+	}
 
 	const excluded = new Set(curation.exclude);
 	const mobility = new Set(curation.mobility);
 	const unilateral = new Set(curation.unilateral);
 
+	// A row is in the pool if it needs nothing, or if curation.yaml has said what
+	// it needs. There is no third way in: the old `include:` list admitted rows
+	// without recording why they were admissible (§5.1).
 	const pool = source.filter(
-		(e) =>
-			(e.equipment === 'body only' || e.equipment === null || curation.include.includes(e.name)) &&
-			!excluded.has(e.name)
+		(e) => (BODYWEIGHT_EQUIPMENT.has(e.equipment) || equipmentOf.has(e.name)) && !excluded.has(e.name)
 	);
 
-	if (pool.length > CATALOG_CAP) {
-		throw new Error(`Pool is ${pool.length} exercises, cap is ${CATALOG_CAP}. Curate harder.`);
+	// §5.1: what the build script must refuse.
+	for (const e of pool) {
+		const tags = equipmentOf.get(e.name) ?? [];
+
+		if (GYM_EQUIPMENT.has(e.equipment ?? '')) {
+			throw new Error(
+				`"${e.name}" is source equipment "${e.equipment}", which §1 puts out of scope. ` +
+					`Remove it from curation.yaml.`
+			);
+		}
+
+		// The check that catches the mistake worth catching: tagging a dumbbell
+		// exercise `chair` and shipping it to somebody who owns no dumbbells.
+		if (!BODYWEIGHT_EQUIPMENT.has(e.equipment) && !tags.some((t) => GATED.includes(t))) {
+			throw new Error(
+				`"${e.name}" is source equipment "${e.equipment}" but carries no gated tag ` +
+					`(${tags.length ? tags.join(', ') : 'none'}). Somebody who owns nothing would be shown it.`
+			);
+		}
+	}
+
+	// Per-type budgets. `ungated` is the number §5's ~120 cap is about: what one
+	// user sees having ticked no boxes.
+	const perType = new Map<string, number>();
+	let ungated = 0;
+	for (const e of pool) {
+		const tags = equipmentOf.get(e.name) ?? [];
+		for (const t of tags) perType.set(t, (perType.get(t) ?? 0) + 1);
+		if (!tags.some((t) => GATED.includes(t))) ungated++;
+	}
+	if (ungated > curation.budgets.ungated) {
+		throw new Error(
+			`${ungated} exercises are reachable with nothing owned, budget is ${curation.budgets.ungated}. Curate harder.`
+		);
+	}
+	for (const id of GATED) {
+		const n = perType.get(id) ?? 0;
+		if (n > curation.budgets[id]) {
+			throw new Error(`${n} ${id} exercises, budget is ${curation.budgets[id]}. Curate harder.`);
+		}
+		// A gated type with nothing in it is a checkbox in Settings that does
+		// nothing when tapped.
+		if (n === 0) {
+			throw new Error(`"${id}" is gated but has no exercises. Remove the type or curate some in.`);
+		}
 	}
 
 	// Slug collisions are a hard error (§5).
@@ -218,6 +324,9 @@ async function main() {
 				name: src.name,
 				aliases: [...aliasSet].sort(),
 				category,
+				// Sorted so the output stays byte-identical regardless of the order the
+				// lists happen to be read in.
+				equipment: [...(equipmentOf.get(src.name) ?? [])].sort(),
 				primaryMuscles: src.primaryMuscles,
 				secondaryMuscles: src.secondaryMuscles,
 				level: src.level === 'expert' ? 'advanced' : src.level,
@@ -250,14 +359,22 @@ async function main() {
 	await writeFile(join(outDir, 'catalog.json'), JSON.stringify(catalog, null, '\t') + '\n');
 	await writeFile(join(outDir, 'attribution.json'), JSON.stringify(attribution, null, '\t') + '\n');
 
-	// Stripped catalog for pasting alongside the LLM prompt (§14).
-	const llm = catalog.map(({ id, name, category }) => ({ id, name, category }));
-	await writeFile(join(ROOT, 'static/catalog-for-llm.json'), JSON.stringify(llm, null, '\t') + '\n');
+	// No catalog-for-llm.json here any more (§14, amended 2026-07-30): it is
+	// generated in the browser from catalog.json so it can be filtered to what the
+	// user owns, which a build-time artefact cannot possibly know.
 
 	const perCategory: Record<string, number> = {};
 	for (const e of catalog) perCategory[e.category] = (perCategory[e.category] ?? 0) + 1;
+	const perEquipment: Record<string, string> = {};
+	for (const id of ALL_EQUIPMENT) {
+		const n = catalog.filter((e) => e.equipment.includes(id)).length;
+		perEquipment[id] = `${n}/${curation.budgets[id] ?? '-'}`;
+	}
+	const reachable = catalog.filter((e) => !e.equipment.some((t) => GATED.includes(t))).length;
 	console.log('\n=== Summary ===');
 	console.log(`Total exercises: ${catalog.length}`);
+	console.log(`Reachable with nothing owned: ${reachable}/${curation.budgets.ungated}`);
+	console.log(`Per equipment (kept/budget): ${JSON.stringify(perEquipment)}`);
 	console.log(`Per category: ${JSON.stringify(perCategory)}`);
 	console.log(`Per source: free-exercise-db=${catalog.length}`);
 	console.log(`Dropped (zero media): ${dropped.length}${dropped.length ? ' -> ' + dropped.join(', ') : ''}`);

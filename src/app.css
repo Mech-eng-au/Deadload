@@ -5,6 +5,21 @@
 }
 
 /*
+ * Height of the bottom tab bar in src/routes/+layout.svelte: a 3.5rem touch
+ * target, its top padding, the safe-area inset and the top border.
+ *
+ * Any screen with its own fixed action bar has to sit *above* the tab bar rather
+ * than share the bottom edge with it. Both were `bottom-0` until 2026-07-30, and
+ * because the tab bar comes later in the document it won: on a 360 x 808 dp
+ * screen it covered the bottom 29 px of a 56 px "Save routine" button, so a tap
+ * at the middle of Save opened the Stats tab instead. Anything fixed to the
+ * bottom on a tabbed screen belongs at this offset.
+ */
+:root {
+	--dl-tabbar-height: calc(3.5rem + 0.5rem + max(env(safe-area-inset-bottom), 0.5rem) + 1px);
+}
+
+/*
  * Directional page transitions (see src/routes/+layout.svelte). Short on
  * purpose: long enough to show which way you moved, short enough that it never
  * stands between a tap and the screen.

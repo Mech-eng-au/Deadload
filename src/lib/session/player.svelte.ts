@@ -5,6 +5,7 @@ import { armAudio, cue, setSoundEnabled } from './audio.js';
 import { announcementFor } from './announce.js';
 import { armSpeech, cancelSpeech, setSpeechEnabled, speak } from './speech.js';
 import { getExercise } from '../catalog/index.js';
+import { isLoadable } from '../catalog/load.js';
 import { getSettings } from '../db/settings.js';
 import { expandRoutine, type Step } from './steps.js';
 import { easierVariant, harderVariant } from '../catalog/ladders.js';
@@ -211,7 +212,7 @@ export class SessionPlayer {
 				// trade this mode makes (§7).
 				if (left <= 0 && this.#autoLogTimed && !this.#autoLogged) {
 					this.#autoLogged = true;
-					void this.log({ seconds: this.targetSeconds });
+					void this.log({ seconds: this.targetSeconds, loadKg: this.prefillLoadKg() });
 				}
 			}
 		}
@@ -367,7 +368,35 @@ export class SessionPlayer {
 		if (this.phase === 'working' || this.phase === 'resting') this.#startTicking();
 	}
 
-	async log(value: { reps?: number; seconds?: number; rpe?: number }): Promise<void> {
+	/**
+	 * What the load stepper should start at (§4.5): whatever this exercise was
+	 * last logged with in this session, falling back to what the routine planned.
+	 * Changing the dumbbell once should not mean changing it again on every set —
+	 * and the change stays on the session, not on the routine, for the same reason
+	 * a swap does (§7).
+	 */
+	prefillLoadKg(step: Step | undefined = this.step): number | undefined {
+		if (!step) return undefined;
+		// A swap keeps the item's id but changes the exercise (§7), so a load carried
+		// forward has to be checked against what is actually being performed now:
+		// swapping a kettlebell row for a bodyweight one must not keep the 10 kg.
+		const exercise = getExercise(step.exerciseId);
+		if (!exercise || !isLoadable(exercise)) return undefined;
+		for (let i = this.session.entries.length - 1; i >= 0; i--) {
+			const entry = this.session.entries[i];
+			if (entry.itemId === step.itemId && !entry.skipped && entry.loadKg !== undefined) {
+				return entry.loadKg;
+			}
+		}
+		return step.loadKg;
+	}
+
+	async log(value: {
+		reps?: number;
+		seconds?: number;
+		rpe?: number;
+		loadKg?: number;
+	}): Promise<void> {
 		const step = this.step;
 		if (!step || this.phase === 'finished') return;
 
@@ -379,6 +408,7 @@ export class SessionPlayer {
 			reps: value.reps,
 			seconds: value.seconds,
 			rpe: value.rpe,
+			loadKg: value.loadKg,
 			skipped: false,
 			completedAt: new Date().toISOString()
 		};

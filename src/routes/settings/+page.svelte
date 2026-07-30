@@ -24,7 +24,15 @@
 		type RestoreSummary
 	} from '$lib/db/backup.js';
 	import { exportBackupFile, exportCsvFile } from '$lib/db/export-file.js';
-	import type { Settings } from '$lib/types.js';
+	import { catalog } from '$lib/catalog/index.js';
+	import {
+		EQUIPMENT,
+		GATED_EQUIPMENT,
+		availableCatalog,
+		exerciseCountLabel,
+		ownedEquipment
+	} from '$lib/catalog/equipment.js';
+	import type { EquipmentId, Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
 	// Read once on mount rather than during render: it touches window.
@@ -88,6 +96,24 @@
 	async function toggleAutoLog() {
 		const next = !(settings?.autoLogTimedSets ?? false);
 		settings = await putSettings({ ...(await getSettings()), autoLogTimedSets: next });
+	}
+
+	const owned = $derived(ownedEquipment(settings));
+	const availableCount = $derived(availableCatalog(owned).length);
+	const chair = EQUIPMENT.find((t) => !t.gated);
+
+	/**
+	 * Writing the resolved list rather than a patch is what keeps §5.1's
+	 * three-valued setting honest: the first tap turns "never answered" into an
+	 * actual answer, so unticking the last box stores `[]` — owns nothing — rather
+	 * than dropping back to undefined and handing pull-ups back.
+	 */
+	async function toggleEquipment(id: EquipmentId) {
+		const current = ownedEquipment(await getSettings());
+		const next = current.includes(id)
+			? current.filter((x) => x !== id)
+			: EQUIPMENT.filter((t) => t.id === id || current.includes(t.id)).map((t) => t.id);
+		settings = await putSettings({ ...(await getSettings()), ownedEquipment: next });
 	}
 
 	async function doExport() {
@@ -167,6 +193,62 @@
 			</p>
 		</div>
 	{/if}
+
+	<!-- §5.1. The app assumes a floor, a wall and a chair; everything else is
+		 something that had to be bought, so it is asked about rather than assumed. -->
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">What you own</h2>
+		<p class="mt-2 text-sm text-zinc-400">
+			Tick what you have. Unticked equipment is left out of the catalog and out of the exercise
+			picker, so you are only ever offered what you can actually do.
+		</p>
+		<ul class="mt-4 flex flex-col gap-2">
+			{#each GATED_EQUIPMENT as type (type.id)}
+				<li>
+					<button
+						onclick={() => toggleEquipment(type.id)}
+						aria-pressed={owned.includes(type.id)}
+						class="flex min-h-16 w-full items-center gap-3 rounded-xl border px-4 py-3 text-left {owned.includes(
+							type.id
+						)
+							? 'border-zinc-500 bg-zinc-800/60'
+							: 'border-zinc-800'}"
+					>
+						<span
+							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-sm {owned.includes(
+								type.id
+							)
+								? 'border-zinc-100 bg-zinc-100 font-bold text-zinc-900'
+								: 'border-zinc-600'}"
+							aria-hidden="true"
+						>
+							{owned.includes(type.id) ? '✓' : ''}
+						</span>
+						<span class="min-w-0 flex-1">
+							<span class="block font-medium">{type.label}</span>
+							<span class="mt-0.5 block text-xs text-zinc-500">{type.needs}</span>
+						</span>
+						<span class="shrink-0 text-xs whitespace-nowrap text-zinc-500 tabular-nums">
+							{exerciseCountLabel(type.id)}
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+		<p class="mt-3 text-xs text-zinc-500">
+			{availableCount} of {catalog.length} exercises available.
+			{#if owned.length === 0}
+				Nothing ticked, so that is everything you can do with a floor, a wall and a chair.
+			{/if}
+		</p>
+		{#if chair}
+			<p class="mt-2 text-xs text-zinc-500">{chair.note}</p>
+		{/if}
+		<p class="mt-2 text-xs text-zinc-500">
+			This only changes what you get offered. A routine you already have, anything you have logged,
+			and the built-in routines all keep every exercise in them — with a note about what they need.
+		</p>
+	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
 		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Sound</h2>

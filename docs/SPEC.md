@@ -25,10 +25,32 @@ Do not build any of these, and do not add abstractions in anticipation of them:
 
 - User accounts, sync, sharing, multi-user
 - Any server component
-- Weighted / equipment-based training
+- **Gym-based training** — a rack, a cable stack, a bench press, a barbell, plates, a machine
 - Nutrition, body weight tracking, habit streaks
 - Play Store distribution (see §11 for the escape hatch if this changes)
 - A general-purpose exercise search over the whole internet
+
+#### Amended 2026-07-30: equipment is not the same thing as a gym
+
+The non-goal above used to read *"weighted / equipment-based training"*, and that was never a
+description of this app. §5's catalog has contained pull-ups, dips and inverted rows since M0 —
+a pull-up bar and a pair of parallel bars are bought hardware, not a floor. The app therefore
+already shipped equipment-based exercises while claiming not to, which meant nobody could reason
+about what belonged in the catalog and what did not. Three sentences replace the one word:
+
+- **Nothing is assumed except a floor, a wall and a chair.** Those are not purchases. Everything
+  beyond them is declared in Settings and, until it is, filtered out of what the app offers
+  (§5.1). Someone who owns nothing must never be shown an exercise they cannot do.
+- **Leverage remains the progression model** (§4.1). Equipment is not the app's answer to "make
+  this harder" — the answer is still the angle, the lever and the number of limbs. A dumbbell row
+  is a movement the catalog otherwise has no way to express, not a heavier push-up.
+- **Body weight is still not tracked**, and that is exactly why load is only ever recorded for an
+  implement of known mass. A 10 kg kettlebell is a measurement. "Reps × plate weight" on a
+  weighted pull-up is not the work done, and the honest number needs a body weight this app
+  refuses to keep.
+
+Gym training stays out for the reason it always was: it is a different place with different
+constraints, and this app is used on a bedroom floor.
 
 ### Hard constraint
 
@@ -147,11 +169,17 @@ All types in `src/lib/types.ts`. **Metric units only.** Durations in seconds, in
 ```ts
 type ExerciseId = string;   // snake_case slug, e.g. "worlds_greatest_stretch"
 
+type EquipmentId =
+  | 'pull_up_bar' | 'jumping_rope' | 'dumbbells'
+  | 'kettlebell' | 'resistance_band' | 'foam_roller'
+  | 'chair';                          // tagged, never gated — see §5.1
+
 interface Exercise {
   id: ExerciseId;
   name: string;                       // display name
   aliases: string[];                  // alternative names for resolution
   category: 'strength' | 'stretch' | 'mobility' | 'core' | 'cardio';
+  equipment: EquipmentId[];           // empty => needs nothing but a floor and a wall
   primaryMuscles: string[];
   secondaryMuscles: string[];
   level: 'beginner' | 'intermediate' | 'advanced';
@@ -231,6 +259,7 @@ interface RoutineItem {
   restSeconds: number;                // rest after each set
   tempo?: string;                     // e.g. "3-1-1-0", free text, display only
   notes?: string;
+  loadKg?: number;                    // mass of the implement, planned — see §4.5
 }
 
 type Target =
@@ -270,6 +299,7 @@ interface SetEntry {
   reps?: number;
   seconds?: number;
   rpe?: number;                       // 1-10, optional
+  loadKg?: number;                    // mass of the implement, performed — see §4.5
   skipped: boolean;
   completedAt: string;
 }
@@ -294,6 +324,43 @@ Database `deadload`, version 1:
 
 Write the migration scaffolding in v1 even though there is nothing to migrate. Adding it later, with real data on the device, is worse.
 
+### 4.5 Load
+
+Added 2026-07-30, with §5.1. A dumbbell row is not a heavier push-up — it is a movement the
+catalog has no other way to express — but the number of kilograms in the hand is the one fact about
+it the app would otherwise throw away.
+
+**`loadKg` lives in two places, and that is deliberate.** `RoutineItem.loadKg` is what the routine
+*plans*; `SetEntry.loadKg` is what was *lifted*. This is exactly the relationship `target` has with
+`reps`, and it exists for the same reason: the log is a record of what happened, not a pointer at
+what was intended. A set done with the 8 kg because the 12 was in the other room has to be able to
+say so.
+
+Both are **optional**, so every routine, session, backup and preset written before this existed
+stays valid with no migration. Absent means "not a loaded exercise", which is nearly all of them.
+
+**Only exercises whose equipment has a mass can carry a load: `dumbbells` and `kettlebell`, and
+nothing else.** A resistance band has no kilograms — its tension depends on how far it is stretched
+and manufacturers' colour codes are not a unit — so putting a number on one would be inventing a
+measurement. A pull-up bar has no mass in the sense that matters.
+
+**Weighted pull-ups and dips are out of scope**, and this is the decision worth recording rather
+than rediscovering. Adding a 10 kg plate to a pull-up does not make the work `reps × 10 kg`: the
+load is the plate *plus the body*, and the honest number needs a body weight §1 refuses to track.
+An `addedKg` field would therefore record a figure that looks like load and is not, and every
+statistic built on it would inherit the error. `HANDOVER.md` §7 proposed exactly this; it is
+declined on those grounds.
+
+Consequences, all small because the field is one number:
+
+- The player's log control gains a load stepper next to the rep stepper, prefilled from the plan,
+  and carries a change forward to the rest of that exercise's sets within the session.
+- The last-time line reads `12 × 10 kg, 11 × 10` — the unit is stated once and then only when the
+  load changes, because a repeated unit is noise on a line read at 1 m.
+- `announce.ts` says "at 10 kilos", after the target and before the side.
+- CSV export gains a `load_kg` column; import accepts `load_kg` in JSON and CSV.
+- Statistics treat kg-reps as a **separate currency** from sets — see §10.
+
 ---
 
 ## 5. Catalog build script
@@ -302,7 +369,7 @@ Write the migration scaffolding in v1 even though there is nothing to migrate. A
 
 ### Sources, in priority order
 
-1. **free-exercise-db** (`yuhonas/free-exercise-db`). Public domain. Pull `dist/exercises.json`. Images at `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/<path>` — note: **not** under `dist/`, that path 404s. Filter to `equipment` in `["body only", null]` (verified 2026-07-25: 111 + 77 = 188 entries, every one with exactly two JPEG images), plus an explicit include list in the script for anything using only a wall, floor, chair, or pull-up bar (e.g. `Dips - Chest Version` and `Band Assisted Pull-Up` sit under `equipment: "other"`).
+1. **free-exercise-db** (`yuhonas/free-exercise-db`). Public domain. Pull `dist/exercises.json`. Images at `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/<path>` — note: **not** under `dist/`, that path 404s. Filter to `equipment` in `["body only", null]` (verified 2026-07-25: 111 + 77 = 188 entries, every one with exactly two JPEG images), plus the per-equipment lists in `curation.yaml`, which pull in named rows from outside that filter and tag what they need at the same time (§5.1). Amended 2026-07-30: this replaced a bare `include:` list that added rows without recording why they were addable.
 2. **wger** (`https://wger.de/api/v2/`). **Optional — verify before building anything against it.** Exercise data is predominantly CC-BY-SA 4.0 (719 of 872 bases), with some CC-BY-SA 3.0 (133) and CC0 (20) — not uniformly 3.0 as previously stated. wger has **no stretch or mobility category** (categories are muscle groups only), so gap-filling means keyword-matching English names (~53 bodyweight stretch-named entries, overlapping heavily with source 1). Image coverage for those entries is unverified as of 2026-07-25 (API unreachable from the dev environment). If used at all: attribution is mandatory, record author, source URL, and per-entry license per image. See `docs/M0-findings.md`.
 3. **`scripts/manual/*.yaml`** - hand-authored entries pointing at local image or video files. This is where own-filmed content goes. Expect to need 10-20 of these, skewed toward modern dynamic mobility drills (90/90 transitions, couch stretch, CARs): source 1 turned out to carry 85 bodyweight stretches with images — static-stretch coverage is good, contemporary mobility programming is the actual gap.
 
@@ -317,7 +384,104 @@ Write the migration scaffolding in v1 even though there is nothing to migrate. A
 - Emit `catalog.json` and `attribution.json`. Both are committed.
 - Print a summary: total exercises, count per category, count per source, count dropped.
 
-Cap the catalog at roughly 120 exercises. More than that and the resolver gets fuzzy matches you don't want and the browse UI becomes a chore. Curation is a feature here.
+Cap the catalog at ~~roughly 120 exercises~~ — amended 2026-07-30 — **roughly 120 exercises
+reachable with nothing owned, plus a hand-picked set per equipment type** (§5.1). The reason for
+the cap has not changed: more than that and the resolver gets fuzzy matches you don't want and the
+browse UI becomes a chore. But the number that matters is what one user actually sees, and a
+dumbbell entry is invisible to someone with no dumbbells, so it cannot make their browse screen a
+chore. The budgets are enforced per type in the build script, not eyeballed. Curation is a feature
+here.
+
+### 5.1 Equipment
+
+Added 2026-07-30, with the §1 amendment. Every exercise carries `equipment: EquipmentId[]` — an
+**array**, because a band-assisted pull-up needs a band *and* a bar, and one field cannot say that.
+Empty means a floor and a wall.
+
+| Id | Label | Needs | Gated |
+|---|---|---|---|
+| `pull_up_bar` | Pull-up bar | a doorway, wall or ceiling bar you can hang from | yes |
+| `jumping_rope` | Jumping rope | a skipping rope and about 2 m of clearance | yes |
+| `dumbbells` | Dumbbells | one or a pair, any weight | yes |
+| `kettlebell` | Kettlebell | one, any weight | yes |
+| `resistance_band` | Resistance band | a loop or tube band with handles | yes |
+| `foam_roller` | Foam roller | a roller, for the self-massage entries | yes |
+| `chair` | Chair or bench | a dining chair, sofa edge, bed, step or low table | **no** |
+
+**A chair is not a purchase**, so it is tagged and never gated. It earns a chip on the exercise so
+the user knows to fetch one, and nothing more. Everything else is something somebody had to buy,
+which is exactly what makes it worth asking about.
+
+**Gating is independent checkboxes, not one switch.** Owning a pull-up bar says nothing about
+owning a kettlebell, and a single "I have equipment" toggle would show a bar owner nine kettlebell
+exercises they cannot do — the failure this whole section exists to prevent.
+
+**A gate hides an exercise from two screens and no others: catalog browse and the exercise
+picker.** It never removes one from a routine the user already has, from logged history, or from a
+preset. Those show an equipment chip instead. Import resolution likewise runs against the **whole**
+catalog and warns rather than blocks: a routine an LLM wrote for a bar you have not ticked yet is
+a reason to tick the box, not an error. Hiding is about what the app *offers*; it is never about
+what the user has already decided to do.
+
+**`pull_up_bar` starts ticked; everything else starts unticked.** Not a preference — the catalog
+shipped eight pull-up-bar exercises from M0 (`pullups`, `chin_up`, `scapular_pull_up`,
+`hanging_leg_raise`, `hanging_pike`, `gorilla_chin_crunch`, `bodyweight_mid_row`, `inverted_row`),
+two presets use them, and one of the eight progression ladders in §4.1 is made of them. Defaulting
+it off would hollow out a fresh install and break a ladder to answer a question nobody had asked
+yet.
+
+`Settings.ownedEquipment` is therefore **three-valued, and the distinction is load-bearing**:
+
+| Value | Meaning |
+|---|---|
+| `undefined` | never answered → treat as `['pull_up_bar']` |
+| `[]` | answered, and owns nothing → gate everything |
+| `[...]` | answered |
+
+`[]` must never collapse to the default, or a user who deliberately unticked every box gets
+pull-ups back on the next launch. There is a unit test for exactly this.
+
+#### Curation per type
+
+Hand-picked and deliberately narrow, measured against the free-exercise-db dump of 2026-07-30
+(873 entries; every candidate below ships two images):
+
+| Type | Source pool | After cuts | Shipped | What was cut |
+|---|---|---|---|---|
+| `jumping_rope` | 1 usable | 1 | **1** | `Fast Skipping` is a body-only step-hop, not rope work; `Battling Ropes` is a different implement |
+| `resistance_band` | 20 | 17 bench-free | **10** | one per movement pattern; skull crushers and bench presses need a bench |
+| `dumbbells` | 123 | 49 bench-free | **14** | one per pattern. The 49 held nine standing triceps extensions and seven wrist curls; one extension survives, no wrist curls |
+| `kettlebell` | 53 | 53, all bench-free | **9** | one per pattern out of a pool that is mostly jerk/snatch/clean variants |
+| `foam_roller` | 11 | 11 | **8** | `Lower Back-SMR` — rolling the lumbar spine is not a thing to put in front of somebody unsupervised; `Brachialis-SMR` and `Peroneals-SMR` are covered by their neighbours |
+
+**One exercise per movement pattern** is the rule that keeps these lists short. The dumbbell pool
+will happily supply nine ways to extend an elbow, and nine near-identical entries make the browse
+screen worse without making the training better — the same argument §4.1 uses for leaving
+near-duplicate rungs off a ladder.
+
+`jumping_rope` ships a single exercise, and the Settings row says "1 exercise" rather than hiding
+that. One is the honest count of what this source has, and a rope owner would rather see the row
+say one than wonder why ticking it changed nothing.
+
+Media cost: 58 KB per exercise, so 6.3 MB today becomes ~9 MB — comfortably inside §11's 25 MB.
+
+#### What the build script must refuse
+
+Beyond the existing checks, `build-catalog.ts` is a hard error when:
+
+- A pool member's source `equipment` is a **gym** value (`machine`, `cable`, `barbell`,
+  `e-z curl bar`, `medicine ball`, `exercise ball`). §1 says these are out, so a typo in
+  `curation.yaml` must not quietly import a lat pulldown.
+- A pool member's source `equipment` is **not** `body only`/`null` and it carries no gated tag.
+  This is the check that catches the real mistake: tagging a dumbbell exercise `chair` and shipping
+  it to somebody who owns no dumbbells.
+- Any per-type budget is exceeded, including the ungated one.
+- A gated type ends up with **zero** exercises, which would put a checkbox in Settings that does
+  nothing.
+
+`curation.yaml`'s old `include:` list is gone. Its two entries were there to pull non-bodyweight
+source rows into the pool, which is now what the per-equipment lists do — they **include and tag in
+one place**, so a row cannot enter the catalog without saying what it needs.
 
 ---
 
@@ -660,6 +824,37 @@ Derived entirely from `sessions`. No separate aggregate store, no denormalizatio
 
 Compute on demand in a worker if it gets slow. It will not get slow at the data volumes involved here.
 
+### 10.1 Load in statistics
+
+Added 2026-07-30 with §4.5. **Sets are the common currency and every chart above keeps working
+exactly as it did.** Kilogram-reps are a second, separate currency, and the two are never added
+together or drawn on one axis.
+
+- **A "Loaded work" section that does not exist until it has data.** It appears only once some
+  logged set has a `loadKg`, which for a user who owns no dumbbells is never. An empty section
+  explaining a feature they do not use is worse than no section.
+- **Never stacked with the rep chart, never a shared axis.** 240 kg-reps and 24 reps are not
+  comparable quantities, and putting them on one axis would make the smaller one look like nothing.
+- **Per-exercise progression is where load really belongs**, and it is safe there because the
+  series is one exercise: 8 kg → 10 kg → 12 kg on a one-arm row is a real progression, measured in
+  a unit that means the same thing at every point on the line.
+- **`volumeByMuscle` gains a `kgReps` figure, shown only where it is non-zero.** A muscle trained
+  only with bodyweight work has no load number, and printing `0 kg` next to it would read as a
+  result rather than an absence.
+- kg-reps are summed only over sets that have **both** a load and a rep count. A loaded *timed* set
+  counts as a loaded set and contributes no kg-reps, because kilogram-seconds is not the same
+  quantity and averaging them together would be arithmetic on unlike units.
+
+#### Refused, on purpose
+
+- **Any single app-wide "total volume" number.** There is no unit in which a 45-second plank, twelve
+  push-ups and eight rows with a 10 kg dumbbell add up. A number that combined them would be
+  precise, prominent, and meaningless — and it is the number a user would most readily believe.
+- **Any estimate of bodyweight load as a percentage of body mass.** "A push-up is 64% of your body
+  weight" is a figure from a paper about other people, multiplied by a body weight this app does not
+  have (§1). That is the calorie counter of §12 in a different costume: a number nobody measured,
+  displayed as though somebody had.
+
 ---
 
 ## 11. PWA and platform
@@ -783,7 +978,20 @@ The riskiest part, so it goes first. ~~If media sourcing fails, the whole projec
 
 ## 14. Appendix: LLM routine prompt
 
-Shipped in-app on the import screen, with a copy button, and with `catalog-for-llm.json` (a stripped `{id, name, category}` list emitted by the build script) downloadable next to it.
+Shipped in-app on the import screen, with a copy button, and with `catalog-for-llm.json` (a stripped
+`{id, name, category, equipment}` list) downloadable next to it.
+
+**Amended 2026-07-30. The catalog file is generated in the browser, not by the build script.** It
+used to be a static asset, which meant it could not possibly reflect §5.1's Settings — the build
+script runs on a laptop months before anyone ticks a box, so the download handed the LLM every
+kettlebell exercise in the catalog and the routine that came back was unusable. It is now built from
+`catalog.json` at the moment the user taps download, filtered to what they own, with an `equipment`
+field per entry so the model can see why an exercise is there.
+
+The prompt's `Constraints:` line is generated from the same source rather than left as a blank to
+fill in: `Equipment available: dumbbells, jumping rope`, or `Equipment available: none — floor,
+wall and chair only`. A model told what is available in a sentence produces better routines than one
+left to infer it from a file, and it costs nothing to say both.
 
 > You are writing a bodyweight training routine that will be imported into an app.
 >
@@ -808,11 +1016,14 @@ Shipped in-app on the import screen, with a copy button, and with `catalog-for-l
 >
 > Per item, use exactly one of `reps`, `duration_seconds`, `reps_min` + `reps_max`, or `"amrap": true`. Set `per_side: true` for anything performed one side at a time. All durations in seconds. Use metric units throughout.
 >
+> For an exercise whose `equipment` includes `dumbbells` or `kettlebell`, you may set `load_kg` to the mass of the implement in kilograms. Set it on nothing else: there is no load to record for a band, and a weighted pull-up is not supported because the real load includes body weight, which this app does not track (§4.5).
+>
 > To alternate exercises as a circuit or superset, set `"circuit": true` on the block: each round performs one set of every item in order. Rest is still taken after each set as its `rest_seconds` says, so for rest only between rounds give every item 0 except the block's last.
 >
 > Goal: **[describe the goal here]**
 > Target duration: **[minutes]**
-> Constraints: **[injuries, available space, floor only, pull-up bar available, and so on]**
+> Equipment available: **[generated from Settings — see the amendment above]**
+> Constraints: **[injuries, available space, and so on]**
 
 ---
 

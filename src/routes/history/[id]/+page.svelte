@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
+	import { formatKg } from '$lib/catalog/load.js';
 	import { deleteSession, getSession } from '$lib/db/sessions.js';
 	import type { Session, SetEntry } from '$lib/types.js';
 
@@ -37,6 +38,7 @@
 		const parts: string[] = [];
 		if (entry.reps !== undefined) parts.push(`${entry.reps} reps`);
 		if (entry.seconds !== undefined) parts.push(`${entry.seconds} s`);
+		if (entry.loadKg !== undefined) parts.push(formatKg(entry.loadKg));
 		if (entry.side) parts.push(entry.side);
 		if (entry.rpe !== undefined) parts.push(`RPE ${entry.rpe}`);
 		return parts.join(' · ') || '—';

@@ -1,15 +1,29 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	import { catalog, categories } from '$lib/catalog/index.js';
-	import type { Category, Exercise } from '$lib/types.js';
+	import { availableCatalog, equipmentLabel, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import type { Category, Exercise, Settings } from '$lib/types.js';
 
 	let { onpick, onclose }: { onpick: (e: Exercise) => void; onclose: () => void } = $props();
 
 	let query = $state('');
 	let activeCategory = $state<Category | 'all'>('all');
+	let settings = $state<Settings | null>(null);
+
+	onMount(async () => {
+		settings = await getSettings();
+	});
+
+	// The other screen a gate applies to (§5.1). Adding an exercise to a routine is
+	// the app offering one, so it offers only what the user can do.
+	const owned = $derived(ownedEquipment(settings));
+	const available = $derived(availableCatalog(owned));
+	const hidden = $derived(catalog.length - available.length);
 
 	const filtered = $derived(
-		catalog.filter((e) => {
+		available.filter((e) => {
 			if (activeCategory !== 'all' && e.category !== activeCategory) return false;
 			if (!query.trim()) return true;
 			const q = query.trim().toLowerCase();
@@ -40,7 +54,7 @@
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			type="search"
-			placeholder="Search {catalog.length} exercises…"
+			placeholder="Search {available.length} exercises…"
 			bind:value={query}
 			autofocus
 			class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-base placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
@@ -78,7 +92,9 @@
 					<span class="min-w-0">
 						<span class="block truncate font-medium">{e.name}</span>
 						<span class="mt-0.5 block text-xs text-zinc-400">
-							{e.category} · {e.level}{e.unilateral ? ' · per side' : ''}
+							{e.category} · {e.level}{e.unilateral ? ' · per side' : ''}{e.equipment.length
+								? ' · ' + e.equipment.map(equipmentLabel).join(', ')
+								: ''}
 						</span>
 					</span>
 				</button>
@@ -88,5 +104,10 @@
 				Nothing matches. Try a different name, or clear the category filter.
 			</li>
 		{/each}
+		{#if hidden > 0 && filtered.length > 0}
+			<li class="px-1 py-4 text-center text-xs text-zinc-600">
+				{hidden} exercise{hidden === 1 ? '' : 's'} need equipment you have not ticked in Settings.
+			</li>
+		{/if}
 	</ul>
 </div>

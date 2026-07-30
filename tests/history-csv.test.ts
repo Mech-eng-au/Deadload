@@ -35,6 +35,7 @@ const catalog = new Map<string, Exercise>([
 			name: 'Pushups',
 			aliases: [],
 			category: 'strength',
+			equipment: [],
 			primaryMuscles: ['chest'],
 			secondaryMuscles: [],
 			level: 'beginner',
@@ -131,7 +132,9 @@ describe('CSV export', () => {
 			[session(0, [entry({ setIndex: 2, side: 'left', reps: 8, rpe: 9 })])],
 			catalog
 		);
-		expect(csv).toContain(',3,left,8,,9,no');
+		// set, side, reps, seconds, load_kg, rpe, skipped — the empty cell between
+		// reps and rpe is seconds, and the one after it is the load (§4.5).
+		expect(csv).toContain(',3,left,8,,,9,no');
 	});
 
 	it('quotes only what needs quoting, and escapes inner quotes', () => {

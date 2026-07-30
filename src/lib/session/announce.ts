@@ -19,6 +19,23 @@ export function spokenDuration(seconds: number): string {
 	return rest === 0 ? head : `${head} ${rest} second${rest === 1 ? '' : 's'}`;
 }
 
+/**
+ * "10 kilos", "1 kilo", "2 and a half kilos" (§4.5). Spelled out for the ear
+ * like everything else here: an engine handed "10 kg" reads it "ten kay gee",
+ * and "2.5" comes out as "two point five" — right, but not how anybody says it
+ * about a dumbbell.
+ */
+export function spokenKg(kg: number): string {
+	const rounded = Number(kg.toFixed(2));
+	if (rounded === 1) return '1 kilo';
+	if (Number.isInteger(rounded)) return `${rounded} kilos`;
+	const whole = Math.floor(rounded);
+	if (Math.abs(rounded - whole - 0.5) < 0.001) {
+		return whole === 0 ? 'half a kilo' : `${whole} and a half kilos`;
+	}
+	return `${rounded} kilos`;
+}
+
 function spokenTarget(step: Step): string {
 	switch (step.target.kind) {
 		case 'reps':
@@ -53,7 +70,11 @@ export function announcementFor(step: Step, exerciseName: string): string {
 	// Capitalised because it is its own sentence: "As many as possible." rather
 	// than a fragment trailing off the exercise name.
 	const target = spokenTarget(step);
-	parts.push(`${target.charAt(0).toUpperCase()}${target.slice(1)}.`);
+	// The load rides on the target sentence rather than standing alone: "12 reps at
+	// 10 kilos" is how a person would say it, and "10 kilos." on its own would need
+	// the listener to work out what it belongs to.
+	const load = step.loadKg === undefined ? '' : ` at ${spokenKg(step.loadKg)}`;
+	parts.push(`${target.charAt(0).toUpperCase()}${target.slice(1)}${load}.`);
 
 	if (step.side) parts.push(`${step.side === 'left' ? 'Left' : 'Right'} side.`);
 

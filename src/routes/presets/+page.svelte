@@ -4,16 +4,40 @@
 	import { onMount } from 'svelte';
 	import { PRESET_FILES, type ReviewModel } from '$lib/import/index.js';
 	import { commitReview, itemCount, outstanding, reviewFromText } from '$lib/import/runner.svelte.js';
+	import { getExercise } from '$lib/catalog/index.js';
+	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import type { EquipmentId, Settings } from '$lib/types.js';
 
 	type Loaded = { file: string; review: ReviewModel; problems: number };
 
 	let presets = $state<Loaded[]>([]);
 	let loading = $state(true);
 	let adding = $state<string | null>(null);
+	let settings = $state<Settings | null>(null);
+
+	const owned = $derived(ownedEquipment(settings));
+
+	/**
+	 * A preset is never filtered or hidden (§5.1) — it says what it needs. Better
+	 * to know before adding it than to find out at the third exercise.
+	 */
+	function needs(review: ReviewModel, owned: EquipmentId[]): EquipmentId[] {
+		const missing = new Set<EquipmentId>();
+		for (const block of review.blocks) {
+			for (const item of block.items) {
+				const exercise = item.chosen ? getExercise(item.chosen) : undefined;
+				if (!exercise || item.dropped) continue;
+				for (const id of missingEquipment(exercise, owned)) missing.add(id);
+			}
+		}
+		return [...missing];
+	}
 
 	// Presets are loaded through the very same parser and resolver as user
 	// imports (§9), so any drift between the two fails here first.
 	onMount(async () => {
+		settings = await getSettings();
 		const loaded: Loaded[] = [];
 		for (const file of PRESET_FILES) {
 			try {
@@ -68,6 +92,14 @@
 						· <span class="text-amber-300">{preset.problems} need matching</span>
 					{/if}
 				</p>
+				{#each [needs(preset.review, owned)] as missing (preset.file)}
+					{#if missing.length}
+						<p class="mt-2 text-xs text-amber-200/90">
+							Uses {missing.map(equipmentLabel).join(' and ').toLowerCase()}, which you have not
+							ticked in Settings. It is added complete either way.
+						</p>
+					{/if}
+				{/each}
 				<button
 					onclick={() => add(preset)}
 					disabled={adding !== null}

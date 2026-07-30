@@ -18,6 +18,19 @@ const looseInt = z.union([z.number(), z.string()]).transform((v, ctx) => {
 	return Math.round(n);
 });
 
+/**
+ * Same tolerance, without the rounding: a load is 2.5 kg as often as 10 (§4.5).
+ * Rounding it would silently turn a 7.5 kg dumbbell into an 8 kg one.
+ */
+const looseNumber = z.union([z.number(), z.string()]).transform((v, ctx) => {
+	const n = typeof v === 'number' ? v : Number(v.trim().replace(/\s*kg$/i, ''));
+	if (!Number.isFinite(n)) {
+		ctx.addIssue({ code: 'custom', message: `expected a number, got ${JSON.stringify(v)}` });
+		return z.NEVER;
+	}
+	return n;
+});
+
 const looseBool = z.union([z.boolean(), z.string()]).transform((v) => {
 	if (typeof v === 'boolean') return v;
 	return ['true', 'yes', '1', 'y'].includes(v.trim().toLowerCase());
@@ -34,6 +47,7 @@ export const wireItemSchema = z
 		amrap: looseBool.optional(),
 		per_side: looseBool.optional(),
 		rest_seconds: looseInt.optional(),
+		load_kg: looseNumber.optional(),
 		tempo: z.string().optional(),
 		notes: z.string().optional()
 	})

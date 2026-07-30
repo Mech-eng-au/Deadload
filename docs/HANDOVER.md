@@ -28,18 +28,20 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 
 | Area | State |
 |---|---|
-| Catalog | 108 bodyweight exercises, every one with at least one image, generated and committed |
+| Catalog | 149 exercises, every one with at least one image, generated and committed. 99 need nothing but a floor, a wall and a chair; the rest are behind the equipment gates below |
+| Equipment | Six independent checkboxes in Settings (pull-up bar, jumping rope, dumbbells, kettlebell, resistance band, foam roller). Unticked equipment is filtered out of catalog browse and the exercise picker and nowhere else (added 2026-07-30) |
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
 | Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
-| Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage |
+| Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
+| Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
 | History | Browse past sessions, inspect every logged set, delete |
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **145 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **201 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -159,6 +161,32 @@ appear after rest, which is already the gap and already counts down out loud.
 it. Rest is also the moment the user is free to listen. Same reason the announcement is not
 repeated when rest is skipped.
 
+**`ownedEquipment: undefined` and `ownedEquipment: []` mean different things.** Undefined is
+"never asked" and resolves to `['pull_up_bar']`, because the catalog was built around a bar from
+M0 and two presets and a ladder need it. `[]` is "owns nothing" and must gate everything. Anything
+written as `settings.ownedEquipment ?? DEFAULT` collapses the two and hands pull-ups back to a user
+who deliberately unticked every box, on the next launch, silently. Read it through
+`ownedEquipment()` in `src/lib/catalog/equipment.ts` and nowhere else. There is a test named after
+this.
+
+**A gate hides an exercise from two screens: catalog browse and the exercise picker.** Not from a
+routine the user already has, not from history, not from a preset, and not from import resolution —
+those show an equipment chip or a warning. Gating is about what the app *offers*. The moment it
+starts editing what the user already decided to do, it is deleting their data to enforce a
+checkbox.
+
+**Load is the mass of an implement, and only ever that.** `loadKg` is set for `dumbbells` and
+`kettlebell` work and nothing else. A band has no kilograms — tension depends on the stretch, and a
+colour code is not a unit. A weighted pull-up is worse: the load is the plate *plus* the body, so
+`reps × plate` is not the work done and the honest figure needs a body weight §1 refuses to track.
+`HANDOVER` §7 used to propose an `addedKg` for exactly that; it is declined in SPEC §4.5. An
+importer that puts a load on a push-up has it dropped with a warning rather than stored.
+
+**kg-reps are a second currency, never added to the set counts.** No single app-wide "total volume"
+number exists, and `totals()` has no load field — there is a test that fails if one is added. There
+is no bodyweight-load-as-a-percentage-of-body-mass estimate either. Both are the calorie counter of
+§12 wearing a different hat: a number nobody measured, shown as though somebody had.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -187,7 +215,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 145 unit tests
+npm test           # 201 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
@@ -231,11 +259,13 @@ the ladders change so it can be argued on its own.
 **Editing a past session.** History can view and delete but not correct. A mislogged set is
 currently permanent. SPEC M6 parks this; it is the obvious next gap.
 
-**Added load.** Weighted pull-ups and dips are the natural continuation once bodyweight gets
-easy — an optional `addedKg` on a set entry. Note this is currently a **non-goal** in SPEC §1
-("weighted / equipment-based training"), so it needs the spec changed deliberately first. Body
-weight tracking is a different request and I would leave it out; it is the beginning of a
-general fitness tracker.
+~~**Added load.**~~ **Built 2026-07-30, and narrower than proposed** (SPEC §4.5, §5.1). The spec was
+changed deliberately first, as this entry asked. But the proposal here — `addedKg` for weighted
+pull-ups and dips — is the part that was *declined*: adding a plate to a pull-up makes the load the
+plate plus the body, and the honest number needs the body weight this same paragraph rightly says to
+leave out. So `loadKg` records the mass of an implement that was actually weighed, dumbbells and
+kettlebells only, and weighted pull-ups remain out of scope. The useful lesson: the reason to refuse
+body-weight tracking is also the reason `addedKg` could never have been honest.
 
 Things I would argue against: cloud sync, badges and achievements, and anything that widens the
 app beyond bodyweight training.

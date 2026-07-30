@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import CatalogPicker from './CatalogPicker.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
+	import { isLoadable } from '$lib/catalog/equipment.js';
 	import { emptyBlock, newItem } from '$lib/db/routines.js';
 	import type { Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
 
@@ -58,7 +59,7 @@
 		'w-20 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-2 text-center text-base focus:border-zinc-500 focus:outline-none';
 </script>
 
-<div class="flex flex-col gap-6 pb-32">
+<div class="flex flex-col gap-6 pb-40">
 	<div class="flex flex-col gap-3">
 		<input bind:value={routine.name} placeholder="Routine name" class="{fieldClass} text-lg" />
 		<input bind:value={routine.goal} placeholder="Goal, e.g. hip flexibility" class={fieldClass} />
@@ -196,6 +197,26 @@
 								/>
 								<span class="text-zinc-400">Per side</span>
 							</label>
+
+							{#if exercise && isLoadable(exercise)}
+								<!-- Only where the equipment has a mass (§4.5): the plan for the
+									 weight, which the log can still differ from. -->
+								<label class="flex items-center gap-2">
+									<span class="text-zinc-400">Load kg</span>
+									<input
+										type="number"
+										min="0"
+										step="0.5"
+										value={item.loadKg ?? ''}
+										oninput={(e) => {
+											const n = Number(e.currentTarget.value);
+											item.loadKg = e.currentTarget.value === '' || n <= 0 ? undefined : n;
+										}}
+										placeholder="–"
+										class={numberClass}
+									/>
+								</label>
+							{/if}
 						</div>
 
 						<input
@@ -224,9 +245,11 @@
 	</button>
 </div>
 
-<!-- Primary action in the bottom third, reachable one-handed (§12). -->
+<!-- Primary action in the bottom third, reachable one-handed (§12). Sits above the
+	 tab bar rather than under it: see --dl-tabbar-height in app.css. -->
 <div
-	class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur"
+	class="fixed inset-x-0 z-30 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-3 pb-3 backdrop-blur"
+	style="bottom: var(--dl-tabbar-height)"
 >
 	<div class="mx-auto max-w-2xl">
 		<button

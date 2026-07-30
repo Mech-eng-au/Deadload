@@ -1,0 +1,62 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Dumbbell and kettlebell upper body",
+	"goal": "upper body strength",
+	"description": "Loaded pushing and pulling with one pair of dumbbells and a kettlebell.",
+	"tags": ["strength", "loaded"],
+	"blocks": [
+		{
+			"label": "Main",
+			"items": [
+				{
+					"exercise": "one_arm_kettlebell_row",
+					"sets": 3,
+					"reps": 8,
+					"load_kg": 12,
+					"per_side": true,
+					"rest_seconds": 45
+				},
+				{
+					"exercise": "Standing Dumbbell Press",
+					"sets": 3,
+					"reps": 10,
+					"load_kg": "10",
+					"rest_seconds": 60
+				},
+				{
+					"exercise": "dumbbell_bicep_curl",
+					"sets": 2,
+					"reps": 12,
+					"load_kg": 7.5,
+					"rest_seconds": 45
+				},
+				{
+					"exercise": "goblet_squat",
+					"sets": 3,
+					"reps": 10,
+					"load_kg": "16 kg",
+					"rest_seconds": 60
+				}
+			]
+		},
+		{
+			"label": "Finisher",
+			"items": [
+				{
+					"exercise": "pushups",
+					"sets": 2,
+					"reps": 15,
+					"load_kg": 20,
+					"rest_seconds": 30,
+					"notes": "A load on a push-up is not a thing the app can record; it should be dropped with a warning."
+				},
+				{
+					"exercise": "plank",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}
