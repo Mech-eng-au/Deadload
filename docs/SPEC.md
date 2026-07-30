@@ -608,6 +608,7 @@ Beyond the existing checks, `build-catalog.ts` is a hard error when:
 source rows into the pool, which is now what the per-equipment lists do — they **include and tag in
 one place**, so a row cannot enter the catalog without saying what it needs.
 
+
 ---
 
 ## 6. Import
@@ -1068,6 +1069,59 @@ Twenty screenshots of Leap Fitness's *Home Workout* were read for ideas. Five we
 - **A ring, not a sentence, for the auto-mode countdown.** How long you have is a quantity, so it gets a shape rather than the words "Starting on its own…".
 
 **Deliberately not taken**, recorded so the decision is not silently revisited: the light theme and blue gradients (dark is a §12 decision, made for a dim bedroom); calorie counts (we do not measure them, and a number nobody measured is the same dishonesty as auto-logging reps — §7); weight and BMI capture (a §1 non-goal); streak flames, PRO badges and "customised for you" cards (retention machinery for an app with a business model, which this one does not have); confetti on completion (§12 allows motion only for the rest countdown, set completion and navigation); and **ALL-CAPS exercise names**, which wrap badly and read worse at a glance — exactly the legibility §12 exists to protect.
+
+#### Ordering a routine by dragging
+
+Added 2026-07-30, replacing the ↑/↓ buttons on each exercise in the editor.
+
+**The drag lives on the routine screen as well as in the editor**, and the routine screen is the one
+that matters: its cards are small, so a twelve-exercise routine is visible in two or three screens
+rather than twelve, and moving the fourth exercise above the second is one gesture on a card you can
+actually see. The editor keeps the same handle because a routine being built for the first time has
+no view screen yet, and ordering it should not have to wait for a save.
+
+Four decisions, all in `$lib/reorder.ts` and `SortableList.svelte` rather than in either screen:
+
+1. **A handle, not a long press.** The card itself opens the exercise (below), so two gestures share
+   one row. They are told apart by *where the finger lands*, not by how long it stays: a long press
+   is invisible until it has already done the wrong thing, and its timeout is a guess about the user.
+2. **The list does not change while the finger is down.** Only the dragged card follows the pointer;
+   the others step aside by exactly its height, so a gap opens where it would land. Every card's
+   measured position therefore stays true for the whole gesture and there is nothing to re-measure —
+   which is what makes cards of different heights work, and a routine card grows with its notes and
+   its equipment chips.
+3. **Page coordinates, and the list scrolls near the edges.** A routine is taller than the screen, so
+   a drag that cannot leave the viewport cannot reorder it. Measuring in page space rather than
+   client space is what lets the page move under the finger without the arithmetic going wrong.
+4. **Within one section only** — exactly as far as the arrow buttons reached. Moving an exercise from
+   Warm-up into Main is a different edit, and the editor is where it belongs.
+
+**On the routine screen a drop saves immediately.** That screen has no Save button, and inventing one
+for a gesture would be worse than the gesture: the drop *is* the decision, it is visible, and
+dragging the card back undoes it. In the editor a drop changes nothing on disk until Save, like every
+other edit there — so Cancel still discards it.
+
+The handle is a `<button>`, and **Arrow Up / Arrow Down on it move the exercise**. That is the only
+way to reorder without a pointer, and it is what the two removed buttons did; focus follows the card
+to its new position so a second press moves the same exercise again.
+
+#### Reading about an exercise from a routine
+
+Added 2026-07-30. Tapping an exercise in a routine — viewing one or editing one — opens what the
+catalog knows about it: the photos, the muscles with the body map of §4.6, how to do it, and the
+progression it belongs to.
+
+**A sheet over the screen, not a link to the catalog page.** From the editor a link would be a defect
+rather than a nicety: leaving that screen discards unsaved work, which the Cancel link says plainly.
+From the routine screen it would cost the scroll position in a twelve-exercise list, to answer a
+question asked in passing. So `ExerciseSheet` opens over what you were doing and closes back onto it.
+
+It renders the **same component as the catalog page** (`ExerciseDetail`), so the two cannot drift into
+describing the same exercise differently. Inside the sheet that component is `embedded`, which means
+one rule: **no link may navigate.** The Settings and muscle-glossary links become plain text, and the
+progression rungs move the *sheet* to that exercise instead of moving the app — which turns out to be
+better than the page's links anyway, since comparing three rungs of a ladder no longer means three
+navigations and three journeys back.
 
 ---
 

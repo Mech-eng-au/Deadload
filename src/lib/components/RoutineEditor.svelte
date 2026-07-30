@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import CatalogPicker from './CatalogPicker.svelte';
+	import ExerciseSheet from './ExerciseSheet.svelte';
+	import SortableList from './SortableList.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { isLoadable } from '$lib/catalog/equipment.js';
 	import { muscleInfo } from '$lib/catalog/muscles.js';
 	import { emptyBlock, newItem } from '$lib/db/routines.js';
-	import type { Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
+	import { moveItem } from '$lib/reorder.js';
+	import type { Block, Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
 
 	let {
 		routine = $bindable(),
@@ -14,6 +17,7 @@
 	}: { routine: Routine; onsave: () => void; saving?: boolean } = $props();
 
 	let pickingForBlock = $state<string | null>(null);
+	let sheetFor = $state<string | null>(null);
 	let tagsText = $state(routine.tags.join(', '));
 
 	const canSave = $derived(routine.name.trim().length > 0);
@@ -24,10 +28,16 @@
 		pickingForBlock = null;
 	}
 
-	function move(items: RoutineItem[], index: number, by: number) {
-		const to = index + by;
-		if (to < 0 || to >= items.length) return;
-		[items[index], items[to]] = [items[to], items[index]];
+	/**
+	 * Dragged here as well as on the routine screen (§12), so a routine can be put
+	 * in order while it is being built — before it has a screen to view.
+	 */
+	function reorder(block: Block, from: number, to: number) {
+		block.items = moveItem(block.items, from, to);
+	}
+
+	function exerciseName(item: RoutineItem): string {
+		return getExercise(item.exerciseId)?.name ?? item.exerciseId;
 	}
 
 	function setTargetKind(item: RoutineItem, kind: Target['kind']) {
@@ -110,11 +120,21 @@
 				</label>
 			{/if}
 
-			<ul class="flex flex-col gap-2">
-				{#each block.items as item, itemIndex (item.id)}
+			<SortableList
+				items={block.items}
+				onreorder={(from, to) => reorder(block, from, to)}
+				describe={exerciseName}
+				itemClass="rounded-xl border border-zinc-800 bg-zinc-900 p-3"
+			>
+				{#snippet row(item, itemIndex, grip)}
 					{@const exercise = getExercise(item.exerciseId)}
-					<li class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-						<div class="flex items-start gap-3">
+					<div class="flex items-start gap-3">
+						<!-- Opens over the editor rather than navigating to the catalog: leaving
+							 this screen discards unsaved work (§12). -->
+						<button
+							onclick={() => (sheetFor = item.exerciseId)}
+							class="flex min-w-0 flex-1 items-start gap-3 text-left"
+						>
 							{#if exercise}
 								<img
 									src="{base}{exercise.media[0].path}"
@@ -122,117 +142,103 @@
 									class="h-14 w-18 shrink-0 rounded-lg bg-white object-cover"
 								/>
 							{/if}
-							<div class="min-w-0 flex-1">
-								<div class="truncate font-medium">{exercise?.name ?? item.exerciseId}</div>
+							<span class="min-w-0 flex-1">
+								<span class="block truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
 								<!-- Muscles in plain English while the routine is being built (§4.6). -->
-								<div class="mt-0.5 text-xs text-zinc-500">
+								<span class="mt-0.5 block text-xs text-zinc-500">
 									{exercise?.category}{exercise?.primaryMuscles.length
-										? ' · ' + exercise.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')
+										? ' · ' +
+											exercise.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')
 										: ''}
-								</div>
-							</div>
-							<div class="flex shrink-0 gap-1">
-								<button
-									onclick={() => move(block.items, itemIndex, -1)}
-									disabled={itemIndex === 0}
-									aria-label="Move up"
-									class="min-h-11 min-w-11 rounded-lg text-zinc-400 disabled:opacity-25"
-								>
-									↑
-								</button>
-								<button
-									onclick={() => move(block.items, itemIndex, 1)}
-									disabled={itemIndex === block.items.length - 1}
-									aria-label="Move down"
-									class="min-h-11 min-w-11 rounded-lg text-zinc-400 disabled:opacity-25"
-								>
-									↓
-								</button>
-								<button
-									onclick={() => block.items.splice(itemIndex, 1)}
-									aria-label="Remove exercise"
-									class="min-h-11 min-w-11 rounded-lg text-zinc-500 hover:text-red-400"
-								>
-									×
-								</button>
-							</div>
-						</div>
-
-						<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3 text-sm">
-							<label class="flex items-center gap-2">
-								<span class="text-zinc-400">Sets</span>
-								<input type="number" min="1" bind:value={item.sets} class={numberClass} />
-							</label>
-
-							<label class="flex items-center gap-2">
-								<span class="text-zinc-400">Target</span>
-								<select
-									value={item.target.kind}
-									onchange={(e) => setTargetKind(item, e.currentTarget.value as Target['kind'])}
-									class="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-2 text-base focus:border-zinc-500 focus:outline-none"
-								>
-									<option value="reps">reps</option>
-									<option value="reps_range">rep range</option>
-									<option value="duration">seconds</option>
-									<option value="amrap">as many as possible</option>
-								</select>
-							</label>
-
-							{#if item.target.kind === 'reps'}
-								<input type="number" min="1" bind:value={item.target.reps} class={numberClass} />
-							{:else if item.target.kind === 'duration'}
-								<input type="number" min="1" bind:value={item.target.seconds} class={numberClass} />
-							{:else if item.target.kind === 'reps_range'}
-								<span class="flex items-center gap-2">
-									<input type="number" min="1" bind:value={item.target.min} class={numberClass} />
-									<span class="text-zinc-500">to</span>
-									<input type="number" min="1" bind:value={item.target.max} class={numberClass} />
 								</span>
-							{/if}
-
-							<label class="flex items-center gap-2">
-								<span class="text-zinc-400">Rest s</span>
-								<input type="number" min="0" bind:value={item.restSeconds} class={numberClass} />
-							</label>
-
-							<label class="flex min-h-11 items-center gap-2">
-								<input
-									type="checkbox"
-									bind:checked={item.perSide}
-									class="h-5 w-5 rounded border-zinc-700 bg-zinc-950"
-								/>
-								<span class="text-zinc-400">Per side</span>
-							</label>
-
-							{#if exercise && isLoadable(exercise)}
-								<!-- Only where the equipment has a mass (§4.5): the plan for the
-									 weight, which the log can still differ from. -->
-								<label class="flex items-center gap-2">
-									<span class="text-zinc-400">Load kg</span>
-									<input
-										type="number"
-										min="0"
-										step="0.5"
-										value={item.loadKg ?? ''}
-										oninput={(e) => {
-											const n = Number(e.currentTarget.value);
-											item.loadKg = e.currentTarget.value === '' || n <= 0 ? undefined : n;
-										}}
-										placeholder="–"
-										class={numberClass}
-									/>
-								</label>
-							{/if}
+							</span>
+						</button>
+						<div class="flex shrink-0 items-center gap-1">
+							{@render grip(itemIndex)}
+							<button
+								onclick={() => block.items.splice(itemIndex, 1)}
+								aria-label="Remove exercise"
+								class="min-h-11 min-w-11 rounded-lg text-zinc-500 hover:text-red-400"
+							>
+								×
+							</button>
 						</div>
+					</div>
 
-						<input
-							bind:value={item.notes}
-							placeholder="Notes (optional)"
-							class="mt-2 w-full rounded-lg bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-600 focus:outline-none"
-						/>
-					</li>
-				{/each}
-			</ul>
+					<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3 text-sm">
+						<label class="flex items-center gap-2">
+							<span class="text-zinc-400">Sets</span>
+							<input type="number" min="1" bind:value={item.sets} class={numberClass} />
+						</label>
+
+						<label class="flex items-center gap-2">
+							<span class="text-zinc-400">Target</span>
+							<select
+								value={item.target.kind}
+								onchange={(e) => setTargetKind(item, e.currentTarget.value as Target['kind'])}
+								class="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-2 text-base focus:border-zinc-500 focus:outline-none"
+							>
+								<option value="reps">reps</option>
+								<option value="reps_range">rep range</option>
+								<option value="duration">seconds</option>
+								<option value="amrap">as many as possible</option>
+							</select>
+						</label>
+
+						{#if item.target.kind === 'reps'}
+							<input type="number" min="1" bind:value={item.target.reps} class={numberClass} />
+						{:else if item.target.kind === 'duration'}
+							<input type="number" min="1" bind:value={item.target.seconds} class={numberClass} />
+						{:else if item.target.kind === 'reps_range'}
+							<span class="flex items-center gap-2">
+								<input type="number" min="1" bind:value={item.target.min} class={numberClass} />
+								<span class="text-zinc-500">to</span>
+								<input type="number" min="1" bind:value={item.target.max} class={numberClass} />
+							</span>
+						{/if}
+
+						<label class="flex items-center gap-2">
+							<span class="text-zinc-400">Rest s</span>
+							<input type="number" min="0" bind:value={item.restSeconds} class={numberClass} />
+						</label>
+
+						<label class="flex min-h-11 items-center gap-2">
+							<input
+								type="checkbox"
+								bind:checked={item.perSide}
+								class="h-5 w-5 rounded border-zinc-700 bg-zinc-950"
+							/>
+							<span class="text-zinc-400">Per side</span>
+						</label>
+
+						{#if exercise && isLoadable(exercise)}
+							<!-- Only where the equipment has a mass (§4.5): the plan for the
+								 weight, which the log can still differ from. -->
+							<label class="flex items-center gap-2">
+								<span class="text-zinc-400">Load kg</span>
+								<input
+									type="number"
+									min="0"
+									step="0.5"
+									value={item.loadKg ?? ''}
+									oninput={(e) => {
+										const n = Number(e.currentTarget.value);
+										item.loadKg = e.currentTarget.value === '' || n <= 0 ? undefined : n;
+									}}
+									placeholder="–"
+									class={numberClass}
+								/>
+							</label>
+						{/if}
+					</div>
+
+					<input
+						bind:value={item.notes}
+						placeholder="Notes (optional)"
+						class="mt-2 w-full rounded-lg bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-600 focus:outline-none"
+					/>
+				{/snippet}
+			</SortableList>
 
 			<button
 				onclick={() => (pickingForBlock = block.id)}
@@ -273,4 +279,8 @@
 
 {#if pickingForBlock}
 	<CatalogPicker onpick={addExercise} onclose={() => (pickingForBlock = null)} />
+{/if}
+
+{#if sheetFor}
+	<ExerciseSheet exerciseId={sheetFor} onclose={() => (sheetFor = null)} />
 {/if}

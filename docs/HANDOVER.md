@@ -30,7 +30,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 |---|---|
 | Catalog | 149 exercises, every one with at least one image, generated and committed. 99 need nothing but a floor, a wall and a chair; the rest are behind the equipment gates below |
 | Equipment | Six independent checkboxes in Settings (pull-up bar, jumping rope, dumbbells, kettlebell, resistance band, foam roller). Unticked equipment is filtered out of catalog browse and the exercise picker and nowhere else (added 2026-07-30) |
-| Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes |
+| Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes. Exercises are dragged into order by a handle, on the routine screen as well as in the editor, and tapping one opens what the catalog knows about it without leaving the screen (added 2026-07-30) |
 | Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Nine built-in routines, loaded through the import path. Two of them (*Floor time with the baby*, *Baby in arms*) carry per-item `notes` saying where the baby goes — the only way to express that without extending the catalog (added 2026-07-30) |
@@ -42,7 +42,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **244 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **260 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -79,6 +79,7 @@ scripts/build-catalog.ts     generates the catalog; run by hand, output committe
 src/lib/catalog/             catalog.json + typed loader; ladders.ts is the one hand-authored bit
 src/lib/db/                  IndexedDB: schema, routines, sessions, aliases, settings, backup
 src/lib/import/              parsers + resolver — pure, no Svelte, no database
+src/lib/reorder.ts           where a dragged card lands — pure, no DOM
 src/lib/session/             player state machine, steps, audio, speech, wake lock, last-time
 src/lib/stats/               statistics and CSV — pure functions over the session log
 src/routes/                  the screens
@@ -87,8 +88,9 @@ tests/                       vitest; fixtures/imports holds the deliberately ugl
 
 Load-bearing rules, all of which have already caught something:
 
-- **The pure layers stay pure.** `import/`, `stats/`, `session/steps.ts` and `session/edit.ts` take
-  data as arguments rather than reading the database. That is why their rules are unit-testable.
+- **The pure layers stay pure.** `import/`, `stats/`, `session/steps.ts`, `session/edit.ts` and
+  `reorder.ts` take data as arguments rather than reading the database. That is why their rules are
+  unit-testable.
 - **`toPlain()` at the database boundary.** IndexedDB's structured clone rejects Svelte 5's
   reactive proxies with `[object Array] could not be cloned`. Every write is flattened at the
   write boundary rather than at call sites, because a forgotten snapshot fails at runtime while
@@ -245,6 +247,34 @@ contradiction that §10 would then count; un-skipping therefore has to supply a 
 renumbers the rest of that exercise by *distinct* `setIndex`, so a per-side pair stays one set rather
 than becoming two.
 
+**Two gestures share a routine card, told apart by place and not by time.** Added 2026-07-30
+(SPEC §12). Tapping the card opens the exercise; the handle on its right drags it into order. A long
+press would have avoided the handle, and was rejected: it is invisible until it has already done the
+wrong thing, and its timeout is a guess about how fast this user moves.
+
+Three things about the drag are load-bearing, and all three are in `$lib/reorder.ts` and
+`SortableList.svelte` rather than in the screens:
+
+- **The list does not change while the finger is down.** Only the dragged card follows the pointer;
+  the others step aside by exactly its height, opening a gap where it will land. So every card's
+  measured position stays true for the whole gesture, which is what makes cards of *different*
+  heights work — and a routine card grows with its notes and its equipment chips. An earlier version
+  drew a drop line instead and the line ended up hidden underneath the card being dragged; the
+  screenshot is what caught it.
+- **Page coordinates, not client coordinates**, because the list auto-scrolls near the edges and the
+  page therefore moves under a still finger. A page-space centre survives that; a client-space one
+  does not.
+- **On the routine screen a drop saves at once; in the editor it does not.** The routine screen has
+  no Save button and the drop is the decision. The editor stages everything until Save, so Cancel
+  still discards a drag there.
+
+**Nothing that opens over a routine may navigate.** The exercise sheet exists because leaving the
+routine *editor* discards unsaved work — its own Cancel link says so — so a link to the catalog page
+would have been a defect dressed as a convenience. `ExerciseDetail` therefore has an `embedded` mode
+whose single rule is that no link navigates: Settings and the muscle glossary become plain text, and
+the progression rungs move the sheet instead of the app. The catalog page and the sheet render the
+same component, so they cannot drift into describing an exercise differently.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -273,7 +303,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 244 unit tests
+npm test           # 260 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
@@ -284,7 +314,7 @@ Playwright with `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. They cover
 flow with a simulated app restart, the session player end to end, the polish round, import and
 presets, backup and restore including a full database wipe, last-time numbers across two
 workouts, page transitions, audio, and history plus CSV. The 2026-07-30 round added the muscle body
-map, the baby presets, and session correction — the last one seeded a finished session straight into
+map, the baby presets, session correction, and dragging a routine into order — the last one seeded a finished session straight into
 IndexedDB rather than performing a whole workout to reach the screen under test, which is worth
 copying for anything that only cares about a logged session.
 
@@ -312,6 +342,12 @@ free-exercise-db simply does not contain most of the intermediate rungs. Writing
 afternoon, not a curation pass. What took the thinking was the invariant — a swap must not change
 the *number* of steps, or the player loses its place on resume, which is why swaps live on the
 session and `perSide` only follows the new exercise once the session is over.
+
+**Dragging an exercise between sections.** The drag added 2026-07-30 reorders within one section
+only, exactly as far as the arrow buttons it replaced could reach. Moving an exercise from Warm-up
+into Main still means removing and re-adding it in the editor. Worth doing if it turns out to be a
+thing the user actually wants; it needs the drag to know about more than one list, which is why it
+was left out of the first version rather than half-done.
 
 **Double progression.** Now unblocked: hit the top of the rep range on every set, and the app
 suggests raising the target. A simple rule over data that already exists. Deliberately left out of

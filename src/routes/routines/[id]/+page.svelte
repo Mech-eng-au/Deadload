@@ -4,12 +4,22 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
-	import { countItems, deleteRoutine, describeItem, getRoutine, uid } from '$lib/db/routines.js';
+	import {
+		countItems,
+		deleteRoutine,
+		describeItem,
+		getRoutine,
+		putRoutine,
+		uid
+	} from '$lib/db/routines.js';
 	import { estimateSeconds, totalSets } from '$lib/session/steps.js';
 	import { putSession } from '$lib/db/sessions.js';
 	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
 	import { getSettings } from '$lib/db/settings.js';
-	import type { Routine, Settings } from '$lib/types.js';
+	import ExerciseSheet from '$lib/components/ExerciseSheet.svelte';
+	import SortableList from '$lib/components/SortableList.svelte';
+	import { moveItem } from '$lib/reorder.js';
+	import type { Block, Routine, RoutineItem, Settings } from '$lib/types.js';
 
 	let routine = $state<Routine | null>(null);
 	let loaded = $state(false);
@@ -45,6 +55,34 @@
 		if (!routine) return;
 		await deleteRoutine(routine.id);
 		await goto(`${base}/`, { replaceState: true });
+	}
+
+	/** Which exercise the sheet is showing, or null when it is closed (§12). */
+	let sheetFor = $state<string | null>(null);
+
+	function exerciseName(item: RoutineItem): string {
+		return getExercise(item.exerciseId)?.name ?? item.exerciseId;
+	}
+
+	/**
+	 * Dragging saves at once (§12). There is no Save button on this screen and
+	 * inventing one for a gesture would be worse than the gesture: the drop *is* the
+	 * decision, it is visible, and dragging the card back undoes it.
+	 *
+	 * Within one section only, exactly as far as the arrow buttons used to reach.
+	 * Moving an exercise from Warm-up into Main is a different edit, and the editor
+	 * is where it belongs.
+	 */
+	async function reorder(block: Block, from: number, to: number) {
+		if (!routine) return;
+		const next: Routine = {
+			...routine,
+			blocks: routine.blocks.map((b) =>
+				b.id === block.id ? { ...b, items: moveItem(b.items, from, to) } : b
+			)
+		};
+		routine = next; // moved under the finger, before the write settles
+		routine = await putRoutine(next);
 	}
 </script>
 
@@ -104,10 +142,22 @@
 							{/if}
 						</h2>
 					{/if}
-					<ul class="flex flex-col gap-2">
-						{#each block.items as item (item.id)}
+					<SortableList
+						items={block.items}
+						onreorder={(from, to) => reorder(block, from, to)}
+						describe={exerciseName}
+						itemClass="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3"
+					>
+						{#snippet row(item, _i, grip)}
 							{@const exercise = getExercise(item.exerciseId)}
-							<li class="flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-3">
+							<!-- The card opens the exercise, the handle moves it (§12). Two
+								 gestures on one row, told apart by where the finger lands rather than
+								 by how long it stays — a long press is invisible until it has already
+								 gone wrong. -->
+							<button
+								onclick={() => (sheetFor = item.exerciseId)}
+								class="flex min-w-0 flex-1 items-center gap-4 text-left"
+							>
 								{#if exercise}
 									<img
 										src="{base}{exercise.media[0].path}"
@@ -118,13 +168,13 @@
 										class="h-16 w-20 shrink-0 rounded-lg bg-white object-cover"
 									/>
 								{/if}
-								<div class="min-w-0">
-									<div class="truncate font-medium">{exercise?.name ?? item.exerciseId}</div>
-									<div class="mt-0.5 text-sm text-zinc-400">{describeItem(item)}</div>
+								<span class="min-w-0">
+									<span class="block truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
+									<span class="mt-0.5 block text-sm text-zinc-400">{describeItem(item)}</span>
 									<!-- A routine keeps every exercise in it (§5.1). Equipment the user has
 										 not ticked earns a chip here, never a removal. -->
 									{#if exercise?.equipment.length}
-										<div class="mt-1 flex flex-wrap gap-1.5 text-xs">
+										<span class="mt-1 flex flex-wrap gap-1.5 text-xs">
 											{#each exercise.equipment as id (id)}
 												<span
 													class="rounded-full px-2 py-0.5 {missingEquipment(exercise, owned).includes(id)
@@ -134,18 +184,19 @@
 													{equipmentLabel(id)}
 												</span>
 											{/each}
-										</div>
+										</span>
 									{/if}
 									{#if item.restSeconds > 0}
-										<div class="text-xs text-zinc-500">{item.restSeconds} s rest</div>
+										<span class="block text-xs text-zinc-500">{item.restSeconds} s rest</span>
 									{/if}
 									{#if item.notes}
-										<div class="mt-1 text-xs text-zinc-500">{item.notes}</div>
+										<span class="mt-1 block text-xs text-zinc-500">{item.notes}</span>
 									{/if}
-								</div>
-							</li>
-						{/each}
-					</ul>
+								</span>
+							</button>
+							{@render grip(_i)}
+						{/snippet}
+					</SortableList>
 				</section>
 			{/if}
 		{/each}
@@ -191,4 +242,8 @@
 			{/if}
 		</div>
 	</article>
+
+	{#if sheetFor}
+		<ExerciseSheet exerciseId={sheetFor} onclose={() => (sheetFor = null)} />
+	{/if}
 {/if}
