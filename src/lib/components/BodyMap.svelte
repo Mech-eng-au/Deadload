@@ -114,14 +114,25 @@
 					<ellipse cx="89" cy="80" rx="6.5" ry="13" class={tone('biceps')}>
 						<title>{title('biceps')}</title>
 					</ellipse>
-					<rect x="45" y="126" width="10" height="56" rx="5" class={tone('quadriceps')} />
-					<rect x="65" y="126" width="10" height="56" rx="5" class={tone('quadriceps')}>
+					<rect x="45" y="126" width="13" height="56" rx="6" class={tone('quadriceps')} />
+					<rect x="62" y="126" width="13" height="56" rx="6" class={tone('quadriceps')}>
 						<title>{title('quadriceps')}</title>
 					</rect>
-					<rect x="56" y="126" width="4" height="42" rx="2" class={tone('adductors')} />
-					<rect x="60" y="126" width="4" height="42" rx="2" class={tone('adductors')}>
+					<!--
+						Two clearly separate strips, one per thigh, with a wide gap down the
+						centreline and nothing bright reaching the pelvis.
+
+						This is not fussiness. The first version put them at x 56-60 and
+						60-64.5 starting at y 126, so they merged into one bright vertical bar
+						straddling the crotch, and the user's first reaction to the shipped
+						screenshot was that it "just looks like a dick". It did. Keep the gap,
+						keep the top below the hip joint, and do not tidy these back into one
+						centred shape.
+					-->
+					<polygon points="48,136 55,140 55,170 48,166" class={tone('adductors')} />
+					<polygon points="72,136 65,140 65,170 72,166" class={tone('adductors')}>
 						<title>{title('adductors')}</title>
-					</rect>
+					</polygon>
 				{:else}
 					<polygon points="46,42 74,42 79,66 60,76 41,66" class={tone('traps')}>
 						<title>{title('traps')}</title>

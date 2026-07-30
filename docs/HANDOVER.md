@@ -198,6 +198,14 @@ exact list of words a beginner needs a picture for, and `adductors` was the exam
 request. SPEC §4.6 records the id→name mapping so this is one licence check away from being
 finishable, not a fresh investigation.
 
+**The two adductor strips on the body map are separated on purpose.** They were one bar straddling
+the centreline starting at the pelvis, and the first screenshot from the phone reported — correctly —
+that it looked like a penis. One highlighted region per thigh, a wide gap down the middle, and
+nothing bright reaching the hip joint. Do not tidy them back into one centred shape. The general
+lesson is the one §3 already makes: a diagram is a picture, and pictures have to be looked at, not
+reasoned about. Every single-muscle highlight has now been rendered and eyeballed; that is the check
+to repeat after editing the SVG.
+
 **Anatomy never appears during a session.** Mid-set the one available glance belongs to the set
 numbers and the countdown (§12), so the muscle glossary and the body map are catalog- and
 builder-only. `tests/muscles.test.ts` asserts the player does not import `BodyMap`.
