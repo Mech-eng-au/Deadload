@@ -393,41 +393,68 @@ Three places, and no others:
 countdown (§12). Anatomy is setup-time information, which is §15's rule exactly: fewer taps during a
 session, more during setup.
 
-#### The body map: real anatomy, our own highlights
+#### The body map: a body model, coloured per muscle
 
-Two anatomical figures with a translucent ellipse over each trained muscle — brighter for a muscle
-doing the work, fainter for one assisting, nothing at all on the rest.
+Front and back figures with each trained muscle **filled in**, on a three-step ramp: grey for a muscle
+not involved, light red for one assisting, strong red for one doing the work, with a legend.
 
-**The figures are `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia
-Commons, by Termininja, CC BY-SA 3.0.** They arrived 2026-07-30, replacing a hand-drawn schematic the
-user did not like — *"I liked the svg's from Wikipedia better"* — and they are unambiguously better:
-the schematic read as an action figure, and one version of it made the adductor highlight look like a
-penis.
+The ramp matters more than the palette. An earlier version used three unrelated tones and the user's
+objection was exactly right — *"it is a bit confusing that the red parts are the main muscle groups
+worked, the grey are the partly applied, and then the light-reds are the ones not used"*. If the
+colours do not order, the reader has to memorise a key instead of reading an intensity. They order now.
 
-Obligations, because CC BY-SA is a condition and not a courtesy: the author, the licence and the
-source URL are recorded in `attribution.json` and shown on the About page, along with a statement
-that the work is modified and shared alike. `Attribution.covers` exists so that entry can say what it
-is for instead of the About page counting zero exercises against it.
+**The figures come from `svelte-body-highlighter` on npm, MIT, © 2022 ELABBASSI Hicham and © 2025
+Stefan Poindl** (itself a port of `react-native-body-highlighter`). `attribution.json` records the
+authors and the licence and the About page shows them, because MIT requires the notice to travel with
+the work. `Attribution.covers` exists so that entry can say what it is for instead of the About page
+counting zero exercises against it.
 
-**Fetched from wger's copies, not from Commons**, for two reasons. The dull one: the network the
-project is built on cannot reach `commons.wikimedia.org`. The real one: wger's copies are already
-flattened to seven tonal layers at 314 kB and 395 kB, where the Commons originals are over 3 MB, and
-§11 has a budget. Share-alike follows the derivative, so the licence and credit are unchanged.
+This is the third attempt, and the history is the argument for each choice:
 
-**The highlights are ours.** The figures have no per-muscle paths — seven tonal layers and nothing
-named — so nothing in them can be recoloured by muscle. wger solves that with its own overlay set,
-which is **not used**: it is AGPL, and it covers 12 of the 17 names, missing `adductors`, `abductors`,
-`forearms`, `middle back` and `neck`, very nearly the list of words a beginner needs a picture for.
-Instead `src/lib/catalog/body-map.ts` places an ellipse per muscle in the figures' own 200 × 369
-coordinate space, which covers all seventeen.
+1. A hand-drawn schematic. Rejected by the user: it read as an action figure, and one version made the
+   adductor highlight look like a penis.
+2. Two Wikimedia anatomical figures (`File:Muscular_system.svg`, CC BY-SA 3.0). Better, and rejected
+   as *"a bit creepy"* — correctly. They are greyscale flayed musculature, and at 136 px on black with
+   a coloured wash they read as a specimen on a slab. Worth recording *why* that happened: the
+   greyscale was not a design decision at all. The Commons originals are over 3 MB, so a
+   size-optimised copy was used, that copy happened to be flattened to seven flat greys, and nobody
+   asked whether a flayed grey cadaver belonged in a workout app.
+3. This one.
 
-The positions were read off a coordinate grid rendered over the figures and then corrected by eye one
-muscle at a time — the first pass had the chest on the collarbone and the "outer hip" on the
-quadriceps. They are **approximate by construction**: an ellipse over a region, not a traced outline.
-That is the honest limit of putting your own highlights on somebody else's drawing, and it is the
-reason the region data sits in a module with tests over it rather than inline in the component.
+**Every muscle in these figures is its own group with a `data-slug`**, which is the real reason to
+prefer them over any anatomical drawing. The app recolours the actual muscle shape. The previous
+figures were seven flat tonal layers with nothing named, which forced an approximate ellipse per
+muscle — and that limitation is now gone, along with the whole coordinate-tuning exercise that came
+with it.
 
-Cost: 709 kB of SVG, fetched once and cached, against §11's 25 MB.
+`src/lib/catalog/body-map.ts` is therefore a **name mapping**, not geometry: catalog muscle name → the
+figure's slugs, per view. Fourteen of the seventeen map exactly. Three are approximations, and they
+are named in `APPROXIMATED` and shown to the user on the compendium rather than fudged silently:
+
+| Muscle | Region used | Why |
+|---|---|---|
+| `lats` | `upper-back` | the model has one region for the whole upper back |
+| `middle back` | `upper-back` | the same region — the two light the same shape |
+| `abductors` | `gluteal` | there is no outer-hip region, and the hip abductors *are* gluteus medius and minimus, which sit in that mass |
+
+A correct muscle outline that is slightly coarse beats a precise ellipse in roughly the right place,
+so the mapping wins over keeping hand-placed shapes for those three.
+
+Two transforms on the way in, both applied by `build-catalog.ts`:
+
+- `id="chest"` becomes `data-part="chest"`. Two figures on one screen would otherwise both carry
+  `id="neck"`, and duplicate ids are invalid and make `#neck` ambiguous.
+- The hard-coded `fill` and `stroke` values are stripped, so CSS is the only thing deciding colour.
+  Left in place they beat stylesheet rules in some engines and the highlight silently does nothing.
+  There is a test asserting no `fill="#` survives.
+
+The figures are **inlined** into the bundle with Vite's `?raw`, because CSS cannot reach inside an
+`<img>` and recolouring by muscle is the entire point. Each instance tags its own copy of the markup
+rather than emitting a stylesheet — the first attempt injected one style element per figure scoped by
+a class derived from the view, and on the compendium, where every muscle has a figure, they all
+matched each other and almost everything came out as "works".
+
+Cost: 68 kB of SVG for both views, down from 709 kB.
 
 ---
 

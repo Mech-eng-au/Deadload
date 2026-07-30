@@ -133,42 +133,92 @@ async function fetchWithRetry(url: string, tries = 3): Promise<ArrayBuffer> {
 	throw lastErr;
 }
 
-export const MUSCLE_FIGURE_ATTRIBUTION = 'wikimedia_muscular_system';
+export const MUSCLE_FIGURE_ATTRIBUTION = 'body_highlighter_model';
 
 /**
- * The two anatomical figures behind the muscle map (§4.6):
- * `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia
- * Commons by Termininja, CC BY-SA 3.0.
+ * The two body figures behind the muscle map (§4.6), from
+ * `svelte-body-highlighter` on npm — itself a port of `react-native-body-highlighter`.
+ * MIT, © 2022 ELABBASSI Hicham and © 2025 Stefan Poindl.
  *
- * Fetched from wger's copies rather than from Commons, for one dull reason and
- * one real one. The dull one: `commons.wikimedia.org` is unreachable from the
- * network this is built on. The real one: wger's copies are already flattened to
- * seven tonal layers and are 320 kB and 400 kB, where the Commons originals are
- * over 3 MB — and §11 has a media budget. Both are CC BY-SA 3.0 either way, since
- * share-alike follows the derivative.
+ * Replaced a pair of Wikimedia anatomical figures on 2026-07-30. Those were
+ * greyscale flayed musculature and the user's verdict was that they looked
+ * creepy, which they did. These are a flat body model, and they solve the deeper
+ * problem too: every muscle is its own `<g>`, so the app recolours the actual
+ * muscle instead of floating an approximate ellipse over a drawing.
  *
- * These are *not* wger's per-muscle overlay SVGs, which are AGPL and cover only
- * 12 of the 17 muscles. The highlights are ours (`src/lib/catalog/body-map.ts`).
+ * Two transforms on the way in, both so the markup is safe to inline twice on one
+ * page:
+ *
+ * - `id="chest"` becomes `data-part="chest"`. Two figures on a screen would
+ *   otherwise both carry `id="neck"`, and duplicate ids are invalid and make
+ *   `#neck` ambiguous. An attribute selector does not care.
+ * - The hard-coded `fill` and `stroke` values are stripped, so CSS is the only
+ *   thing deciding colour. Left in place they win over stylesheet rules in some
+ *   engines and it becomes a fight.
  */
-const FIGURE_BASE =
-	'https://raw.githubusercontent.com/wger-project/wger/master/wger/core/static/images/muscles/';
+const MODEL_PACKAGE = 'svelte-body-highlighter';
+const MODEL_VERSION = '5.0.0';
+const MODEL_BASE = `https://registry.npmjs.org/${MODEL_PACKAGE}/-/${MODEL_PACKAGE}-${MODEL_VERSION}.tgz`;
+
+/** Strip the baked-in colours and turn ids into attributes (see above). */
+function prepareFigure(svg: string): string {
+	return svg
+		.replace(/\sid="([^"]+)"/g, ' data-part="$1"')
+		.replace(/\s(?:fill|stroke)="(?!none)[^"]*"/g, '')
+		.replace(/\n\s*\n/g, '\n')
+		.trim();
+}
 
 async function fetchBodyFigures(): Promise<void> {
 	const dir = join(ROOT, 'static/muscles');
 	await mkdir(dir, { recursive: true });
-	for (const [remote, local] of [
-		['muscular_system_front.svg', 'front.svg'],
-		['muscular_system_back.svg', 'back.svg']
-	]) {
-		const svg = Buffer.from(await fetchWithRetry(FIGURE_BASE + remote));
-		// A truncated download would silently produce a blank figure, and a blank
-		// figure looks like a styling bug rather than a failed fetch.
-		if (svg.length < 100_000 || !svg.subarray(0, 2000).includes(Buffer.from('<svg'))) {
-			throw new Error(`${remote} does not look like a complete SVG (${svg.length} bytes)`);
+
+	// The tarball rather than a git host: npm is the one registry this build can
+	// always reach, and a version-pinned tarball is reproducible.
+	const tgz = Buffer.from(await fetchWithRetry(MODEL_BASE));
+	const { Readable } = await import('node:stream');
+	const { createGunzip } = await import('node:zlib');
+	const chunks: Buffer[] = [];
+	const gunzip = Readable.from(tgz).pipe(createGunzip());
+	for await (const c of gunzip) chunks.push(c as Buffer);
+	const tar = Buffer.concat(chunks);
+
+	for (const view of ['front', 'back'] as const) {
+		const svg = readFromTar(tar, `package/dist/assets/svg/male-${view}.svg`);
+		if (!svg) throw new Error(`male-${view}.svg not found in ${MODEL_PACKAGE}@${MODEL_VERSION}`);
+		const prepared = prepareFigure(svg);
+		// A truncated or restructured asset would render as a blank figure, which
+		// looks like a styling bug rather than a failed fetch. Counting slugs rather
+		// than naming one: the two views share no single muscle worth hard-coding —
+		// `chest` is front-only, `gluteal` back-only.
+		const slugs = new Set(
+			[...prepared.matchAll(/data-slug="([^"]+)"/g)].map((m) => m[1])
+		);
+		if (!prepared.includes('data-part="outline"') || slugs.size < 8) {
+			throw new Error(
+				`male-${view}.svg is not the expected structure (${slugs.size} muscle groups)`
+			);
 		}
-		await writeFile(join(dir, local), svg);
-		console.log(`  muscle figure: ${local} (${Math.round(svg.length / 1024)} kB)`);
+		await writeFile(join(dir, `${view}.svg`), prepared + '\n');
+		console.log(`  body figure: ${view}.svg (${Math.round(prepared.length / 1024)} kB)`);
 	}
+}
+
+/** Minimal ustar reader: one named file out of an uncompressed tar. */
+function readFromTar(tar: Buffer, wanted: string): string | undefined {
+	let offset = 0;
+	while (offset + 512 <= tar.length) {
+		const name = tar.subarray(offset, offset + 100).toString('utf8').replace(/\0.*$/, '');
+		if (!name) break;
+		const size = parseInt(
+			tar.subarray(offset + 124, offset + 136).toString('utf8').replace(/\0.*$/, '').trim() || '0',
+			8
+		);
+		const body = offset + 512;
+		if (name === wanted) return tar.subarray(body, body + size).toString('utf8');
+		offset = body + Math.ceil(size / 512) * 512;
+	}
+	return undefined;
 }
 
 async function main() {
@@ -392,17 +442,17 @@ async function main() {
 			license: 'PD',
 			sourceUrl: 'https://github.com/yuhonas/free-exercise-db'
 		},
-		// Not keyed to any exercise: these are the two figures behind the muscle map
-		// (§4.6). They are here because attribution.json is this project's licence
-		// register, and CC BY-SA 3.0 obliges us to name the author and the licence
-		// wherever the work appears — the About page reads this file.
+		// Not keyed to any exercise: the two body figures behind the muscle map
+		// (§4.6). attribution.json is this project's licence register, and MIT
+		// requires the copyright notice to travel with the work — the About page
+		// reads this file.
 		{
 			id: MUSCLE_FIGURE_ATTRIBUTION,
-			source: 'wikimedia',
-			license: 'CC-BY-SA-3.0',
-			author: 'Termininja',
-			sourceUrl: 'https://commons.wikimedia.org/wiki/File:Muscular_system.svg',
-			covers: 'The front and back body diagrams on the exercise and muscle screens'
+			source: 'body-highlighter',
+			license: 'MIT',
+			author: 'ELABBASSI Hicham and Stefan Poindl',
+			sourceUrl: `https://www.npmjs.com/package/${MODEL_PACKAGE}`,
+			covers: 'The front and back body figures on the exercise and muscle screens'
 		}
 	];
 

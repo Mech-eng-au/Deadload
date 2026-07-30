@@ -36,7 +36,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Presets | Five built-in routines, loaded through the import path |
 | Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
-| Muscles | Plain English for all seventeen catalog muscle names, front/back anatomical figures (Wikimedia, CC BY-SA 3.0) with our own highlights, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
+| Muscles | Plain English for all seventeen catalog muscle names, front/back body figures (MIT) with each muscle filled in on a grey-to-red ramp, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
 | History | Browse past sessions, inspect every logged set, delete |
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
@@ -188,29 +188,40 @@ number exists, and `totals()` has no load field — there is a test that fails i
 is no bodyweight-load-as-a-percentage-of-body-mass estimate either. Both are the calorie counter of
 §12 wearing a different hat: a number nobody measured, shown as though somebody had.
 
-**The body figures are CC BY-SA 3.0, and that is an obligation.** `static/muscles/{front,back}.svg`
-are `File:Muscular_system.svg` and `File:Muscular_system-back.svg` from Wikimedia Commons by
-Termininja. Share-alike is a condition, not a courtesy: the author, licence, source URL and a
-statement of modification are in `attribution.json` and rendered on the About page. Do not drop that
-block, and do not swap the figures for something whose licence has not been read — SPEC §4.1 requires
-one recorded per image.
+**The body figures are MIT, and the notice has to travel with them.** `static/muscles/{front,back}.svg`
+come from `svelte-body-highlighter`, © 2022 ELABBASSI Hicham and © 2025 Stefan Poindl. The authors and
+licence are in `attribution.json` and rendered on the About page; do not drop that block, and do not
+swap the figures for something whose licence has not been read — SPEC §4.1 requires one recorded per
+image.
 
-**The highlights on those figures are ours, and wger's overlays are deliberately not used.** The
-figures are seven flat tonal layers with no per-muscle paths, so nothing in them can be recoloured by
-name. wger has an overlay set that does exactly this job and it is rejected on two grounds: it is
-AGPL, and it covers 12 of the 17 muscle names — missing `adductors`, `abductors`, `forearms`,
-`middle back` and `neck`, nearly the exact list of words a beginner needs a picture for. Ours live in
-`src/lib/catalog/body-map.ts`, one ellipse per muscle in the figures' 200 × 369 space, all seventeen
-covered, with tests over the coverage.
+**The muscle map is a name mapping, not geometry.** Every muscle in these figures is its own group
+with a `data-slug`, so `src/lib/catalog/body-map.ts` maps catalog muscle name → slug and the app
+recolours the real muscle shape. Fourteen of seventeen map exactly; `lats` and `middle back` share
+`upper-back`, and `abductors` uses `gluteal`. Those three are listed in `APPROXIMATED` and shown to
+the user on the compendium — if you tighten them, keep them visible rather than silent.
 
-**The two adductor highlights are separated on purpose.** On the old schematic they were one bar
-straddling the centreline starting at the pelvis, and the screenshot from the phone reported —
-correctly — that it looked like a penis. The rule survived the move to the anatomical figures: one
-region per thigh, a real gap down the middle, nothing reaching the hip joint. `tests/muscles.test.ts`
-fails if the gap closes. The general lesson is the one §3 already makes: a diagram is a picture, and
-pictures have to be looked at rather than reasoned about. Rendering every single-muscle highlight and
-eyeballing it is the check to repeat after touching `body-map.ts` — it is how the chest ended up off
-the collarbone and the "outer hip" off the quadriceps.
+**The colour is a ramp and must stay one.** Grey → light red → strong red, for not used → assists →
+works, with a legend. The user's objection to an earlier version was precisely that its three colours
+did not order, so a reader had to memorise a key instead of reading an intensity. Do not swap in three
+unrelated hues.
+
+**Two transforms happen at fetch time in `build-catalog.ts`, and both are load-bearing.** `id` becomes
+`data-part`, because two figures on a screen would otherwise carry duplicate ids; and the hard-coded
+`fill`/`stroke` values are stripped, because inline presentation attributes beat stylesheet rules in
+some engines and the highlight would silently do nothing. There is a test for the second one.
+
+**The figures are inlined with `?raw`, and each instance tags its own markup.** CSS cannot reach
+inside an `<img>`, which is why they are not images. And the tagging is per instance because the first
+attempt injected a style element per figure scoped by a class derived from the view — on the
+compendium, where every muscle has a figure, they all matched each other and nearly everything came
+out as "works".
+
+**Render all seventeen highlights and look at them after touching `body-map.ts`.** This is the check
+that has caught every real defect in this feature: an adductor highlight that looked like a penis, a
+chest highlight on the collarbone, an "outer hip" on the quadriceps, and a class collision that
+painted almost every muscle as "works". None of them were visible from the code. It is the same point
+§3 makes about the app as a whole — a diagram is a picture, and pictures have to be looked at rather
+than reasoned about.
 
 **Anatomy never appears during a session.** Mid-set the one available glance belongs to the set
 numbers and the countdown (§12), so the muscle glossary and the body map are catalog- and

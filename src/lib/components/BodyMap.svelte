@@ -1,19 +1,28 @@
 <script lang="ts">
-	import { base } from '$app/paths';
 	import { muscleLabel } from '$lib/catalog/muscles.js';
-	import { FIGURE_HEIGHT, FIGURE_WIDTH, VIEWS, type Region } from '$lib/catalog/body-map.js';
+	import { slugsFor, type View } from '$lib/catalog/body-map.js';
+	import frontSvg from '../../../static/muscles/front.svg?raw';
+	import backSvg from '../../../static/muscles/back.svg?raw';
 
 	/**
-	 * Front and back anatomical figures with the trained muscles highlighted
+	 * Front and back body figures with the trained muscles coloured in
 	 * (docs/SPEC.md §4.6).
 	 *
-	 * The figures are `File:Muscular_system.svg` and `File:Muscular_system-back.svg`
-	 * from Wikimedia Commons by Termininja, **CC BY-SA 3.0**, downloaded by
-	 * `build-catalog.ts`, recorded in `attribution.json` and credited on the About
-	 * page. They replaced a hand-drawn schematic at the user's request.
+	 * The figures are from `svelte-body-highlighter` (MIT), credited on the About
+	 * page. Every muscle is its own group with a `data-slug`, so this recolours the real
+	 * muscle shape rather than overlaying an approximation — which is the whole
+	 * reason for the swap away from the previous anatomical drawings.
 	 *
-	 * The highlight positions live in `$lib/catalog/body-map.ts` so they can be
-	 * unit-tested; this component only decides how they are drawn.
+	 * Inlined with `?raw` rather than loaded as an `<img>`, because CSS cannot reach
+	 * inside an image and recolouring by muscle is the entire point. The build
+	 * script has already stripped the baked-in `fill`/`stroke` values and rewritten
+	 * `id` to `data-part`, so two figures can sit on one page without duplicate ids
+	 * and nothing fights the stylesheet.
+	 *
+	 * Colour is a ramp, not three unrelated tones: grey for a muscle not involved,
+	 * light red for one assisting, strong red for one doing the work. Chosen with
+	 * the user, whose objection to the first attempt was exactly that its three
+	 * colours did not order.
 	 *
 	 * Never shown during a session (§4.6): mid-set the one available glance belongs
 	 * to the set numbers and the countdown (§12).
@@ -21,70 +30,123 @@
 	let {
 		primary = [],
 		secondary = [],
-		size = 'normal'
-	}: { primary?: string[]; secondary?: string[]; size?: 'small' | 'normal' } = $props();
+		size = 'normal',
+		/** The legend is worth it once per screen, not once per figure. */
+		legend = true
+	}: {
+		primary?: string[];
+		secondary?: string[];
+		size?: 'small' | 'normal';
+		legend?: boolean;
+	} = $props();
 
-	const primarySet = $derived(new Set(primary));
-	const secondarySet = $derived(new Set(secondary));
+	const VIEWS: { id: View; svg: string }[] = [
+		{ id: 'front', svg: frontSvg },
+		{ id: 'back', svg: backSvg }
+	];
 
-	/** Only the muscles in play get a shape; the rest of the figure is left alone. */
-	function shown(regions: readonly Region[]): Region[] {
-		return regions.filter((r) => primarySet.has(r.m) || secondarySet.has(r.m));
+	const width = $derived(size === 'small' ? 112 : 140);
+
+	/**
+	 * Tag the muscle groups in the markup rather than emitting a stylesheet.
+	 *
+	 * The first attempt injected a style element per figure, scoped by a wrapper
+	 * class derived from the view — so on the compendium, where
+	 * seventeen figures share a page, every figure picked up every other figure's
+	 * rules and almost everything came out as "works". Marking up each instance's
+	 * own copy of the markup cannot collide, because there is nothing global to
+	 * collide with.
+	 */
+	function paint(svg: string, view: View): string {
+		const prim = new Set(slugsFor(primary, view));
+		const sec = new Set(slugsFor(secondary, view));
+		return svg.replace(/data-slug="([^"]+)"/g, (whole, slug: string) =>
+			prim.has(slug)
+				? `${whole} class="dl-works"`
+				: sec.has(slug)
+					? `${whole} class="dl-assist"`
+					: whole
+		);
 	}
 
-	function opacity(muscle: string): number {
-		return primarySet.has(muscle) ? 0.62 : 0.3;
+	/** Read out on a long press, so the diagram is not the only way to know. */
+	function described(view: View): string {
+		const p = primary.filter((m) => slugsFor([m], view).length);
+		const s = secondary.filter((m) => slugsFor([m], view).length);
+		const parts = [];
+		if (p.length) parts.push(`works ${p.map(muscleLabel).join(', ')}`);
+		if (s.length) parts.push(`assists ${s.map(muscleLabel).join(', ')}`);
+		return parts.length ? `${view} view: ${parts.join('; ')}` : `${view} view`;
 	}
-
-	function title(muscle: string): string {
-		return `${muscleLabel(muscle)} — ${primarySet.has(muscle) ? 'works' : 'assists'}`;
-	}
-
-	const width = $derived(size === 'small' ? 104 : 136);
 </script>
 
-<div class="flex items-start justify-center gap-4">
-	{#each VIEWS as view (view.id)}
-		<figure class="flex flex-col items-center gap-1.5">
-			<div class="relative" style="width:{width}px">
-				<!-- A plain img, so the figure's ~300 kB of path data is fetched once and
-					 cached rather than inlined into every page that shows one. -->
-				<img
-					src="{base}/muscles/{view.id}.svg"
-					alt="The body from the {view.label}, with the muscles this trains highlighted"
-					width={FIGURE_WIDTH}
-					height={FIGURE_HEIGHT}
-					style="width:{width}px;display:block"
-				/>
-				<svg
-					viewBox="0 0 {FIGURE_WIDTH} {FIGURE_HEIGHT}"
-					class="pointer-events-none absolute inset-0"
+<!-- The ramp variables live on the outer wrapper, not on each figure: the legend
+	 swatches are outside the figures and need the same values. -->
+<div class="dl-map flex flex-col items-center gap-2">
+	<div class="flex items-start justify-center gap-5">
+		{#each VIEWS as view (view.id)}
+			<figure class="flex flex-col items-center gap-1.5">
+				<div
+					class="dl-body"
 					style="width:{width}px"
-					aria-hidden="true"
+					role="img"
+					aria-label={described(view.id)}
 				>
-					{#each shown(view.regions) as r, i (r.m + i)}
-						<!-- hard-light keeps the drawing's shading visible through the wash
-							 rather than flooding it flat. Where the blend mode is not
-							 supported it falls back to a plain translucent fill, which still
-							 reads. -->
-						<ellipse
-							cx={r.cx}
-							cy={r.cy}
-							rx={r.rx}
-							ry={r.ry}
-							transform={r.rot ? `rotate(${r.rot} ${r.cx} ${r.cy})` : undefined}
-							fill="#7dd3fc"
-							opacity={opacity(r.m)}
-							style="mix-blend-mode:hard-light"
-						>
-							<title>{title(r.m)}</title>
-						</ellipse>
-					{/each}
-				</svg>
-			</div>
-			<figcaption class="text-[10px] tracking-widest text-zinc-500 uppercase">
-				{view.label}
-			</figcaption>
-		</figure>
-	{/each}
+					{@html paint(view.svg, view.id)}
+				</div>
+				<figcaption class="text-[10px] tracking-widest text-zinc-500 uppercase">
+					{view.id}
+				</figcaption>
+			</figure>
+		{/each}
+	</div>
+
+	{#if legend && (primary.length || secondary.length)}
+		<ul class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+			<li class="flex items-center gap-1.5">
+				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-works)"></span>works
+			</li>
+			{#if secondary.length}
+				<li class="flex items-center gap-1.5">
+					<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-assist)"></span>assists
+				</li>
+			{/if}
+			<li class="flex items-center gap-1.5">
+				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-body)"></span>not used
+			</li>
+		</ul>
+	{/if}
 </div>
+
+<style>
+	/* The ramp. Kept here rather than in app.css because nothing else uses it. */
+	.dl-map {
+		--dl-body: #3f3f46; /* zinc-700 — present, but plainly not involved */
+		--dl-outline: #52525b;
+		--dl-assist: #fca5a5; /* red-300 */
+		--dl-works: #ef4444; /* red-500 */
+	}
+	.dl-body :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	/* Default every part to the uninvolved tone; `paint()` tags the ones in play. */
+	.dl-body :global(path) {
+		fill: var(--dl-body);
+	}
+	.dl-body :global(.dl-assist path) {
+		fill: var(--dl-assist);
+	}
+	.dl-body :global(.dl-works path) {
+		fill: var(--dl-works);
+	}
+	.dl-body :global([data-part='outline'] path) {
+		fill: none;
+		stroke: var(--dl-outline);
+	}
+	/* Head and hands carry no muscle information, so they stay furniture. */
+	.dl-body :global(:is([data-part='head'], [data-part='hair'], [data-part='hands']) path) {
+		fill: #2e2e33;
+	}
+</style>
