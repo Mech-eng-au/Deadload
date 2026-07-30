@@ -5,11 +5,31 @@ export type ExerciseId = string; // snake_case slug, e.g. "worlds_greatest_stret
 export type Category = 'strength' | 'stretch' | 'mobility' | 'core' | 'cardio';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
 
+/**
+ * Things an exercise needs that a bedroom floor does not supply (§5.1). All but
+ * `chair` are gated: unticked in Settings, they hide the exercise from catalog
+ * browse and the exercise picker. A chair is furniture rather than a purchase,
+ * so it is tagged and never gated.
+ */
+export type EquipmentId =
+	| 'pull_up_bar'
+	| 'jumping_rope'
+	| 'dumbbells'
+	| 'kettlebell'
+	| 'resistance_band'
+	| 'foam_roller'
+	| 'chair';
+
 export interface Exercise {
 	id: ExerciseId;
 	name: string;
 	aliases: string[];
 	category: Category;
+	/**
+	 * Empty means a floor and a wall. An array rather than one value because a
+	 * band-assisted pull-up needs a band *and* a bar, and one field cannot say so.
+	 */
+	equipment: EquipmentId[];
 	primaryMuscles: string[];
 	secondaryMuscles: string[];
 	level: Level;
@@ -153,4 +173,20 @@ export interface Settings {
 	autoStartSets?: boolean;
 	/** Log a timed set at its target and move on, with no tap. */
 	autoLogTimedSets?: boolean;
+
+	/**
+	 * What the user owns (§5.1). Three-valued on purpose, and the distinction is
+	 * load-bearing:
+	 *
+	 * - `undefined` — never answered. Treated as `['pull_up_bar']`, because the
+	 *   catalog has shipped eight pull-up-bar exercises since M0 and two presets
+	 *   and a progression ladder are built on them.
+	 * - `[]` — answered, and owns nothing. Gates everything.
+	 * - `[...]` — answered.
+	 *
+	 * `[]` must never fall back to the default: a user who deliberately unticked
+	 * every box would get pull-ups handed back on the next launch. Read it through
+	 * `ownedEquipment()` in `$lib/catalog/equipment`, never directly.
+	 */
+	ownedEquipment?: EquipmentId[];
 }

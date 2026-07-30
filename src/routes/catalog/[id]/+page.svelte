@@ -1,11 +1,25 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { ladderFor } from '$lib/catalog/ladders.js';
+	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import type { Settings } from '$lib/types.js';
 
 	let { data } = $props();
 	const e = $derived(data.exercise);
 	const ladder = $derived(ladderFor(e.id));
+
+	let settings = $state<Settings | null>(null);
+	onMount(async () => {
+		settings = await getSettings();
+	});
+
+	// This screen is reachable from a routine, from history and from a ladder rung,
+	// so it can be an exercise the user has not ticked the equipment for. It says
+	// so rather than hiding — §5.1 gates what the app offers, never what it shows.
+	const missing = $derived(missingEquipment(e, ownedEquipment(settings)));
 </script>
 
 <svelte:head>
@@ -25,7 +39,23 @@
 			{#if e.unilateral}
 				<span class="rounded-full bg-zinc-800 px-3 py-1">per side</span>
 			{/if}
+			{#each e.equipment as id (id)}
+				<span
+					class="rounded-full px-3 py-1 {missing.includes(id)
+						? 'bg-amber-950/60 text-amber-200'
+						: 'bg-zinc-800'}"
+				>
+					{equipmentLabel(id)}
+				</span>
+			{/each}
 		</div>
+		{#if missing.length}
+			<p class="mt-3 text-xs text-amber-200/80">
+				Needs {missing.map(equipmentLabel).join(' and ').toLowerCase()}, which you have not ticked in
+				<a href="{base}/settings/" data-sveltekit-replacestate class="underline">Settings</a>. It
+				stays here, and out of the catalog and the picker until you do.
+			</p>
+		{/if}
 	</div>
 
 	<div class="grid gap-3 sm:grid-cols-2">

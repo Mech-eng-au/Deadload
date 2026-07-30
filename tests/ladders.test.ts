@@ -6,6 +6,7 @@ import {
 	ladderFor,
 	ladders
 } from '../src/lib/catalog/ladders.js';
+import { DEFAULT_OWNED, isAvailable } from '../src/lib/catalog/equipment.js';
 
 /**
  * The ladders are hand-authored (src/lib/catalog/ladders.ts), so they can drift
@@ -75,8 +76,19 @@ describe('progression ladders (§4.1)', () => {
 		expect(ladderFor('plank')).toEqual(['plank', 'side_bridge']);
 	});
 
-	it('covers a meaningful share of the strength catalog', () => {
-		const strength = catalog.filter((e) => e.category === 'strength');
+	it('covers a meaningful share of the strength catalog a fresh install offers', () => {
+		// Measured over what the app offers on a fresh install (§5.1's default
+		// equipment), which is the set this rule was written against — before the
+		// equipment types existed, every strength exercise in the catalog was in it.
+		//
+		// Not measured over the whole catalog, because the equipment entries are
+		// deliberately unladdered: a ladder is one movement getting harder by
+		// leverage (§4.1), and the way a dumbbell curl gets harder is a heavier
+		// dumbbell. Including 33 rungless equipment exercises in the denominator
+		// would turn this into a test of how much equipment was curated in.
+		const strength = catalog.filter(
+			(e) => e.category === 'strength' && isAvailable(e, DEFAULT_OWNED)
+		);
 		const laddered = strength.filter((e) => ladderFor(e.id).length > 0);
 		expect(laddered.length / strength.length).toBeGreaterThan(0.4);
 	});

@@ -35,6 +35,7 @@ const catalog = new Map<string, Exercise>([
 			name: 'Pushups',
 			aliases: [],
 			category: 'strength',
+			equipment: [],
 			primaryMuscles: ['chest'],
 			secondaryMuscles: [],
 			level: 'beginner',

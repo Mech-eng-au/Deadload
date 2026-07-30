@@ -6,6 +6,7 @@
 			"90 90 hamstring"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -38,6 +39,44 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "adductor",
+		"name": "Adductor",
+		"aliases": [
+			"adductor"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"adductors"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Lie face down with one leg on a foam roll.",
+			"Rotate the leg so that the foam roll contacts against your inner thigh. Shift as much weight onto the foam roll as can be tolerated.",
+			"While trying to relax the muscles if the inner thigh, roll over the foam between your hip and knee, holding points of tension for 10-30 seconds. Repeat with the other leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/adductor/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/adductor/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "air_bike",
 		"name": "Air Bike",
 		"aliases": [
@@ -46,6 +85,7 @@
 			"bicycles"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -84,6 +124,7 @@
 			"all fours quad stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -121,6 +162,7 @@
 			"alternate heel touchers"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -158,6 +200,7 @@
 			"ankle circles"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"calves"
 		],
@@ -195,6 +238,7 @@
 			"figure four stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -230,6 +274,7 @@
 			"arm circles"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"shoulders"
 		],
@@ -261,6 +306,89 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "band_good_morning",
+		"name": "Band Good Morning",
+		"aliases": [
+			"band good morning"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [
+			"glutes",
+			"lower back"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Using a 41 inch band, stand on one end, spreading your feet a small amount. Bend at the hips to loop the end of the band behind your neck. This will be your starting position.",
+			"Keeping your legs straight, extend through the hips to come to a near vertical position.",
+			"Ensure that you do not round your back as you go down back to the starting position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/band_good_morning/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/band_good_morning/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "band_pull_apart",
+		"name": "Band Pull Apart",
+		"aliases": [
+			"band pull apart"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"middle back",
+			"traps"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Begin with your arms extended straight out in front of you, holding the band with both hands.",
+			"Initiate the movement by performing a reverse fly motion, moving your hands out laterally to your sides.",
+			"Keep your elbows extended as you perform the movement, bringing the band to your chest. Ensure that you keep your shoulders back during the exercise.",
+			"Pause as you complete the movement, returning to the starting position under control."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/band_pull_apart/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/band_pull_apart/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "bench_dips",
 		"name": "Bench Dips",
 		"aliases": [
@@ -269,6 +397,9 @@
 			"tricep dips"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"triceps"
 		],
@@ -308,6 +439,7 @@
 			"bent knee hip raise"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -339,12 +471,56 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "bent_over_two_dumbbell_row",
+		"name": "Bent Over Two-Dumbbell Row",
+		"aliases": [
+			"bent over two dumbbell row"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"middle back"
+		],
+		"secondaryMuscles": [
+			"biceps",
+			"lats",
+			"shoulders"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"With a dumbbell in each hand (palms facing your torso), bend your knees slightly and bring your torso forward by bending at the waist; as you bend make sure to keep your back straight until it is almost parallel to the floor. Tip: Make sure that you keep the head up. The weights should hang directly in front of you as your arms hang perpendicular to the floor and your torso. This is your starting position.",
+			"While keeping the torso stationary, lift the dumbbells to your side (as you breathe out), keeping the elbows close to the body (do not exert any force with the forearm other than holding the weights). On the top contracted position, squeeze the back muscles and hold for a second.",
+			"Slowly lower the weight again to the starting position as you inhale.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/bent_over_two_dumbbell_row/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/bent_over_two_dumbbell_row/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "body_up",
 		"name": "Body-Up",
 		"aliases": [
 			"body up"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"triceps"
 		],
@@ -384,6 +560,9 @@
 			"bodyweight mid row"
 		],
 		"category": "strength",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"middle back"
 		],
@@ -424,6 +603,7 @@
 			"squat"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -464,6 +644,7 @@
 			"walking lunge"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -507,6 +688,7 @@
 			"hip bridge"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -538,6 +720,83 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "calf_raises_with_bands",
+		"name": "Calf Raises - With Bands",
+		"aliases": [
+			"calf raises with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"calves"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Grab an exercise band and stand on it with your toes making sure that the length of the band between the foot and the arms is the same for both sides.",
+			"While holding the handles of the band, raise the arms to the side of your head as if you were getting ready to perform a shoulder press. The palms should be facing forward with the elbows bent and to the sides. This movement will create tension on the band. This will be your starting position.",
+			"Keeping the hands by your shoulder, stand up on your toes as you exhale and contract the calves hard at the top of the movement.",
+			"After a one second contraction, slowly go back down to the starting position.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/calf_raises_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/calf_raises_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "calves_smr",
+		"name": "Calves-SMR",
+		"aliases": [
+			"calves smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"calves"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Begin seated on the floor. Place a foam roller underneath your lower leg. Your other leg can either be crossed over the opposite or be placed on the floor, supporting some of your weight. This will be your starting position.",
+			"Place your hands to your side or just behind you, and press down to raise your hips off of the floor, placing much of your weight against your calf muscle. Roll from below the knee to above the ankle, pausing at points of tension for 10-30 seconds. Repeat for the other leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/calves_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/calves_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "cat_stretch",
 		"name": "Cat Stretch",
 		"aliases": [
@@ -546,6 +805,7 @@
 			"cat stretch"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -584,6 +844,9 @@
 			"chair lower back stretch"
 		],
 		"category": "stretch",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"lats"
 		],
@@ -623,6 +886,7 @@
 			"childs pose"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -661,6 +925,7 @@
 			"chin to chest stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"neck"
 		],
@@ -698,6 +963,9 @@
 			"chinups"
 		],
 		"category": "strength",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"lats"
 		],
@@ -739,6 +1007,7 @@
 			"cross body crunch"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -770,12 +1039,57 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "cross_over_with_bands",
+		"name": "Cross Over - With Bands",
+		"aliases": [
+			"cross over with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"chest"
+		],
+		"secondaryMuscles": [
+			"biceps",
+			"shoulders"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Secure an exercise band around a stationary post.",
+			"While facing away from the post, grab the handles on both ends of the band and step forward enough to create tension on the band.",
+			"Raise your arms to the sides, parallel to the floor, perpendicular to your torso (your torso and the arms should resemble the letter \"T\") and with the palms facing forward. Have them extended with a slight bend at the elbows. This will be your starting position.",
+			"While keeping your arms straight, bring them across your chest in a semicircular motion to the front as you exhale and flex your pecs. Hold the contraction for a second.",
+			"Slowly return to the starting position as you inhale.",
+			"Perform for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/cross_over_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/cross_over_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "crunches",
 		"name": "Crunches",
 		"aliases": [
 			"crunches"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -815,6 +1129,7 @@
 			"dancers stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -855,6 +1170,7 @@
 			"deadbug"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -888,45 +1204,6 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
-		"id": "dips_chest_version",
-		"name": "Dips - Chest Version",
-		"aliases": [
-			"dips chest version"
-		],
-		"category": "strength",
-		"primaryMuscles": [
-			"chest"
-		],
-		"secondaryMuscles": [
-			"shoulders",
-			"triceps"
-		],
-		"level": "intermediate",
-		"unilateral": false,
-		"defaultMetric": "reps",
-		"instructions": [
-			"For this exercise you will need access to parallel bars. To get yourself into the starting position, hold your body at arms length (arms locked) above the bars.",
-			"While breathing in, lower yourself slowly with your torso leaning forward around 30 degrees or so and your elbows flared out slightly until you feel a slight stretch in the chest.",
-			"Once you feel the stretch, use your chest to bring your body back to the starting position as you breathe out. Tip: Remember to squeeze the chest at the top of the movement for a second.",
-			"Repeat the movement for the prescribed amount of repetitions."
-		],
-		"media": [
-			{
-				"kind": "image",
-				"path": "/media/dips_chest_version/0.webp",
-				"width": 800,
-				"height": 534
-			},
-			{
-				"kind": "image",
-				"path": "/media/dips_chest_version/1.webp",
-				"width": 800,
-				"height": 534
-			}
-		],
-		"attributionId": "free_exercise_db"
-	},
-	{
 		"id": "dips_triceps_version",
 		"name": "Dips - Triceps Version",
 		"aliases": [
@@ -935,6 +1212,9 @@
 			"parallel bar dips"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"triceps"
 		],
@@ -974,6 +1254,7 @@
 			"double leg butt kick"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -1010,12 +1291,353 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "dumbbell_bicep_curl",
+		"name": "Dumbbell Bicep Curl",
+		"aliases": [
+			"dumbbell bicep curl"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"biceps"
+		],
+		"secondaryMuscles": [
+			"forearms"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand up straight with a dumbbell in each hand at arm's length. Keep your elbows close to your torso and rotate the palms of your hands until they are facing forward. This will be your starting position.",
+			"Now, keeping the upper arms stationary, exhale and curl the weights while contracting your biceps. Continue to raise the weights until your biceps are fully contracted and the dumbbells are at shoulder level. Hold the contracted position for a brief pause as you squeeze your biceps.",
+			"Then, inhale and slowly begin to lower the dumbbells back to the starting position.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_bicep_curl/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_bicep_curl/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_clean",
+		"name": "Dumbbell Clean",
+		"aliases": [
+			"dumbbell clean"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"forearms",
+			"glutes",
+			"lower back",
+			"quadriceps",
+			"shoulders",
+			"traps"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Begin standing with a dumbbell in each hand with your feet shoulder width apart.",
+			"Lower the weights to the floor by flexing at the hips and knees, pushing your hips back until the dumbbells reach the floor. This will be your starting position.",
+			"To initiate the movement, violently jump upward by extending the hips, knees, and ankles to acclerate the weights upward. Maintaining a neutral grip on the dumbbells, keep the arms straight until full extension is reached.",
+			"After full extension, rebend the hips and knees to receive the weight in a squat position. Allow the arms to bend, guiding the dumbbells to your shoulders.",
+			"Upon receiving the weight in the squat position, extend the hips and knees to finish in a standing position with the weights on your shoulders."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_clean/0.webp",
+				"width": 800,
+				"height": 450
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_clean/1.webp",
+				"width": 800,
+				"height": 450
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_floor_press",
+		"name": "Dumbbell Floor Press",
+		"aliases": [
+			"dumbbell floor press"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"triceps"
+		],
+		"secondaryMuscles": [
+			"chest",
+			"shoulders"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Lay on the floor holding dumbbells in your hands. Your knees can be bent. Begin with the weights fully extended above you.",
+			"Lower the weights until your upper arm comes in contact with the floor. You can tuck your elbows to emphasize triceps size and strength, or to focus on your chest angle your arms to the side.",
+			"Pause at the bottom, and then bring the weight together at the top by extending through the elbows."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_floor_press/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_floor_press/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_lunges",
+		"name": "Dumbbell Lunges",
+		"aliases": [
+			"dumbbell lunges"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"hamstrings"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand with your torso upright holding two dumbbells in your hands by your sides. This will be your starting position.",
+			"Step forward with your right leg around 2 feet or so from the foot being left stationary behind and lower your upper body down, while keeping the torso upright and maintaining balance. Inhale as you go down. Note: As in the other exercises, do not allow your knee to go forward beyond your toes as you come down, as this will put undue stress on the knee joint. Make sure that you keep your front shin perpendicular to the ground.",
+			"Using mainly the heel of your foot, push up and go back to the starting position as you exhale.",
+			"Repeat the movement for the recommended amount of repetitions and then perform with the left leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_lunges/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_lunges/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_shrug",
+		"name": "Dumbbell Shrug",
+		"aliases": [
+			"dumbbell shrug"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"traps"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand erect with a dumbbell on each hand (palms facing your torso), arms extended on the sides.",
+			"Lift the dumbbells by elevating the shoulders as high as possible while you exhale. Hold the contraction at the top for a second. Tip: The arms should remain extended at all times. Refrain from using the biceps to help lift the dumbbells. Only the shoulders should be moving up and down.",
+			"Lower the dumbbells back to the original position.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_shrug/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_shrug/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_side_bend",
+		"name": "Dumbbell Side Bend",
+		"aliases": [
+			"dumbbell side bend"
+		],
+		"category": "core",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"abdominals"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand up straight while holding a dumbbell on the left hand (palms facing the torso) as you have the right hand holding your waist. Your feet should be placed at shoulder width. This will be your starting position.",
+			"While keeping your back straight and your head up, bend only at the waist to the right as far as possible. Breathe in as you bend to the side. Then hold for a second and come back up to the starting position as you exhale. Tip: Keep the rest of the body stationary.",
+			"Now repeat the movement but bending to the left instead. Hold for a second and come back to the starting position.",
+			"Repeat for the recommended amount of repetitions and then change hands."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_side_bend/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_side_bend/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_squat",
+		"name": "Dumbbell Squat",
+		"aliases": [
+			"dumbbell squat"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"hamstrings",
+			"lower back"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand up straight while holding a dumbbell on each hand (palms facing the side of your legs).",
+			"Position your legs using a shoulder width medium stance with the toes slightly pointed out. Keep your head up at all times as looking down will get you off balance and also maintain a straight back. This will be your starting position. Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances discussed in the foot stances section.",
+			"Begin to slowly lower your torso by bending the knees as you maintain a straight posture with the head up. Continue down until your thighs are parallel to the floor. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.",
+			"Begin to raise your torso as you exhale by pushing the floor with the heel of your foot mainly as you straighten the legs again and go back to the starting position.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_squat/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_squat/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "dumbbell_step_ups",
+		"name": "Dumbbell Step Ups",
+		"aliases": [
+			"dumbbell step ups"
+		],
+		"category": "strength",
+		"equipment": [
+			"chair",
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"hamstrings"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand up straight while holding a dumbbell on each hand (palms facing the side of your legs).",
+			"Place the right foot on the elevated platform. Step on the platform by extending the hip and the knee of your right leg. Use the heel mainly to lift the rest of your body up and place the foot of the left leg on the platform as well. Breathe out as you execute the force required to come up.",
+			"Step down with the left leg by flexing the hip and knee of the right leg as you inhale. Return to the original standing position by placing the right foot of to next to the left foot on the initial position.",
+			"Repeat with the right leg for the recommended amount of repetitions and then perform with the left leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_step_ups/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/dumbbell_step_ups/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "dynamic_back_stretch",
 		"name": "Dynamic Back Stretch",
 		"aliases": [
 			"dynamic back stretch"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"lats"
 		],
@@ -1050,6 +1672,7 @@
 			"dynamic chest stretch"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -1086,6 +1709,7 @@
 			"elbow to knee"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -1121,6 +1745,7 @@
 			"elbows back"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -1152,12 +1777,53 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "external_rotation_with_band",
+		"name": "External Rotation with Band",
+		"aliases": [
+			"external rotation with band"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Choke the band around a post. The band should be at the same height as your elbow. Stand with your left side to the band a couple of feet away.",
+			"Grasp the end of the band with your right hand, and keep your elbow pressed firmly to your side. We recommend you hold a pad or foam roll in place with your elbow to keep it firmly in position.",
+			"With your upper arm in position, your elbow should be flexed to 90 degrees with your hand reaching across the front of your torso. This will be your starting position.",
+			"Execute the movement by rotating your arm in a backhand motion, keeping your elbow in place.",
+			"Continue as far as you are able, pause, and then return to the starting position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/external_rotation_with_band/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/external_rotation_with_band/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "floor_glute_ham_raise",
 		"name": "Floor Glute-Ham Raise",
 		"aliases": [
 			"floor glute ham raise"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -1197,6 +1863,9 @@
 			"flutter kicks"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -1238,6 +1907,7 @@
 			"squat jump"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -1280,6 +1950,9 @@
 			"front leg raises"
 		],
 		"category": "mobility",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -1314,6 +1987,7 @@
 			"glute kickback"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -1346,12 +2020,58 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "goblet_squat",
+		"name": "Goblet Squat",
+		"aliases": [
+			"goblet squat"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"hamstrings",
+			"shoulders"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand holding a light kettlebell by the horns close to your chest. This will be your starting position.",
+			"Squat down between your legs until your hamstrings are on your calves. Keep your chest and head up and your back straight.",
+			"At the bottom position, pause and use your elbows to push your knees out. Return to the starting position, and repeat for 10-20 repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/goblet_squat/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/goblet_squat/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "gorilla_chin_crunch",
 		"name": "Gorilla Chin/Crunch",
 		"aliases": [
 			"gorilla chin crunch"
 		],
 		"category": "core",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -1392,6 +2112,7 @@
 			"groin and back stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"adductors"
 		],
@@ -1427,6 +2148,7 @@
 			"groiners"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"adductors"
 		],
@@ -1456,6 +2178,44 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "hamstring_smr",
+		"name": "Hamstring-SMR",
+		"aliases": [
+			"hamstring smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"In a seated position, extend your legs over a foam roll so that it is position on the back of the upper legs. Place your hands to the side or behind you to help support your weight. This will be your starting position.",
+			"Using your hands, lift your hips off of the floor and shift your weight on the foam roll to one leg. Relax the hamstrings of the leg you are stretching.",
+			"Roll over the foam from below the hip to above the back of the knee, pausing at points of tension for 10-30 seconds. Repeat for the other leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/hamstring_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/hamstring_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "handstand_push_ups",
 		"name": "Handstand Push-Ups",
 		"aliases": [
@@ -1464,6 +2224,7 @@
 			"hspu"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"shoulders"
 		],
@@ -1503,6 +2264,9 @@
 			"hanging leg raise"
 		],
 		"category": "core",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -1539,6 +2303,9 @@
 			"hanging pike"
 		],
 		"category": "core",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -1576,6 +2343,7 @@
 			"hip circles prone"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"abductors"
 		],
@@ -1607,6 +2375,47 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "hip_extension_with_bands",
+		"name": "Hip Extension with Bands",
+		"aliases": [
+			"hip extension with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"glutes"
+		],
+		"secondaryMuscles": [
+			"hamstrings"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Secure one end of the band to the lower portion of a post and attach the other to one ankle.",
+			"Facing the attachment point of the band, hold on to the column to stabilize yourself.",
+			"Keeping your head and your chest up, move the resisted leg back as far as you can while keeping the knee straight.",
+			"Return the leg to the starting position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/hip_extension_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/hip_extension_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "hug_knees_to_chest",
 		"name": "Hug Knees To Chest",
 		"aliases": [
@@ -1614,6 +2423,7 @@
 			"knees to chest"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -1653,6 +2463,9 @@
 			"hyperextensions with no hyperextension bench"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -1687,12 +2500,51 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "iliotibial_tract_smr",
+		"name": "Iliotibial Tract-SMR",
+		"aliases": [
+			"iliotibial tract smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"abductors"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Lay on your side, with the bottom leg placed onto a foam roller between the hip and the knee. The other leg can be crossed in front of you.",
+			"Place as much of your weight as is tolerable onto your bottom leg; there is no need to keep your bottom leg in contact with the ground. Be sure to relax the muscles of the leg you are stretching.",
+			"Roll your leg over the foam from you hip to your knee, pausing for 10-30 seconds at points of tension. Repeat with the opposite leg."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/iliotibial_tract_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/iliotibial_tract_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "inchworm",
 		"name": "Inchworm",
 		"aliases": [
 			"inchworm"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -1730,6 +2582,9 @@
 			"incline push up"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -1770,6 +2625,9 @@
 			"inverted row"
 		],
 		"category": "strength",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"middle back"
 		],
@@ -1809,6 +2667,7 @@
 			"iron crosses stretch"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -1844,6 +2703,7 @@
 			"jackknife sit up"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -1874,12 +2734,183 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "kettlebell_one_legged_deadlift",
+		"name": "Kettlebell One-Legged Deadlift",
+		"aliases": [
+			"kettlebell one legged deadlift"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [
+			"glutes",
+			"lower back"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Hold a kettlebell by the handle in one hand. Stand on one leg, on the same side that you hold the kettlebell.",
+			"Keeping that knee slightly bent, perform a stiff legged deadlift by bending at the hip, extending your free leg behind you for balance.",
+			"Continue lowering the kettlebell until you are parallel to the ground, and then return to the upright position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_one_legged_deadlift/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_one_legged_deadlift/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "kettlebell_thruster",
+		"name": "Kettlebell Thruster",
+		"aliases": [
+			"kettlebell thruster"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"quadriceps",
+			"triceps"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Clean two kettlebells to your shoulders. Clean the kettlebells to your shoulders by extending through the legs and hips as you pull the kettlebells towards your shoulders. Rotate your wrists as you do so. This will be your starting position.",
+			"Begin to squat by flexing your hips and knees, lowering your hips between your legs. Maintain an upright, straight back as you descend as low as you can.",
+			"At the bottom, reverse direction and squat by extending your knees and hips, driving through your heels. As you do so, press both kettlebells overhead by extending your arms straight up, using the momentum from the squat to help drive the weights upward.",
+			"As you begin the next repetition, return the weights to the shoulders."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_thruster/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_thruster/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "kettlebell_turkish_get_up_squat_style",
+		"name": "Kettlebell Turkish Get-Up (Squat style)",
+		"aliases": [
+			"kettlebell turkish get up squat style"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"abdominals",
+			"calves",
+			"hamstrings",
+			"quadriceps",
+			"triceps"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Lie on your back on the floor and press a kettlebell to the top position by extending the elbow. Bend the knee on the same side as the kettlebell.",
+			"Keeping the kettlebell locked out at all times, pivot to the opposite side and use your non- working arm to assist you in driving forward to the lunge position.",
+			"Using your free hand, push yourself to a seated position, then progressing to your feet. While looking up at the kettlebell, slowly stand up. Reverse the motion back to the starting position and repeat."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_turkish_get_up_squat_style/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_turkish_get_up_squat_style/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "kettlebell_windmill",
+		"name": "Kettlebell Windmill",
+		"aliases": [
+			"kettlebell windmill"
+		],
+		"category": "core",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"abdominals"
+		],
+		"secondaryMuscles": [
+			"glutes",
+			"hamstrings",
+			"shoulders",
+			"triceps"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Place a kettlebell in front of your lead foot and clean and press it overhead with your opposite arm. Clean the kettlebell to your shoulder by extending through the legs and hips as you pull the kettlebell towards your shoulders. Rotate your wrist as you do so, so that the palm faces forward. Press it overhead by extending the elbow.",
+			"Keeping the kettlebell locked out at all times, push your butt out in the direction of the locked out kettlebell. Turn your feet out at a forty-five degree angle from the arm with the locked out kettlebell. Bending at the hip to one side, sticking your butt out, slowly lean until you can touch the floor with your free hand. Keep your eyes on the kettlebell that you hold over your head at all times.",
+			"Pause for a second after reaching the ground and reverse the motion back to the starting position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_windmill/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/kettlebell_windmill/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "knee_across_the_body",
 		"name": "Knee Across The Body",
 		"aliases": [
 			"knee across the body"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -1917,6 +2948,7 @@
 			"knee tuck jump"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -1958,6 +2990,7 @@
 			"kneeling forearm stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"forearms"
 		],
@@ -1994,6 +3027,7 @@
 			"kneeling hip flexor"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -2030,6 +3064,7 @@
 			"lateral bound"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"adductors"
 		],
@@ -2067,12 +3102,91 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "lateral_raise_with_bands",
+		"name": "Lateral Raise - With Bands",
+		"aliases": [
+			"lateral raise with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"To begin, stand on an exercise band so that tension begins at arm's length. Grasp the handles using a pronated (palms facing your thighs) grip that is slightly less than shoulder width. The handles should be resting on the sides of your thighs. Your arms should be extended with a slight bend at the elbows and your back should be straight. This will be your starting position.",
+			"Use your side shoulders to lift the handles to the sides as you exhale. Continue to lift the handles until they are slightly above parallel. Tip: As you lift the handles, slightly tilt the hand as if you were pouring water and keep your arms extended. Also, keep your torso stationary and pause for a second at the top of the movement.",
+			"Lower the handles back down slowly to the starting position. Inhale as you perform this portion of the movement.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/lateral_raise_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/lateral_raise_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "latissimus_dorsi_smr",
+		"name": "Latissimus Dorsi-SMR",
+		"aliases": [
+			"latissimus dorsi smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"lats"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"While lying on the floor, place a foam roll under your back and to one side, just behind your arm pit. This will be your starting position.",
+			"Keep the arm of the side being stretched behind and to the side of you as you shift your weight onto your lats, keeping your upper body off of the ground. Hold for 10-30 seconds, and switch sides."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/latissimus_dorsi_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/latissimus_dorsi_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "leg_lift",
 		"name": "Leg Lift",
 		"aliases": [
 			"leg lift"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -2112,6 +3226,7 @@
 			"leg pull in"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2148,6 +3263,7 @@
 			"leg up hamstring stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -2183,6 +3299,7 @@
 			"middle back stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"middle back"
 		],
@@ -2215,6 +3332,44 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "monster_walk",
+		"name": "Monster Walk",
+		"aliases": [
+			"monster walk"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"abductors"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Place a band around both ankles and another around both knees. There should be enough tension that they are tight when your feet are shoulder width apart.",
+			"To begin, take short steps forward alternating your left and right foot.",
+			"After several steps, do just the opposite and walk backward to where you started."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/monster_walk/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/monster_walk/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "mountain_climbers",
 		"name": "Mountain Climbers",
 		"aliases": [
@@ -2222,6 +3377,7 @@
 			"mountain climbers"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -2260,6 +3416,7 @@
 			"oblique crunches on the floor"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2297,6 +3454,7 @@
 			"on your side quad stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -2331,6 +3489,7 @@
 			"one arm against wall"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"lats"
 		],
@@ -2353,12 +3512,131 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "one_arm_kettlebell_floor_press",
+		"name": "One-Arm Kettlebell Floor Press",
+		"aliases": [
+			"one arm kettlebell floor press"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"chest"
+		],
+		"secondaryMuscles": [
+			"triceps"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Lie on the floor holding a kettlebell with one hand, with your upper arm supported by the floor. The palm should be facing in.",
+			"Press the kettlebell straight up toward the ceiling, rotating your wrist.",
+			"Lower the kettlebell back to the starting position and repeat."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_floor_press/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_floor_press/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "one_arm_kettlebell_row",
+		"name": "One-Arm Kettlebell Row",
+		"aliases": [
+			"one arm kettlebell row"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"middle back"
+		],
+		"secondaryMuscles": [
+			"biceps",
+			"lats"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Place a kettlebell in front of your feet. Bend your knees slightly and then push your butt out as much as possible as you bend over to get in the starting position. Grab the kettlebell and pull it to your stomach, retracting your shoulder blade and flexing the elbow. Keep your back straight. Lower and repeat."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_row/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_row/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "one_arm_kettlebell_swings",
+		"name": "One-Arm Kettlebell Swings",
+		"aliases": [
+			"one arm kettlebell swings"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"lower back",
+			"shoulders"
+		],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "reps",
+		"instructions": [],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_swings/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/one_arm_kettlebell_swings/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "overhead_stretch",
 		"name": "Overhead Stretch",
 		"aliases": [
 			"overhead stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2398,6 +3676,7 @@
 			"pelvic tilt into bridge"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -2427,6 +3706,43 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "piriformis_smr",
+		"name": "Piriformis-SMR",
+		"aliases": [
+			"piriformis smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"glutes"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Sit with your buttocks on top of a foam roll. Bend your knees, and then cross one leg so that the ankle is over the knee. This will be your starting position.",
+			"Shift your weight to the side of the crossed leg, rolling over the buttocks until you feel tension in your upper glute. You may assist the stretch by using one hand to pull the bent knee towards your chest. Hold this position for 10-30 seconds, and then switch sides."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/piriformis_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/piriformis_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "plank",
 		"name": "Plank",
 		"aliases": [
@@ -2435,6 +3751,7 @@
 			"plank"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2469,6 +3786,7 @@
 			"plyo push up"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -2512,6 +3830,9 @@
 			"pullups"
 		],
 		"category": "strength",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"lats"
 		],
@@ -2552,6 +3873,7 @@
 			"push up to side plank"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -2593,6 +3915,7 @@
 			"push up wide"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -2633,6 +3956,7 @@
 			"push ups close triceps position"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"triceps"
 		],
@@ -2672,6 +3996,9 @@
 			"push ups with feet elevated"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -2715,6 +4042,7 @@
 			"standard push up"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -2748,12 +4076,50 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "quadriceps_smr",
+		"name": "Quadriceps-SMR",
+		"aliases": [
+			"quadriceps smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": true,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Lay facedown on the floor with your weight supported by your hands or forearms. Place a foam roll underneath one leg on the quadriceps, and keep the foot off of the ground. Make sure to relax the leg as much as possible. This will be your starting position.",
+			"Shifting as much weight onto the leg to be stretched as is tolerable, roll over the foam from above the knee to below the hip, holding points of tension for 10-30 seconds. Switch sides."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/quadriceps_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/quadriceps_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "reverse_crunch",
 		"name": "Reverse Crunch",
 		"aliases": [
 			"reverse crunch"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2785,12 +4151,52 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "rhomboids_smr",
+		"name": "Rhomboids-SMR",
+		"aliases": [
+			"rhomboids smr"
+		],
+		"category": "mobility",
+		"equipment": [
+			"foam_roller"
+		],
+		"primaryMuscles": [
+			"middle back"
+		],
+		"secondaryMuscles": [
+			"traps"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "duration",
+		"instructions": [
+			"Lay down with your back on the floor. Place a foam roll underneath your upper back, and cross your arms in front of you, protracting your shoulders. This will be your starting position.",
+			"Raise your hips off of the ground, placing your weight onto the foam roll. Shift your weight to one side at a time, rolling over your middle and upper back. Pause at points of tension for 10-30 seconds."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/rhomboids_smr/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/rhomboids_smr/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "rocket_jump",
 		"name": "Rocket Jump",
 		"aliases": [
 			"rocket jump"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -2823,6 +4229,46 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "rope_jumping",
+		"name": "Rope Jumping",
+		"aliases": [
+			"rope jumping"
+		],
+		"category": "cardio",
+		"equipment": [
+			"jumping_rope"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"hamstrings"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Hold an end of the rope in each hand. Position the rope behind you on the ground. Raise your arms up and turn the rope over your head bringing it down in front of you. When it reaches the ground, jump over it. Find a good turning pace that can be maintained. Different speeds and techniques can be used to introduce variation.",
+			"Rope jumping is exciting, challenges your coordination, and requires a lot of energy. A 150 lb person will burn about 350 calories jumping rope for 30 minutes, compared to over 450 calories running."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/rope_jumping/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/rope_jumping/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "runners_stretch",
 		"name": "Runner's Stretch",
 		"aliases": [
@@ -2830,6 +4276,7 @@
 			"runners stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -2868,6 +4315,7 @@
 			"russian twists"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -2907,6 +4355,9 @@
 			"scapular pull up"
 		],
 		"category": "strength",
+		"equipment": [
+			"pull_up_bar"
+		],
 		"primaryMuscles": [
 			"traps"
 		],
@@ -2945,6 +4396,7 @@
 			"scissors jump"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -2984,6 +4436,7 @@
 			"seated floor hamstring stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -3014,6 +4467,7 @@
 			"shoulder circles"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"shoulders"
 		],
@@ -3044,12 +4498,53 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "shoulder_press_with_bands",
+		"name": "Shoulder Press - With Bands",
+		"aliases": [
+			"shoulder press with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"triceps"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"To begin, stand on an exercise band so that tension begins at arm's length. Grasp the handles and lift them so that the hands are at shoulder height at each side.",
+			"Rotate the wrists so that the palms of your hands are facing forward. Your elbows should be bent, with the upper arms and forearms in line to the torso. This is your starting position.",
+			"As you exhale, lift the handles up until your arms are fully extended overhead."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/shoulder_press_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/shoulder_press_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "shoulder_stretch",
 		"name": "Shoulder Stretch",
 		"aliases": [
 			"shoulder stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"shoulders"
 		],
@@ -3084,6 +4579,7 @@
 			"side plank"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3117,6 +4613,7 @@
 			"side jackknife"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3142,12 +4639,54 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "side_lateral_raise",
+		"name": "Side Lateral Raise",
+		"aliases": [
+			"side lateral raise"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Pick a couple of dumbbells and stand with a straight torso and the dumbbells by your side at arms length with the palms of the hand facing you. This will be your starting position.",
+			"While maintaining the torso in a stationary position (no swinging), lift the dumbbells to your side with a slight bend on the elbow and the hands slightly tilted forward as if pouring water in a glass. Continue to go up until you arms are parallel to the floor. Exhale as you execute this movement and pause for a second at the top.",
+			"Lower the dumbbells back down slowly to the starting position as you inhale.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/side_lateral_raise/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/side_lateral_raise/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "side_leg_raises",
 		"name": "Side Leg Raises",
 		"aliases": [
 			"side leg raises"
 		],
 		"category": "mobility",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"adductors"
 		],
@@ -3183,6 +4722,7 @@
 			"side lying groin stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"adductors"
 		],
@@ -3220,6 +4760,7 @@
 			"side neck stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"neck"
 		],
@@ -3254,6 +4795,7 @@
 			"single arm push up"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"chest"
 		],
@@ -3293,6 +4835,7 @@
 			"single leg glute bridge"
 		],
 		"category": "strength",
+		"equipment": [],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -3331,6 +4874,7 @@
 			"sit squats"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -3372,6 +4916,7 @@
 			"situp"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3409,6 +4954,7 @@
 			"spider crawl"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3448,6 +4994,9 @@
 			"spinal stretch"
 		],
 		"category": "stretch",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"middle back"
 		],
@@ -3489,6 +5038,7 @@
 			"split jump"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -3530,6 +5080,7 @@
 			"split squats"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -3562,12 +5113,179 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "squats_with_bands",
+		"name": "Squats - With Bands",
+		"aliases": [
+			"squats with bands"
+		],
+		"category": "strength",
+		"equipment": [
+			"resistance_band"
+		],
+		"primaryMuscles": [
+			"quadriceps"
+		],
+		"secondaryMuscles": [
+			"calves",
+			"glutes",
+			"hamstrings",
+			"lower back"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"To start out, make sure that the exercise band is at an even split between both the left and right side of the body. To do this, use your hands to grab both sides of the band and place both feet in the middle of the band. Your feet should be shoulder width apart from each other.",
+			"When holding the bands, they should be the same height on each side. You should be using a pronated grip (palms facing forward) and have the handles of the bands next to your face for this exercise. This is the starting position.",
+			"Slowly start to bend the knees and lower the legs so that your thighs are parallel to the floor while exhaling.",
+			"Use the heel of your feet to push your body up to the starting position as you exhale.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/squats_with_bands/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/squats_with_bands/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "standing_dumbbell_calf_raise",
+		"name": "Standing Dumbbell Calf Raise",
+		"aliases": [
+			"standing dumbbell calf raise"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"calves"
+		],
+		"secondaryMuscles": [],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Stand with your torso upright holding two dumbbells in your hands by your sides. Place the ball of the foot on a sturdy and stable wooden board (that is around 2-3 inches tall) while your heels extend off and touch the floor. This will be your starting position.",
+			"With the toes pointing either straight (to hit all parts equally), inwards (for emphasis on the outer head) or outwards (for emphasis on the inner head), raise the heels off the floor as you exhale by contracting the calves. Hold the top contraction for a second.",
+			"As you inhale, go back to the starting position by slowly lowering the heels.",
+			"Repeat for the recommended amount of times."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_calf_raise/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_calf_raise/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "standing_dumbbell_press",
+		"name": "Standing Dumbbell Press",
+		"aliases": [
+			"standing dumbbell press"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"triceps"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Standing with your feet shoulder width apart, take a dumbbell in each hand. Raise the dumbbells to head height, the elbows out and about 90 degrees. This will be your starting position.",
+			"Maintaining strict technique with no leg drive or leaning back, extend through the elbow to raise the weights together directly above your head.",
+			"Pause, and slowly return the weight to the starting position."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_press/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_press/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
+		"id": "standing_dumbbell_triceps_extension",
+		"name": "Standing Dumbbell Triceps Extension",
+		"aliases": [
+			"standing dumbbell triceps extension"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"triceps"
+		],
+		"secondaryMuscles": [],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"To begin, stand up with a dumbbell held by both hands. Your feet should be about shoulder width apart from each other. Slowly use both hands to grab the dumbbell and lift it over your head until both arms are fully extended.",
+			"The resistance should be resting in the palms of your hands with your thumbs around it. The palm of the hands should be facing up towards the ceiling. This will be your starting position.",
+			"Keeping your upper arms close to your head with elbows in and perpendicular to the floor, lower the resistance in a semicircular motion behind your head until your forearms touch your biceps. Tip: The upper arms should remain stationary and only the forearms should move. Breathe in as you perform this step.",
+			"Go back to the starting position by using the triceps to raise the dumbbell. Breathe out as you perform this step.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_triceps_extension/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/standing_dumbbell_triceps_extension/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "standing_gastrocnemius_calf_stretch",
 		"name": "Standing Gastrocnemius Calf Stretch",
 		"aliases": [
 			"standing gastrocnemius calf stretch"
 		],
 		"category": "stretch",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"calves"
 		],
@@ -3605,6 +5323,7 @@
 			"standing lateral stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3641,6 +5360,7 @@
 			"standing soleus and achilles stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"calves"
 		],
@@ -3675,6 +5395,7 @@
 			"standing toe touches"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -3712,6 +5433,7 @@
 			"star jump"
 		],
 		"category": "cardio",
+		"equipment": [],
 		"primaryMuscles": [
 			"quadriceps"
 		],
@@ -3752,6 +5474,9 @@
 			"step up with knee raise"
 		],
 		"category": "strength",
+		"equipment": [
+			"chair"
+		],
 		"primaryMuscles": [
 			"glutes"
 		],
@@ -3784,6 +5509,49 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "stiff_legged_dumbbell_deadlift",
+		"name": "Stiff-Legged Dumbbell Deadlift",
+		"aliases": [
+			"stiff legged dumbbell deadlift"
+		],
+		"category": "strength",
+		"equipment": [
+			"dumbbells"
+		],
+		"primaryMuscles": [
+			"hamstrings"
+		],
+		"secondaryMuscles": [
+			"glutes",
+			"lower back"
+		],
+		"level": "beginner",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Grasp a couple of dumbbells holding them by your side at arm's length.",
+			"Stand with your torso straight and your legs spaced using a shoulder width or narrower stance. The knees should be slightly bent. This is your starting position.",
+			"Keeping the knees stationary, lower the dumbbells to over the top of your feet by bending at the waist while keeping your back straight. Keep moving forward as if you were going to pick something from the floor until you feel a stretch on the hamstrings. Exhale as you perform this movement",
+			"Start bringing your torso up straight again by extending your hips and waist until you are back at the starting position. Inhale as you perform this movement.",
+			"Repeat for the recommended amount of repetitions."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/stiff_legged_dumbbell_deadlift/0.webp",
+				"width": 800,
+				"height": 534
+			},
+			{
+				"kind": "image",
+				"path": "/media/stiff_legged_dumbbell_deadlift/1.webp",
+				"width": 800,
+				"height": 534
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "superman",
 		"name": "Superman",
 		"aliases": [
@@ -3791,6 +5559,7 @@
 			"superman"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"lower back"
 		],
@@ -3830,6 +5599,7 @@
 			"the straddle"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -3861,6 +5631,7 @@
 			"triceps stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"triceps"
 		],
@@ -3896,6 +5667,7 @@
 			"tuck crunch"
 		],
 		"category": "core",
+		"equipment": [],
 		"primaryMuscles": [
 			"abdominals"
 		],
@@ -3928,12 +5700,52 @@
 		"attributionId": "free_exercise_db"
 	},
 	{
+		"id": "two_arm_kettlebell_military_press",
+		"name": "Two-Arm Kettlebell Military Press",
+		"aliases": [
+			"two arm kettlebell military press"
+		],
+		"category": "strength",
+		"equipment": [
+			"kettlebell"
+		],
+		"primaryMuscles": [
+			"shoulders"
+		],
+		"secondaryMuscles": [
+			"triceps"
+		],
+		"level": "intermediate",
+		"unilateral": false,
+		"defaultMetric": "reps",
+		"instructions": [
+			"Clean two kettlebells to your shoulders. Clean the kettlebells to your shoulders by extending through the legs and hips as you swing the kettlebells towards your shoulders. Rotate your wrists as you do so, so that the palms face forward.",
+			"Press the kettlebells up and out. As the kettlebells pass your head, lean into the weights so that the kettlebells are racked behind your head. Make sure to contract your lats, butt, and stomach for added stability."
+		],
+		"media": [
+			{
+				"kind": "image",
+				"path": "/media/two_arm_kettlebell_military_press/0.webp",
+				"width": 800,
+				"height": 536
+			},
+			{
+				"kind": "image",
+				"path": "/media/two_arm_kettlebell_military_press/1.webp",
+				"width": 800,
+				"height": 536
+			}
+		],
+		"attributionId": "free_exercise_db"
+	},
+	{
 		"id": "upper_back_stretch",
 		"name": "Upper Back Stretch",
 		"aliases": [
 			"upper back stretch"
 		],
 		"category": "stretch",
+		"equipment": [],
 		"primaryMuscles": [
 			"middle back"
 		],
@@ -3969,6 +5781,7 @@
 			"windmills"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"abductors"
 		],
@@ -4010,6 +5823,7 @@
 			"worlds greatest stretch"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"hamstrings"
 		],
@@ -4049,6 +5863,7 @@
 			"wrist circles"
 		],
 		"category": "mobility",
+		"equipment": [],
 		"primaryMuscles": [
 			"forearms"
 		],

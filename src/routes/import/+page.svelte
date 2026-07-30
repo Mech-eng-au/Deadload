@@ -1,13 +1,21 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	import CatalogPicker from '$lib/components/CatalogPicker.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { describeItem } from '$lib/db/routines.js';
 	import { ImportError, toRoutineItem, type ReviewItem, type ReviewModel } from '$lib/import/index.js';
 	import { commitReview, itemCount, outstanding, reviewFromText } from '$lib/import/runner.svelte.js';
-	import { LLM_PROMPT } from '$lib/import/prompt.js';
-	import type { Exercise } from '$lib/types.js';
+	import { buildPrompt, equipmentSentence, llmCatalogJson } from '$lib/import/prompt.js';
+	import {
+		equipmentLabel,
+		missingEquipment,
+		ownedEquipment,
+		availableCatalog
+	} from '$lib/catalog/equipment.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import type { Exercise, Settings } from '$lib/types.js';
 
 	let stage = $state<'input' | 'review'>('input');
 	let pasted = $state('');
@@ -17,15 +25,43 @@
 	let pickingFor = $state<ReviewItem | null>(null);
 	let saving = $state(false);
 	let copied = $state(false);
+	let settings = $state<Settings | null>(null);
+
+	onMount(async () => {
+		settings = await getSettings();
+	});
+
+	// Resolution runs against the whole catalog and equipment is a warning, never a
+	// block (§5.1): a routine written for a bar you have not ticked yet is a reason
+	// to tick the box, not an error.
+	const owned = $derived(ownedEquipment(settings));
+	const prompt = $derived(buildPrompt(owned));
+	const offered = $derived(availableCatalog(owned).length);
 
 	async function copyPrompt() {
 		try {
-			await navigator.clipboard.writeText(LLM_PROMPT);
+			await navigator.clipboard.writeText(prompt);
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		} catch {
 			// Clipboard blocked; the prompt is on screen to select by hand.
 		}
+	}
+
+	/**
+	 * The catalog file is built here rather than shipped as a static asset (§14,
+	 * amended 2026-07-30): a build-time file cannot know what the user owns, and
+	 * one that lists exercises they cannot do produces a routine they cannot run.
+	 */
+	function downloadCatalog() {
+		const url = URL.createObjectURL(
+			new Blob([llmCatalogJson(owned)], { type: 'application/json' })
+		);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'catalog-for-llm.json';
+		a.click();
+		URL.revokeObjectURL(url);
 	}
 
 	const remaining = $derived(review ? outstanding(review) : 0);
@@ -163,6 +199,11 @@
 				Copy the prompt below, attach the catalog file so it only uses exercises you have, and
 				paste the answer back here.
 			</p>
+			<p class="mt-2 text-xs text-zinc-500">
+				Both are built from what you own: {offered} exercises, equipment
+				<span class="text-zinc-400">{equipmentSentence(owned)}</span>. Change it in Settings and
+				download again.
+			</p>
 			<div class="mt-3 flex gap-2">
 				<button
 					onclick={copyPrompt}
@@ -170,16 +211,15 @@
 				>
 					{copied ? 'Copied' : 'Copy prompt'}
 				</button>
-				<a
-					href="{base}/catalog-for-llm.json"
-					download="catalog-for-llm.json"
+				<button
+					onclick={downloadCatalog}
 					class="flex min-h-12 flex-1 items-center justify-center rounded-xl border border-zinc-700 px-4 text-center text-sm"
 				>
 					Catalog file
-				</a>
+				</button>
 			</div>
 			<pre
-				class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs whitespace-pre-wrap text-zinc-400">{LLM_PROMPT}</pre>
+				class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs whitespace-pre-wrap text-zinc-400">{prompt}</pre>
 		</details>
 	</div>
 {:else if review}
@@ -235,6 +275,12 @@
 										{#if item.result.status !== 'resolved'}
 											<div class="mt-0.5 text-xs text-zinc-500">matched from “{item.written}”</div>
 										{/if}
+										{#each missingEquipment(exercise, owned) as id (id)}
+											<div class="mt-1 text-xs text-amber-200/90">
+												Needs a {equipmentLabel(id).toLowerCase()} — not ticked in Settings. Imported
+												anyway.
+											</div>
+										{/each}
 									{:else}
 										<div class="truncate font-medium text-amber-200">“{item.written}”</div>
 										<div class="mt-0.5 text-xs text-zinc-400">

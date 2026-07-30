@@ -7,10 +7,14 @@
 	import { countItems, deleteRoutine, describeItem, getRoutine, uid } from '$lib/db/routines.js';
 	import { estimateSeconds, totalSets } from '$lib/session/steps.js';
 	import { putSession } from '$lib/db/sessions.js';
-	import type { Routine } from '$lib/types.js';
+	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import type { Routine, Settings } from '$lib/types.js';
 
 	let routine = $state<Routine | null>(null);
 	let loaded = $state(false);
+	let settings = $state<Settings | null>(null);
+	const owned = $derived(ownedEquipment(settings));
 	let confirmingDelete = $state(false);
 	let starting = $state(false);
 
@@ -32,6 +36,7 @@
 	}
 
 	onMount(async () => {
+		settings = await getSettings();
 		routine = (await getRoutine(page.params.id!)) ?? null;
 		loaded = true;
 	});
@@ -116,6 +121,21 @@
 								<div class="min-w-0">
 									<div class="truncate font-medium">{exercise?.name ?? item.exerciseId}</div>
 									<div class="mt-0.5 text-sm text-zinc-400">{describeItem(item)}</div>
+									<!-- A routine keeps every exercise in it (§5.1). Equipment the user has
+										 not ticked earns a chip here, never a removal. -->
+									{#if exercise?.equipment.length}
+										<div class="mt-1 flex flex-wrap gap-1.5 text-xs">
+											{#each exercise.equipment as id (id)}
+												<span
+													class="rounded-full px-2 py-0.5 {missingEquipment(exercise, owned).includes(id)
+														? 'bg-amber-950/60 text-amber-200'
+														: 'bg-zinc-800 text-zinc-400'}"
+												>
+													{equipmentLabel(id)}
+												</span>
+											{/each}
+										</div>
+									{/if}
 									{#if item.restSeconds > 0}
 										<div class="text-xs text-zinc-500">{item.restSeconds} s rest</div>
 									{/if}
