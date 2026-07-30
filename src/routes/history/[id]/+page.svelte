@@ -335,7 +335,21 @@
 										: 'text-zinc-300'}"
 								>
 									<span class="text-zinc-500">Set {entry.setIndex + 1}</span>
-									<span class="tabular-nums">{describe(entry)}</span>
+									<span class="flex items-center gap-2">
+										<span class="tabular-nums">{describe(entry)}</span>
+										<!-- The row is the tap target; the pencil is what says so. Same
+											 viewBox and stroke weight as the tab bar icons. -->
+										<svg
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="1.75"
+											aria-hidden="true"
+											class="h-4 w-4 shrink-0 text-zinc-500"
+										>
+											<path d="M4 20h4L19 9l-4-4L4 16z" stroke-linejoin="round" />
+										</svg>
+									</span>
 								</button>
 							{/if}
 						</li>
@@ -347,7 +361,7 @@
 		{#if grouped.length === 0}
 			<p class="text-zinc-500">Nothing was logged in this session.</p>
 		{:else if !cannotEdit}
-			<p class="-mt-4 text-xs text-zinc-600">Tap a set to correct what was logged.</p>
+			<p class="-mt-4 text-xs text-zinc-600">Tap a set to correct it.</p>
 		{/if}
 
 		<div>
