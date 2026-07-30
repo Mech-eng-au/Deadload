@@ -39,5 +39,9 @@ export const PRESET_FILES = [
 	'full-body-15.json',
 	'desk-decompression.json',
 	'push-pull-supersets.json',
-	'full-body-circuit.json'
+	'full-body-circuit.json',
+	// Added 2026-07-30. The only two presets whose `notes` carry instructions the
+	// catalog cannot: where the baby goes (§9).
+	'baby-floor-time.json',
+	'baby-in-arms.json'
 ] as const;

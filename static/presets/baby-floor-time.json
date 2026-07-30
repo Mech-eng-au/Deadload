@@ -1,0 +1,99 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Floor time with the baby",
+	"goal": "gentle strength and mobility",
+	"description": "Mat work with your baby in the routine rather than waiting beside it. Every exercise is an ordinary one — the notes just say where the baby goes. For the stretch of the day they are happy on their back.",
+	"tags": ["baby", "gentle", "floor"],
+	"blocks": [
+		{
+			"label": "Warm-up",
+			"items": [
+				{
+					"exercise": "cat_stretch",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "On all fours with the baby on their back underneath you, face to face. Round your spine as you breathe out, let it drop as you breathe in."
+				},
+				{
+					"exercise": "pelvic_tilt_into_bridge",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "Slow, and breathe out as you tilt. Baby lying next to you."
+				},
+				{
+					"exercise": "dynamic_chest_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "Undoing the shoulders-forward of a day spent carrying."
+				}
+			]
+		},
+		{
+			"label": "Main",
+			"items": [
+				{
+					"exercise": "butt_lift_bridge",
+					"sets": 2,
+					"reps": 10,
+					"rest_seconds": 30,
+					"notes": "Baby sitting on your hips, or lying along your shins."
+				},
+				{
+					"exercise": "dead_bug",
+					"sets": 2,
+					"reps": 8,
+					"per_side": true,
+					"rest_seconds": 30,
+					"notes": "Baby lying beside your head so you can keep talking to them. Keep your lower back flat on the mat."
+				},
+				{
+					"exercise": "glute_kickback",
+					"sets": 2,
+					"reps": 10,
+					"per_side": true,
+					"rest_seconds": 30,
+					"notes": "Baby on the mat in front of you."
+				},
+				{
+					"exercise": "incline_push_up",
+					"sets": 2,
+					"reps": 8,
+					"rest_seconds": 30,
+					"notes": "Hands on the sofa, baby lying on it in front of you. Kiss at the top of each rep."
+				},
+				{
+					"exercise": "superman",
+					"sets": 2,
+					"duration_seconds": 20,
+					"rest_seconds": 30,
+					"notes": "Baby in front of you, so lifting up is how you get to see them."
+				}
+			]
+		},
+		{
+			"label": "Cooldown",
+			"items": [
+				{
+					"exercise": "childs_pose",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "Baby just in front of your hands."
+				},
+				{ "exercise": "hug_knees_to_chest", "sets": 1, "duration_seconds": 40, "rest_seconds": 0 },
+				{
+					"exercise": "side_neck_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0,
+					"notes": "Start with the side you feed on most."
+				},
+				{ "exercise": "upper_back_stretch", "sets": 1, "duration_seconds": 40, "rest_seconds": 0 }
+			]
+		}
+	]
+}

@@ -16,6 +16,7 @@ import {
 } from '../src/lib/import/index.js';
 import { parseJson } from '../src/lib/import/parse-json.js';
 import { PRESET_FILES } from '../src/lib/import/index.js';
+import { missingEquipment } from '../src/lib/catalog/equipment.js';
 import type { Exercise } from '../src/lib/types.js';
 
 const catalog = catalogJson as Exercise[];
@@ -276,5 +277,58 @@ describe('built-in presets (§9)', () => {
 		const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');
 		const { routine } = toRoutine(review(text, file), index, key, 'builtin');
 		expect(routine.blocks.filter((b) => b.mode === 'circuit')).toHaveLength(circuitBlocks);
+	});
+
+	it.each(['baby-floor-time.json', 'baby-in-arms.json'])(
+		'%s keeps its per-item notes, which are the whole point of it',
+		(file) => {
+			// These two say where the baby goes, and the catalog cannot: the exercises
+			// are ordinary, and `notes` is the only field carrying the instruction that
+			// makes the routine what it is. Resolution passing while notes were
+			// silently dropped would leave a preset that looks fine and is useless.
+			const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');
+			const { routine } = toRoutine(review(text, file), index, key, 'builtin');
+			const withNotes = routine.blocks.flatMap((b) => b.items).filter((i) => i.notes?.trim());
+			expect(withNotes.length).toBeGreaterThanOrEqual(5);
+			expect(withNotes.some((i) => /bab(y|ies)/i.test(i.notes!))).toBe(true);
+		}
+	);
+
+	it('keeps the baby presets free of the exercises a new parent should not be handed', () => {
+		// Not medical advice, and not pretending to be — but a routine written for
+		// somebody with a small baby has no business containing jumping or the
+		// crunch family, and the catalog's `core` category is mostly that.
+		const avoid = [
+			'crunches',
+			'sit_up',
+			'jackknife_sit_up',
+			'russian_twist',
+			'air_bike',
+			'freehand_jump_squat',
+			'knee_tuck_jump',
+			'plyo_push_up',
+			'rope_jumping'
+		];
+		for (const file of ['baby-floor-time.json', 'baby-in-arms.json']) {
+			const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');
+			const { routine } = toRoutine(review(text, file), index, key, 'builtin');
+			const ids = routine.blocks.flatMap((b) => b.items).map((i) => i.exerciseId);
+			for (const bad of avoid) {
+				expect(ids, `${file} contains ${bad}`).not.toContain(bad);
+			}
+		}
+	});
+
+	it('keeps the baby presets doable with nothing bought', () => {
+		// A chair is furniture (§5.1) and allowed; anything gated is not, because the
+		// person these are for is borrowing somebody else's phone to try the app.
+		for (const file of ['baby-floor-time.json', 'baby-in-arms.json']) {
+			const text = readFileSync(join(import.meta.dirname, '../static/presets', file), 'utf8');
+			const { routine } = toRoutine(review(text, file), index, key, 'builtin');
+			for (const item of routine.blocks.flatMap((b) => b.items)) {
+				const exercise = index.byId.get(item.exerciseId)!;
+				expect(missingEquipment(exercise, []), `${file}: ${item.exerciseId}`).toEqual([]);
+			}
+		}
 	});
 });

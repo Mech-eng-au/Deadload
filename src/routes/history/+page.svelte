@@ -72,6 +72,7 @@
 										{when(row.startedAt)}
 										{#if row.minutes}· {row.minutes} min{/if}
 										{#if !row.finished}· <span class="text-amber-300">unfinished</span>{/if}
+									{#if row.edited}· corrected{/if}
 									</span>
 								</span>
 								<span class="shrink-0 text-right">
