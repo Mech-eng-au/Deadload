@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { catalog, categories } from '$lib/catalog/index.js';
 	import { availableCatalog, equipmentLabel, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { muscleInfo } from '$lib/catalog/muscles.js';
 	import { getSettings } from '$lib/db/settings.js';
 	import type { Category, Exercise, Settings } from '$lib/types.js';
 
@@ -95,6 +96,11 @@
 							{e.category} · {e.level}{e.unilateral ? ' · per side' : ''}{e.equipment.length
 								? ' · ' + e.equipment.map(equipmentLabel).join(', ')
 								: ''}
+						</span>
+						<!-- Plain English while a routine is being built (§4.6), which is where
+							 the decision "is this the exercise I want" is actually made. -->
+						<span class="mt-0.5 block truncate text-xs text-zinc-500">
+							{e.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')}
 						</span>
 					</span>
 				</button>

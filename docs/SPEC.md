@@ -361,6 +361,63 @@ Consequences, all small because the field is one number:
 - CSV export gains a `load_kg` column; import accepts `load_kg` in JSON and CSV.
 - Statistics treat kg-reps as a **separate currency** from sets — see §10.
 
+### 4.6 Muscles in plain English
+
+Added 2026-07-30, from the user: *"not everybody knows what quadriceps or adductors are"*. Quite
+right, and the app was printing seventeen anatomy-textbook words at them without translation.
+
+The vocabulary is **closed** — free-exercise-db uses exactly seventeen names — which is what makes
+this tractable rather than open-ended:
+
+`abdominals`, `abductors`, `adductors`, `biceps`, `calves`, `chest`, `forearms`, `glutes`,
+`hamstrings`, `lats`, `lower back`, `middle back`, `neck`, `quadriceps`, `shoulders`, `traps`,
+`triceps`.
+
+`src/lib/catalog/muscles.ts` gives each one a `short` (two or three words, for brackets), a `where`
+(somewhere you could point at) and a `does` (stated as movements, not anatomy). **Hand-authored and
+deliberately not in `catalog.json`**, for the same reason as the ladders in §4.1: it is editorial
+writing and belongs in a file a person is expected to argue with. `tests/muscles.test.ts` fails if
+the catalog ever names a muscle this file does not explain.
+
+Three places, and no others:
+
+- **Exercise detail** — the body map (below), then *Works* and *Assists* with the plain-English
+  gloss after each name.
+- **The exercise picker and the routine editor** — `front of thigh` under the name. This is where
+  "is this the exercise I want" is actually decided.
+- **`/muscles/`, the compendium** — all seventeen, ordered by how much of the catalog trains each,
+  each opening to a diagram, the two sentences, and a link through to the exercises that train it
+  (`/catalog/?muscle=<id>`).
+
+**Not during a session.** Mid-set the user has one glance and it belongs to the set numbers and the
+countdown (§12). Anatomy is setup-time information, which is §15's rule exactly: fewer taps during a
+session, more during setup.
+
+#### The body map is a diagram, not an illustration
+
+`BodyMap.svelte`: a connected silhouette, front and back, with one rectangle or ellipse per muscle
+region — bright for a muscle doing the work, mid-grey for one assisting, dim for the rest. 4 kB of
+inline SVG, so §11's media budget stays spent on the photographs.
+
+**The obvious alternative was investigated and rejected on two counts.** wger ships 16 muscle
+overlays (`wger/core/static/images/muscles/main/muscle-N.svg`) drawn over two Wikimedia figures,
+which is exactly the shape of thing this needs:
+
+1. **Licence unverified.** wger's `SOURCES` names `File:Muscular_system.svg` and
+   `File:Muscular_system-back.svg` on Wikimedia Commons. The network policy of the development
+   environment blocks `commons.wikimedia.org` and `wger.de`, so neither licence could be read.
+   §4.1 requires a recorded licence and author per image, and guessing one into an APK is not a
+   thing to do. Same posture as §5's wger note: verify from an unrestricted network first.
+2. **Coverage is 12 of 17, and the gaps are the words that most need a picture.** The overlays have
+   no `adductors`, `abductors`, `forearms`, `middle back` or `neck` — and `adductors` is the example
+   the request itself used. The base figures are also 321 kB and 404 kB of unoptimised Inkscape SVG.
+
+So the schematic ships, and the wger route is recorded here as a real upgrade with a known
+first step: read those two Commons pages. If they are usable, the overlays replace the 12 they
+cover and the schematic keeps the other five — the mapping is
+1 biceps, 2 shoulders, 4 chest, 5 triceps, 6 abdominals, 7 calves, 8 glutes, 9 traps,
+10 quadriceps, 11 hamstrings, 12 lats, 16 lower back.
+
 ---
 
 ## 5. Catalog build script

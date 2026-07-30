@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { browser } from '$app/environment';
 	import { catalog, categories } from '$lib/catalog/index.js';
 	import { availableCatalog, equipmentLabel, ownedEquipment } from '$lib/catalog/equipment.js';
+	import { muscleInfo, muscleLabel } from '$lib/catalog/muscles.js';
 	import { getSettings } from '$lib/db/settings.js';
 	import type { Category, Settings } from '$lib/types.js';
 
@@ -14,6 +17,17 @@
 		settings = await getSettings();
 	});
 
+	// Arriving from the compendium (§4.6): ?muscle=quadriceps narrows to the
+	// exercises that train it. A URL rather than another control on the screen —
+	// the filter has one entry point and does not need a permanent chip row.
+	//
+	// Read only in the browser. The build is fully prerendered (§2), and reading
+	// `searchParams` during prerender throws — correctly, since there is no query
+	// string at build time. So the prerendered page is the unfiltered catalog and
+	// the filter applies on hydration, which is also exactly what a client-side
+	// navigation from the compendium does.
+	const muscle = $derived(browser ? page.url.searchParams.get('muscle') : null);
+
 	// One of the two screens a gate applies to (§5.1): this is the app offering
 	// exercises, so it offers only what the user can do.
 	const owned = $derived(ownedEquipment(settings));
@@ -23,6 +37,7 @@
 	const filtered = $derived(
 		available.filter((e) => {
 			if (activeCategory !== 'all' && e.category !== activeCategory) return false;
+			if (muscle && !e.primaryMuscles.includes(muscle)) return false;
 			if (!query.trim()) return true;
 			const q = query.trim().toLowerCase();
 			return e.name.toLowerCase().includes(q) || e.aliases.some((a) => a.includes(q));
@@ -54,6 +69,18 @@
 			</button>
 		{/each}
 	</div>
+
+	{#if muscle}
+		<div class="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3">
+			<p class="min-w-0 text-sm">
+				<span class="font-medium">{muscleLabel(muscle)}</span>
+				<span class="text-zinc-500"> — {muscleInfo(muscle)?.short ?? ''}</span>
+			</p>
+			<a href="{base}/catalog/" data-sveltekit-replacestate class="shrink-0 text-xs text-zinc-400 underline">
+				Clear
+			</a>
+		</div>
+	{/if}
 
 	<p class="text-xs text-zinc-500">
 		{filtered.length} shown
@@ -95,6 +122,10 @@
 			</li>
 		{/each}
 	</ul>
+
+	<a href="{base}/muscles/" class="pb-4 text-center text-sm text-zinc-500 underline">
+		What all these muscle names mean
+	</a>
 
 	{#if filtered.length === 0}
 		<p class="py-8 text-center text-zinc-500">
