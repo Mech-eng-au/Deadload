@@ -28,13 +28,13 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 
 | Area | State |
 |---|---|
-| Catalog | 149 exercises, every one with at least one image, generated and committed. 99 need nothing but a floor, a wall and a chair; the rest are behind the equipment gates below |
-| Equipment | Six independent checkboxes in Settings (pull-up bar, jumping rope, dumbbells, kettlebell, resistance band, foam roller). Unticked equipment is filtered out of catalog browse and the exercise picker and nowhere else (added 2026-07-30) |
+| Catalog | 166 exercises, every one with at least one image, generated and committed. 99 need nothing but a floor, a wall and a chair; the rest are behind the equipment gates below |
+| Equipment | Nine independent checkboxes in Settings (pull-up bar, jumping rope, dumbbells, kettlebell, resistance band, foam roller, yoga ball, suspension straps, ab wheel). Unticked equipment is filtered out of catalog browse and the exercise picker and nowhere else (added 2026-07-30; the last three 2026-08-02) |
 | Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes. Exercises are dragged into order by a handle, on the routine screen as well as in the editor, and tapping one opens what the catalog knows about it without leaving the screen (added 2026-07-30) |
 | Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Nine built-in routines, loaded through the import path. Two of them (*Floor time with the baby*, *Baby in arms*) carry per-item `notes` saying where the baby goes — the only way to express that without extending the catalog (added 2026-07-30) |
-| Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set |
+| Backup | Whole-database JSON export and restore (merge or replace), CSV export of every set, and one routine as a printable A4 PDF with a box to write in for each set — photographs included by default, checkbox to leave them out (added 2026-08-02) |
 | Load | `loadKg` on the routine item and on the logged set, for dumbbell and kettlebell work only; stepper in the player, spoken, in the CSV and the importer; kg-reps as a separate statistic (added 2026-07-30) |
 | Muscles | Plain English for all seventeen catalog muscle names, front/back body figures (MIT) with each muscle filled in on a grey-to-red ramp, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
@@ -42,7 +42,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **260 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **288 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -79,6 +79,7 @@ scripts/build-catalog.ts     generates the catalog; run by hand, output committe
 src/lib/catalog/             catalog.json + typed loader; ladders.ts is the one hand-authored bit
 src/lib/db/                  IndexedDB: schema, routines, sessions, aliases, settings, backup
 src/lib/import/              parsers + resolver — pure, no Svelte, no database
+src/lib/pdf/                 hand-rolled PDF writer + the printable routine sheet
 src/lib/reorder.ts           where a dragged card lands — pure, no DOM
 src/lib/session/             player state machine, steps, audio, speech, wake lock, last-time
 src/lib/stats/               statistics and CSV — pure functions over the session log
@@ -88,9 +89,9 @@ tests/                       vitest; fixtures/imports holds the deliberately ugl
 
 Load-bearing rules, all of which have already caught something:
 
-- **The pure layers stay pure.** `import/`, `stats/`, `session/steps.ts`, `session/edit.ts` and
-  `reorder.ts` take data as arguments rather than reading the database. That is why their rules are
-  unit-testable.
+- **The pure layers stay pure.** `import/`, `stats/`, `session/steps.ts`, `session/edit.ts`,
+  `reorder.ts` and `pdf/` (bar `pdf/images.ts`, which needs a canvas) take data as arguments rather
+  than reading the database. That is why their rules are unit-testable.
 - **`toPlain()` at the database boundary.** IndexedDB's structured clone rejects Svelte 5's
   reactive proxies with `[object Array] could not be cloned`. Every write is flattened at the
   write boundary rather than at call sites, because a forgotten snapshot fails at runtime while
@@ -275,6 +276,30 @@ whose single rule is that no link navigates: Settings and the muscle glossary be
 the progression rungs move the sheet instead of the app. The catalog page and the sheet render the
 same component, so they cannot drift into describing an exercise differently.
 
+**A yoga ball is not gym equipment, and the build script used to say it was.** Added 2026-08-02 with
+suspension straps and an ab wheel (SPEC §5.1). `exercise ball` sat in the build script's `GYM_EQUIPMENT`
+set next to `machine` and `barbell`, which was a category error: §1's rule is *nothing is assumed
+except a floor, a wall and a chair, and everything else is declared in Settings*, and a £15 inflatable
+in the corner of a bedroom is exactly that. **`medicine ball` stays refused**, and not for consistency:
+its seventeen rows are almost all throws and slams, which need a partner and a room this app is not
+used in. If you add it anyway, cut the throws first.
+
+**The printable sheet is a log, not a printout.** Added 2026-08-02 (SPEC §8). Every set gets a box
+with its target printed pale inside it, because the reason to want paper is to write on it. Three
+things are easy to undo by accident:
+
+- **It is not `window.print()`**, and must not become it: an Android WebView has no print dialog
+  unless the host app implements one, so that button would do nothing on the phone and work perfectly
+  in every test run here.
+- **The PDF is written by hand** (`src/lib/pdf/writer.ts`) rather than by a library, because the whole
+  job is text, rules, boxes and a JPEG. The file is assembled as one character per byte so the
+  cross-reference offsets are string lengths; there is a unit test that walks every offset and checks
+  it lands on the object it claims, with and without binary in the file. Break that and readers reject
+  the file outright with nothing useful to say.
+- **Photographs are scaled before they are embedded, not after.** 23 mm on paper is 240 px; at catalog
+  resolution the same sheet is 900 kB instead of 83 kB. And they go in as JPEG because that is the one
+  format a PDF stores verbatim — the catalog's WebP would have to be decoded either way.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -303,7 +328,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 260 unit tests
+npm test           # 288 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 ```
@@ -314,7 +339,11 @@ Playwright with `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. They cover
 flow with a simulated app restart, the session player end to end, the polish round, import and
 presets, backup and restore including a full database wipe, last-time numbers across two
 workouts, page transitions, audio, and history plus CSV. The 2026-07-30 round added the muscle body
-map, the baby presets, session correction, and dragging a routine into order — the last one seeded a finished session straight into
+map, the baby presets, session correction, and dragging a routine into order; 2026-08-02 added the
+printable sheet — downloaded from the running app and then **rendered with MuPDF (`npm i mupdf`, a
+WASM build with its own fonts) and looked at**, which is the only way to know a PDF is right. Note
+that pdf.js in Node parses the file fine and draws no glyphs at all, so a blank render there means
+nothing — the last one seeded a finished session straight into
 IndexedDB rather than performing a whole workout to reach the screen under test, which is worth
 copying for anything that only cares about a logged session.
 

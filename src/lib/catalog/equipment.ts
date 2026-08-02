@@ -63,6 +63,24 @@ export const EQUIPMENT: EquipmentType[] = [
 		gated: true
 	},
 	{
+		id: 'yoga_ball',
+		label: 'Yoga ball',
+		needs: 'A big inflatable ball, 55–75 cm. Also sold as an exercise, stability or Swiss ball.',
+		gated: true
+	},
+	{
+		id: 'suspension_trainer',
+		label: 'Suspension straps',
+		needs: 'Two straps with handles, anchored to a door or a beam.',
+		gated: true
+	},
+	{
+		id: 'ab_wheel',
+		label: 'Ab wheel',
+		needs: 'The small wheel with a handle through it.',
+		gated: true
+	},
+	{
 		id: 'chair',
 		label: 'Chair or bench',
 		needs: 'A dining chair, the edge of a sofa or bed, a step, a low table.',

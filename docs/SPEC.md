@@ -531,6 +531,9 @@ Empty means a floor and a wall.
 | `kettlebell` | Kettlebell | one, any weight | yes |
 | `resistance_band` | Resistance band | a loop or tube band with handles | yes |
 | `foam_roller` | Foam roller | a roller, for the self-massage entries | yes |
+| `yoga_ball` | Yoga ball | a big inflatable ball, 55–75 cm — also sold as an exercise, stability or Swiss ball | yes |
+| `suspension_trainer` | Suspension straps | two straps with handles, anchored to a door or a beam | yes |
+| `ab_wheel` | Ab wheel | the small wheel with a handle through it | yes |
 | `chair` | Chair or bench | a dining chair, sofa edge, bed, step or low table | **no** |
 
 **A chair is not a purchase**, so it is tagged and never gated. It earns a chip on the exercise so
@@ -584,6 +587,29 @@ will happily supply nine ways to extend an elbow, and nine near-identical entrie
 screen worse without making the training better — the same argument §4.1 uses for leaving
 near-duplicate rungs off a ladder.
 
+#### Amended 2026-07-30: three more things people already own
+
+Asked for from the phone — a yoga ball by name, and *"other equipment that people often have in
+their home, if we missed any"*. Same test as every other row in the table: is it a thing that sits
+in an ordinary home, and does this source have enough of it to be worth a checkbox?
+
+| Type | Source pool | Shipped | What was cut, and why |
+|---|---|---|---|
+| `yoga_ball` | 12 (`exercise ball`) | **10** | `Weighted Ball Hyperextension` and `Weighted Ball Side Bend` both put a **weight plate** behind the neck or in the hand. A plate is gym kit under §1, and the ball is not what makes those two hard |
+| `suspension_trainer` | 7 (`other`, "Suspended …") | **6** | `Ring Dips` needs gymnastic rings, which are a different purchase from a strap trainer with handles |
+| `ab_wheel` | 1 (`Ab Roller`) | **1** | nothing to cut |
+
+**The build script used to refuse `exercise ball` outright**, in the same breath as `machine` and
+`barbell`. That was wrong and this amendment removes it: a yoga ball is a £15 inflatable that lives
+in the corner of a bedroom, and calling it gym equipment was a category error — §1's actual rule is
+*"nothing is assumed except a floor, a wall and a chair, and everything else is declared in
+Settings"*, which is precisely what a ball now does. `medicine ball` **stays refused**, and not out
+of consistency: its 17 rows are almost all *throws* — chest passes, overhead slams, throws with a
+run-up — which need a partner, a wall you are willing to hit, and a room this app is not used in.
+
+`ab_wheel` ships one exercise, deliberately, on the precedent `jumping_rope` set below: one is the
+honest count of what this source has.
+
 `jumping_rope` ships a single exercise, and the Settings row says "1 exercise" rather than hiding
 that. One is the honest count of what this source has, and a rope owner would rather see the row
 say one than wonder why ticking it changed nothing.
@@ -595,8 +621,9 @@ Media cost: 58 KB per exercise, so 6.3 MB today becomes ~9 MB — comfortably in
 Beyond the existing checks, `build-catalog.ts` is a hard error when:
 
 - A pool member's source `equipment` is a **gym** value (`machine`, `cable`, `barbell`,
-  `e-z curl bar`, `medicine ball`, `exercise ball`). §1 says these are out, so a typo in
-  `curation.yaml` must not quietly import a lat pulldown.
+  `e-z curl bar`, `medicine ball`). §1 says these are out, so a typo in `curation.yaml` must not
+  quietly import a lat pulldown. `exercise ball` was on this list until 2026-07-30 and should not
+  go back on it — see the amendment above.
 - A pool member's source `equipment` is **not** `body only`/`null` and it carries no gated tag.
   This is the check that catches the real mistake: tagging a dumbbell exercise `chair` and shipping
   it to somebody who owns no dumbbells.
@@ -925,6 +952,47 @@ Browser storage can be evicted under device storage pressure or wiped by clearin
 - **Export:** a single JSON file containing all routines, all sessions, alias overrides, and settings, with a `schemaVersion` field. One button in Settings, plus an automatic prompt when the session count crosses each multiple of 20.
 - **Restore:** file picker, validate, then offer merge or replace. Merge deduplicates by `id`.
 - The export format is a documented type in `src/lib/db/backup.ts`, not an ad-hoc `JSON.stringify` of whatever the DB happens to contain.
+
+#### A routine on paper
+
+Added 2026-07-30, asked for from the phone. One routine, one or two A4 pages, as a real PDF file
+handed to the share sheet exactly as the backup and the CSV are.
+
+**It is a log, not a printout of a screen.** Every set gets a box with its target printed small and
+pale inside it, and the box is there to write the number in. That is the only reason to want a
+routine on paper — a phone that has to stay in a pocket, somebody else following your routine, a
+week away from the app — and a picture of the app on A4 would serve none of them. It carries the
+name, the estimate, the description, what equipment it needs, each section, each exercise with its
+sets, target, rest and notes, and a footer on every page saying which routine it is and when it was
+printed.
+
+**With the photographs, and a checkbox to leave them out.** The first version had none, on a file-size
+argument, and that was wrong: somebody following the paper instead of the app cannot see the movement,
+and a name is not a movement. Each one is printed 23 mm wide, and — this is the part that makes it
+affordable — **scaled to that size before it is embedded**, not at catalog resolution. Measured on the
+twelve-exercise *Baby in arms*: **83 kB with photographs, 6 kB without**, against the ~900 kB it would
+have been at 800 px. The checkbox is for a sheet that has to photocopy or go out by email; the default
+is on.
+
+A PDF takes **JPEG verbatim and has never heard of WebP**, which the catalog ships, so the one piece of
+this feature that touches the browser is `src/lib/pdf/images.ts`: decode, scale, re-encode on a canvas.
+An image that fails to load is simply left out — a sheet missing one photograph beats a button that
+does nothing.
+
+**The PDF is generated in the app, by hand, in about 300 lines** (`src/lib/pdf/`). Not a library:
+this is text, rules, rectangles and a JPEG the format stores as it stands, and the base-14 fonts every
+reader already has mean no font needs embedding. The file is written as pure ASCII with everything above 126 escaped octally, so the
+cross-reference offsets are string lengths — the one part of a PDF that a reader rejects outright, and
+the one there is a unit test for. `describeItem` is shared with the routine screen so the paper cannot
+start describing a set differently from the app.
+
+**Why not the browser's own print.** `window.print()` is the obvious answer and it is broken exactly
+where this app lives: an Android WebView has no print dialog unless the host app implements one, so
+the button would do nothing on the phone and work fine in every test. Generating the bytes ourselves
+works the same everywhere.
+
+There is no PDF *import*, and there should not be: §6 resolves against the catalog, and a PDF is
+where structured data goes to die.
 
 ---
 
