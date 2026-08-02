@@ -28,7 +28,13 @@ export default defineConfig({
 				]
 			},
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,webmanifest}'],
+				// `ttf` is here for the printable sheet's embedded font (§16). Without
+				// it the subsets are the one asset the service worker does not hold, so
+				// the PDF button would work everywhere except offline — which is the
+				// one place §1 promises everything works. The APK does not register a
+				// service worker at all (§11), so this only matters to the hosted PWA,
+				// which is exactly why it would never have been noticed on the phone.
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,webmanifest,ttf}'],
 				maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
 				navigateFallback: null
 			}

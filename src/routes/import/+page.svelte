@@ -16,6 +16,8 @@
 		availableCatalog
 	} from '$lib/catalog/equipment.js';
 	import { getSettings } from '$lib/db/settings.js';
+	import { LOCALES } from '$lib/i18n/index.js';
+	import { locale, t } from '$lib/i18n/locale.svelte.js';
 	import type { Exercise, Settings } from '$lib/types.js';
 
 	let stage = $state<'input' | 'review'>('input');
@@ -36,7 +38,9 @@
 	// block (§5.1): a routine written for a bar you have not ticked yet is a reason
 	// to tick the box, not an error.
 	const owned = $derived(ownedEquipment(settings));
-	const prompt = $derived(buildPrompt(owned));
+	const prompt = $derived(
+		buildPrompt(owned, t, LOCALES.find((l) => l.id === locale())?.endonym ?? 'English')
+	);
 	const offered = $derived(availableCatalog(owned).length);
 
 	async function copyPrompt() {
@@ -93,7 +97,7 @@
 	function preview(item: ReviewItem): string {
 		const exercise = item.chosen ? getExercise(item.chosen) : undefined;
 		if (!exercise) return '';
-		return describeItem(toRoutineItem(item.raw, exercise, 'preview', []));
+		return describeItem(toRoutineItem(item.raw, exercise, 'preview', []), t);
 	}
 
 	async function save() {
@@ -116,11 +120,11 @@
 </script>
 
 <svelte:head>
-	<title>Import a routine · Deadload</title>
+	<title>{t.importer.title} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
-<h1 class="mt-2 mb-5 font-display text-2xl font-bold">Import a routine</h1>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.common.backRoutines}</a>
+<h1 class="mt-2 mb-5 font-display text-2xl font-bold">{t.importer.title}</h1>
 
 {#if stage === 'input'}
 	<div class="flex flex-col gap-5 pb-12">
@@ -140,11 +144,11 @@
 				? 'border-zinc-400 bg-zinc-900'
 				: 'border-zinc-800'}"
 		>
-			<p class="text-zinc-300">Drop a .json or .csv file here</p>
+			<p class="text-zinc-300">{t.importer.dropHere}</p>
 			<label
 				class="mt-4 inline-block min-h-12 cursor-pointer rounded-xl bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-900"
 			>
-				Choose a file
+				{t.importer.chooseFile}
 				<input
 					type="file"
 					accept=".json,.csv,application/json,text/csv"
@@ -156,12 +160,12 @@
 
 		<div>
 			<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-				Or paste the text
+				{t.importer.orPaste}
 			</h2>
 			<textarea
 				bind:value={pasted}
 				rows="6"
-				placeholder={'{ "name": "Morning mobility", "blocks": [ … ] }'}
+				placeholder={t.importer.pastePlaceholder}
 				class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-3 font-mono text-sm placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
 			></textarea>
 			<button
@@ -169,10 +173,10 @@
 				disabled={!pasted.trim()}
 				class="mt-2 min-h-14 w-full rounded-xl bg-zinc-100 py-4 font-semibold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
 			>
-				Read it
+				{t.importer.readIt}
 			</button>
 			<p class="mt-2 text-xs text-zinc-500">
-				Markdown code fences around the JSON are fine, they get stripped.
+				{t.importer.fencesFine}
 			</p>
 		</div>
 
@@ -189,34 +193,33 @@
 			href="{base}/presets/" data-sveltekit-replacestate
 			class="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-300 hover:border-zinc-600"
 		>
-			Or start from a built-in routine →
+			{t.importer.orPreset}
 		</a>
 
 		<!-- The prompt from SPEC §14, shipped in-app so a routine can be generated
 			 without leaving the phone. -->
 		<details class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-			<summary class="cursor-pointer text-sm font-medium">Get a routine from an LLM</summary>
+			<summary class="cursor-pointer text-sm font-medium">{t.importer.llmSummary}</summary>
 			<p class="mt-3 text-sm text-zinc-400">
-				Copy the prompt below, attach the catalog file so it only uses exercises you have, and
-				paste the answer back here.
+				{t.importer.llmIntro}
 			</p>
 			<p class="mt-2 text-xs text-zinc-500">
-				Both are built from what you own: {offered} exercises, equipment
-				<span class="text-zinc-400">{equipmentSentence(owned)}</span>. Change it in Settings and
-				download again.
+				{t.importer.llmBuiltFrom(offered)}
+				<span class="text-zinc-400">{equipmentSentence(owned, t)}</span>{t.importer
+					.llmChangeInSettings}
 			</p>
 			<div class="mt-3 flex gap-2">
 				<button
 					onclick={copyPrompt}
 					class="min-h-12 flex-1 rounded-xl bg-zinc-100 px-4 text-sm font-semibold text-zinc-900"
 				>
-					{copied ? 'Copied' : 'Copy prompt'}
+					{copied ? t.importer.copied : t.importer.copyPrompt}
 				</button>
 				<button
 					onclick={downloadCatalog}
 					class="flex min-h-12 flex-1 items-center justify-center rounded-xl border border-zinc-700 px-4 text-center text-sm"
 				>
-					Catalog file
+					{t.importer.catalogFile}
 				</button>
 			</div>
 			<pre
@@ -231,9 +234,9 @@
 		/>
 
 		<p class="text-sm text-zinc-400">
-			{keeping} exercise{keeping === 1 ? '' : 's'} ready.
+			{t.importer.readyCount(keeping)}
 			{#if remaining > 0}
-				<span class="text-amber-300">{remaining} still need{remaining === 1 ? 's' : ''} a match.</span>
+				<span class="text-amber-300">{t.importer.stillNeedMatch(remaining)}</span>
 			{/if}
 		</p>
 
@@ -245,9 +248,9 @@
 			<section>
 				{#if block.label || block.circuit}
 					<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-						{block.label || 'Circuit'}
+						{block.label || t.routine.circuit}
 						{#if block.circuit && block.label}
-							<span class="ml-1 font-normal text-zinc-500 normal-case">· circuit</span>
+							<span class="ml-1 font-normal text-zinc-500 normal-case">· {t.importer.circuit}</span>
 						{/if}
 					</h2>
 				{/if}
@@ -274,12 +277,11 @@
 										<div class="truncate font-medium">{exercise.name}</div>
 										<div class="mt-0.5 text-sm text-zinc-400">{preview(item)}</div>
 										{#if item.result.status !== 'resolved'}
-											<div class="mt-0.5 text-xs text-zinc-500">matched from “{item.written}”</div>
+											<div class="mt-0.5 text-xs text-zinc-500">{t.importer.matchedFrom(item.written)}</div>
 										{/if}
 										{#each missingEquipment(exercise, owned) as id (id)}
 											<div class="mt-1 text-xs text-amber-200/90">
-												Needs a {equipmentLabel(id).toLowerCase()} — not ticked in Settings. Imported
-												anyway.
+												{t.importer.needsEquipment(equipmentLabel(id, t).toLowerCase())}
 											</div>
 										{/each}
 										{#if item.raw.load_kg !== undefined && item.raw.load_kg > 0 && !isLoadable(exercise)}
@@ -287,16 +289,15 @@
 												 (§4.5): a dropped number the user never saw dropped is the
 												 same as a silent one. -->
 											<div class="mt-1 text-xs text-amber-200/90">
-												The file put {item.raw.load_kg} kg on this. It is not done with a weight, so the
-												load is dropped.
+												{t.importer.loadDropped(item.raw.load_kg)}
 											</div>
 										{/if}
 									{:else}
 										<div class="truncate font-medium text-amber-200">“{item.written}”</div>
 										<div class="mt-0.5 text-xs text-zinc-400">
 											{item.result.status === 'suggested'
-												? 'Not an exact match. Pick one:'
-												: 'Not in the catalog. Pick the closest, or drop it.'}
+												? t.importer.notExact
+												: t.importer.notInCatalog}
 										</div>
 									{/if}
 								</div>
@@ -305,7 +306,7 @@
 										onclick={() => (pickingFor = item)}
 										class="min-h-11 shrink-0 rounded-lg px-3 text-xs text-zinc-400"
 									>
-										Change
+										{t.common.change}
 									</button>
 								{/if}
 							</div>
@@ -336,13 +337,13 @@
 											onclick={() => (pickingFor = item)}
 											class="min-h-12 flex-1 rounded-lg border border-zinc-700 text-sm"
 										>
-											Search catalog
+											{t.importer.searchCatalog}
 										</button>
 										<button
 											onclick={() => (item.dropped = true)}
 											class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-sm text-zinc-500"
 										>
-											Drop it
+											{t.importer.dropIt}
 										</button>
 									</div>
 								</div>
@@ -351,7 +352,7 @@
 									onclick={() => (item.dropped = false)}
 									class="mt-2 min-h-11 text-xs text-zinc-400 underline"
 								>
-									Keep it after all
+									{t.importer.keepAfterAll}
 								</button>
 							{:else if item.result.status !== 'resolved'}
 								<label class="mt-2 flex min-h-11 items-center gap-2 text-xs text-zinc-400">
@@ -360,7 +361,7 @@
 										bind:checked={item.remember}
 										class="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
 									/>
-									Remember “{item.written}” means this
+									{t.importer.rememberMeans(item.written)}
 								</label>
 							{/if}
 						</li>
@@ -370,7 +371,7 @@
 		{/each}
 
 		<button onclick={restart} class="min-h-12 text-sm text-zinc-500 underline">
-			Start over with a different file
+			{t.importer.startOver}
 		</button>
 	</div>
 
@@ -385,11 +386,11 @@
 				disabled={remaining > 0 || keeping === 0 || saving}
 				class="min-h-14 w-full rounded-xl bg-zinc-100 py-4 font-semibold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
 			>
-				{saving ? 'Saving…' : 'Save routine'}
+				{saving ? t.common.saving : t.importer.saveRoutine}
 			</button>
 			{#if remaining > 0}
 				<p class="pt-2 text-center text-xs text-zinc-500">
-					Match or drop the {remaining} highlighted exercise{remaining === 1 ? '' : 's'} first.
+					{t.importer.matchFirst(remaining)}
 				</p>
 			{/if}
 		</div>

@@ -1,0 +1,113 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Gulvtid med babyen",
+	"goal": "skånsom styrke og mobilitet",
+	"description": "Måtteøvelser med babyen som en del af rutinen frem for at vente ved siden af den. Hver øvelse er en helt almindelig én — noterne siger bare, hvor babyen er. Til den del af dagen, hvor de ligger glade på ryggen.",
+	"tags": [
+		"baby",
+		"skånsom",
+		"gulv"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "cat_stretch",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "På alle fire med babyen liggende på ryggen under dig, ansigt mod ansigt. Rund ryggen når du ånder ud, lad den synke når du ånder ind."
+				},
+				{
+					"exercise": "pelvic_tilt_into_bridge",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "Langsomt, og ånd ud mens du vipper. Babyen ligger ved siden af dig."
+				},
+				{
+					"exercise": "dynamic_chest_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "Retter op på de fremadfaldne skuldre efter en dag med bæring."
+				}
+			]
+		},
+		{
+			"label": "Hoveddel",
+			"items": [
+				{
+					"exercise": "butt_lift_bridge",
+					"sets": 2,
+					"reps": 10,
+					"rest_seconds": 30,
+					"notes": "Babyen sidder på dine hofter, eller ligger langs dine skinneben."
+				},
+				{
+					"exercise": "dead_bug",
+					"sets": 2,
+					"reps": 8,
+					"per_side": true,
+					"rest_seconds": 30,
+					"notes": "Babyen ligger ved siden af dit hoved, så du kan blive ved med at snakke med den. Hold lænden fladt mod måtten."
+				},
+				{
+					"exercise": "glute_kickback",
+					"sets": 2,
+					"reps": 10,
+					"per_side": true,
+					"rest_seconds": 30,
+					"notes": "Babyen på måtten foran dig."
+				},
+				{
+					"exercise": "incline_push_up",
+					"sets": 2,
+					"reps": 8,
+					"rest_seconds": 30,
+					"notes": "Hænderne på sofaen, babyen liggende på den foran dig. Et kys i toppen af hver gentagelse."
+				},
+				{
+					"exercise": "superman",
+					"sets": 2,
+					"duration_seconds": 20,
+					"rest_seconds": 30,
+					"notes": "Babyen foran dig, så det at løfte op er måden du får den at se."
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "childs_pose",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0,
+					"notes": "Babyen lige foran dine hænder."
+				},
+				{
+					"exercise": "hug_knees_to_chest",
+					"sets": 1,
+					"duration_seconds": 40,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "side_neck_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0,
+					"notes": "Start med den side, du ammer eller giver flaske på mest."
+				},
+				{
+					"exercise": "upper_back_stretch",
+					"sets": 1,
+					"duration_seconds": 40,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}

@@ -3,7 +3,8 @@
 	import { getAttribution, getExercise } from '$lib/catalog/index.js';
 	import { ladderFor } from '$lib/catalog/ladders.js';
 	import { equipmentLabel, missingEquipment } from '$lib/catalog/equipment.js';
-	import { muscleInfo, muscleLabel } from '$lib/catalog/muscles.js';
+	import { muscleLabel, muscleShort } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import BodyMap from './BodyMap.svelte';
 	import type { Snippet } from 'svelte';
 	import type { EquipmentId, Exercise } from '$lib/types.js';
@@ -44,13 +45,13 @@
 	<div>
 		{@render heading?.()}
 		<div class="mt-2 flex flex-wrap gap-2 text-xs">
-			<span class="rounded-full bg-zinc-800 px-3 py-1">{exercise.category}</span>
-			<span class="rounded-full bg-zinc-800 px-3 py-1">{exercise.level}</span>
+			<span class="rounded-full bg-zinc-800 px-3 py-1">{t.catalog.categories[exercise.category]}</span>
+			<span class="rounded-full bg-zinc-800 px-3 py-1">{t.catalog.levels[exercise.level]}</span>
 			<span class="rounded-full bg-zinc-800 px-3 py-1">
-				{exercise.defaultMetric === 'duration' ? 'timed' : 'reps'}
+				{exercise.defaultMetric === 'duration' ? t.session.seconds : t.session.reps}
 			</span>
 			{#if exercise.unilateral}
-				<span class="rounded-full bg-zinc-800 px-3 py-1">per side</span>
+				<span class="rounded-full bg-zinc-800 px-3 py-1">{t.units.perSide}</span>
 			{/if}
 			{#each exercise.equipment as id (id)}
 				<span
@@ -58,19 +59,20 @@
 						? 'bg-amber-950/60 text-amber-200'
 						: 'bg-zinc-800'}"
 				>
-					{equipmentLabel(id)}
+					{equipmentLabel(id, t)}
 				</span>
 			{/each}
 		</div>
 		{#if missing.length}
 			<p class="mt-3 text-xs text-amber-200/80">
-				Needs {missing.map(equipmentLabel).join(' and ').toLowerCase()}, which you have not ticked in
-				{#if embedded}
-					Settings.
-				{:else}
-					<a href="{base}/settings/" data-sveltekit-replacestate class="underline">Settings</a>.
+				{t.exercise.needsEquipment(
+					t.units.list(missing.map((id) => equipmentLabel(id, t).toLowerCase()))
+				)}
+				{#if !embedded}
+					<a href="{base}/settings/" data-sveltekit-replacestate class="underline">
+						{t.exercise.tickInSettings}
+					</a>
 				{/if}
-				It stays here, and out of the catalog and the picker until you do.
 			</p>
 		{/if}
 	</div>
@@ -95,28 +97,28 @@
 	<!-- §4.6. The catalog names muscles the way an anatomy book does, so the
 		 diagram says where they are and the brackets say it in words. -->
 	<section>
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Muscles</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.muscles.title}</h2>
 		<div class="mt-3">
 			<BodyMap primary={exercise.primaryMuscles} secondary={exercise.secondaryMuscles} />
 		</div>
 		<dl class="mt-4 flex flex-col gap-2 text-sm">
 			<div>
-				<dt class="text-xs tracking-wide text-zinc-500 uppercase">Works</dt>
+				<dt class="text-xs tracking-wide text-zinc-500 uppercase">{t.muscles.works}</dt>
 				<dd class="mt-0.5 text-zinc-100">
 					<!-- The space before the dash is a non-breaking one on purpose: Svelte
 						 trims leading whitespace inside an element, so a plain space here
 						 renders as "Adductors— inner thigh". -->
-					{#each exercise.primaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
-							class="text-zinc-500">{` — ${muscleInfo(m)?.short ?? ''}`}</span
+					{#each exercise.primaryMuscles as m, i (m)}<span>{muscleLabel(m, t)}</span><span
+							class="text-zinc-500">{` — ${muscleShort(m, t)}`}</span
 						>{#if i < exercise.primaryMuscles.length - 1}<span>{', '}</span>{/if}{/each}
 				</dd>
 			</div>
 			{#if exercise.secondaryMuscles.length}
 				<div>
-					<dt class="text-xs tracking-wide text-zinc-500 uppercase">Assists</dt>
+					<dt class="text-xs tracking-wide text-zinc-500 uppercase">{t.muscles.assists}</dt>
 					<dd class="mt-0.5 text-zinc-400">
-						{#each exercise.secondaryMuscles as m, i (m)}<span>{muscleLabel(m)}</span><span
-								class="text-zinc-600">{` — ${muscleInfo(m)?.short ?? ''}`}</span
+						{#each exercise.secondaryMuscles as m, i (m)}<span>{muscleLabel(m, t)}</span><span
+								class="text-zinc-600">{` — ${muscleShort(m, t)}`}</span
 							>{#if i < exercise.secondaryMuscles.length - 1}<span>{', '}</span>{/if}{/each}
 					</dd>
 				</div>
@@ -128,26 +130,33 @@
 				data-sveltekit-replacestate
 				class="mt-3 inline-block text-xs text-zinc-500 underline"
 			>
-				What all these muscles are →
+				{t.muscles.whatTheyMean}
 			</a>
 		{/if}
 	</section>
 
 	{#if exercise.instructions.length}
 		<section>
-			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">How to do it</h2>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+				{t.exercise.howToDoIt}
+			</h2>
 			<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-zinc-200">
 				{#each exercise.instructions as step, i (i)}
 					<li>{step}</li>
 				{/each}
 			</ol>
+			<!-- §16: the catalog is English data, not our copy. Said once, here, where
+				 the English is actually on screen, rather than left to be noticed. -->
+			<p class="mt-2 text-xs text-zinc-600">{t.exercise.instructionsInEnglish}</p>
 		</section>
 	{/if}
 
 	{#if ladder.length}
 		<!-- The whole progression, easiest first, with where this one sits (§4.1). -->
 		<section>
-			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Progression</h2>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+				{t.exercise.progression}
+			</h2>
 			<ol class="mt-2 flex flex-col gap-1">
 				{#each ladder as id, i (id)}
 					{@const rung = 'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left'}

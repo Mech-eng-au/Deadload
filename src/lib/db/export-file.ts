@@ -1,6 +1,8 @@
 import { backupFilename, buildBackup, serializeBackup } from './backup.js';
 import { catalog } from '../catalog/index.js';
 import { loadThumbnails } from '../pdf/images.js';
+import { sheetFonts } from '../pdf/fonts.js';
+import { pack } from '../i18n/locale.svelte.js';
 import { routineSheet, sheetFilename } from '../pdf/routine-sheet.js';
 import { sessionsToCsv } from '../stats/csv.js';
 import { listSessions } from './sessions.js';
@@ -86,6 +88,6 @@ export async function exportRoutinePdf(
 		.flatMap((b) => b.items.map((i) => byId.get(i.exerciseId)))
 		.filter((e): e is NonNullable<typeof e> => !!e);
 	const images = options.photos === false ? undefined : await loadThumbnails(used);
-	const bytes = routineSheet(routine, byId, { images });
+	const bytes = routineSheet(routine, byId, { fonts: await sheetFonts(), t: pack(), images });
 	return { ...(await deliver(sheetFilename(routine), bytes, 'application/pdf')), bytes: bytes.length };
 }

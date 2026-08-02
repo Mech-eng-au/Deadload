@@ -1,4 +1,5 @@
 // Data model per docs/SPEC.md §4. Metric units only; durations in whole seconds.
+import type { Locale } from './i18n/index.js';
 
 export type ExerciseId = string; // snake_case slug, e.g. "worlds_greatest_stretch"
 
@@ -53,8 +54,8 @@ export interface MediaAsset {
 
 export interface Attribution {
 	id: string;
-	source: 'free-exercise-db' | 'wger' | 'wikimedia' | 'body-highlighter' | 'own';
-	license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'MIT' | 'own';
+	source: 'free-exercise-db' | 'wger' | 'wikimedia' | 'body-highlighter' | 'noto-fonts' | 'own';
+	license: 'PD' | 'CC0' | 'CC-BY-SA-3.0' | 'CC-BY-SA-4.0' | 'MIT' | 'OFL-1.1' | 'own';
 	author?: string;
 	sourceUrl?: string;
 	/**
@@ -219,4 +220,19 @@ export interface Settings {
 	 * `ownedEquipment()` in `$lib/catalog/equipment`, never directly.
 	 */
 	ownedEquipment?: EquipmentId[];
+
+	/**
+	 * Interface language (§16). **Three-valued, exactly like `ownedEquipment`
+	 * above, and load-bearing for the same reason:**
+	 *
+	 * - `undefined` — never answered. The phone decides, through
+	 *   `navigator.languages`.
+	 * - `'en'` / `'da'` — answered, and it outranks the phone from then on.
+	 *
+	 * Collapsing the two — `settings.language ?? deviceLanguage()` — puts a Dane
+	 * who deliberately chose English back into Danish on the next launch, in
+	 * silence. Read it through `resolveLocale()` in `$lib/i18n`, never directly.
+	 * There is a test named after this.
+	 */
+	language?: Locale;
 }

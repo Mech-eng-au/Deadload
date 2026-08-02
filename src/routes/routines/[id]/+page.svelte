@@ -20,6 +20,7 @@
 	import ExerciseSheet from '$lib/components/ExerciseSheet.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
 	import { moveItem } from '$lib/reorder.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Block, Routine, RoutineItem, Settings } from '$lib/types.js';
 
 	let routine = $state<Routine | null>(null);
@@ -71,10 +72,10 @@
 			const { filename, shared, bytes } = await exportRoutinePdf(routine, { photos });
 			const size = `${Math.max(1, Math.round(bytes / 1024))} kB`;
 			printed = shared
-				? `Saved ${filename} (${size})`
-				: `Written to app storage as ${filename} (${size})`;
+				? t.routine.printedShared(filename, size)
+				: t.routine.printedLocal(filename, size);
 		} catch (e) {
-			printed = `Could not make the PDF: ${e instanceof Error ? e.message : String(e)}`;
+			printed = t.routine.printFailed(e instanceof Error ? e.message : String(e));
 		} finally {
 			printing = false;
 		}
@@ -110,16 +111,16 @@
 </script>
 
 <svelte:head>
-	<title>{routine?.name ?? 'Routine'} · Deadload</title>
+	<title>{routine?.name ?? t.routine.fallbackTitle} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.common.backRoutines}</a>
 
 {#if !loaded}
-	<p class="mt-8 text-zinc-500">Loading…</p>
+	<p class="mt-8 text-zinc-500">{t.common.loading}</p>
 {:else if !routine}
-	<p class="mt-8 text-zinc-300">That routine is no longer here.</p>
-	<a href="{base}/" data-sveltekit-replacestate class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
+	<p class="mt-8 text-zinc-300">{t.routine.gone}</p>
+	<a href="{base}/" data-sveltekit-replacestate class="mt-4 inline-block text-sm text-zinc-400 underline">{t.common.backToRoutines}</a>
 {:else}
 	<article class="mt-2 flex flex-col gap-6 pb-12">
 		<header>
@@ -129,13 +130,13 @@
 				 along but never showed. -->
 			<div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
 				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
-					~{Math.max(1, Math.round(estimateSeconds(routine) / 60))} min
+					{t.routine.approxMinutes(Math.max(1, Math.round(estimateSeconds(routine) / 60)))}
 				</span>
 				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
-					{countItems(routine)} exercise{countItems(routine) === 1 ? '' : 's'}
+					{t.units.exercises(countItems(routine))}
 				</span>
 				<span class="rounded-full bg-zinc-800 px-3 py-1 tabular-nums">
-					{totalSets(routine)} set{totalSets(routine) === 1 ? '' : 's'}
+					{t.units.sets(totalSets(routine))}
 				</span>
 				{#if routine.goal}<span class="text-zinc-500">{routine.goal}</span>{/if}
 			</div>
@@ -157,10 +158,10 @@
 				<section>
 					{#if block.label || block.mode === 'circuit'}
 						<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-							{block.label || 'Circuit'}
+							{block.label || t.routine.circuit}
 							{#if block.mode === 'circuit'}
 								<span class="ml-1 font-normal text-zinc-500 normal-case">
-									· {block.label ? 'circuit, ' : ''}{rounds} round{rounds === 1 ? '' : 's'}
+									{t.routine.circuitRounds(rounds, !!block.label)}
 								</span>
 							{/if}
 						</h2>
@@ -193,7 +194,7 @@
 								{/if}
 								<span class="min-w-0">
 									<span class="block truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
-									<span class="mt-0.5 block text-sm text-zinc-400">{describeItem(item)}</span>
+									<span class="mt-0.5 block text-sm text-zinc-400">{describeItem(item, t)}</span>
 									<!-- A routine keeps every exercise in it (§5.1). Equipment the user has
 										 not ticked earns a chip here, never a removal. -->
 									{#if exercise?.equipment.length}
@@ -204,13 +205,13 @@
 														? 'bg-amber-950/60 text-amber-200'
 														: 'bg-zinc-800 text-zinc-400'}"
 												>
-													{equipmentLabel(id)}
+													{equipmentLabel(id, t)}
 												</span>
 											{/each}
 										</span>
 									{/if}
 									{#if item.restSeconds > 0}
-										<span class="block text-xs text-zinc-500">{item.restSeconds} s rest</span>
+										<span class="block text-xs text-zinc-500">{t.units.restAfter(item.restSeconds)}</span>
 									{/if}
 									{#if item.notes}
 										<span class="mt-1 block text-xs text-zinc-500">{item.notes}</span>
@@ -231,21 +232,21 @@
 					disabled={starting}
 					class="min-h-16 rounded-xl bg-zinc-100 py-4 font-display text-xl font-bold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
 				>
-					{starting ? 'Starting…' : 'Start session'}
+					{starting ? t.routine.starting : t.routine.startSession}
 				</button>
 			{/if}
 			<a
 				href="{base}/routines/{routine.id}/edit/"
 				class="min-h-14 rounded-xl border border-zinc-700 py-4 text-center text-base font-medium"
 			>
-				Edit routine
+				{t.routine.edit}
 			</a>
 			<button
 				onclick={print}
 				disabled={printing || countItems(routine) === 0}
 				class="min-h-14 rounded-xl border border-zinc-800 py-4 text-base text-zinc-300 disabled:opacity-50"
 			>
-				{printing ? 'Making the PDF…' : 'Save as printable PDF'}
+				{printing ? t.routine.printing : t.routine.print}
 			</button>
 			<label class="-mt-1 flex min-h-11 items-center gap-2 text-xs text-zinc-500">
 				<input
@@ -253,13 +254,13 @@
 					bind:checked={photos}
 					class="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
 				/>
-				<span>Include the photos — bigger file, but you can see the movement</span>
+				<span>{t.routine.includePhotos}</span>
 			</label>
 			{#if printed}
 				<p class="-mt-2 text-xs text-zinc-500">{printed}</p>
 			{:else}
 				<p class="-mt-2 text-xs text-zinc-600">
-					A4, with a box to write the number in for every set.
+					{t.routine.printHint}
 				</p>
 			{/if}
 			{#if confirmingDelete}
@@ -268,13 +269,13 @@
 						onclick={remove}
 						class="min-h-14 flex-1 rounded-xl bg-red-900/70 py-4 text-base font-medium text-red-50"
 					>
-						Delete for good
+						{t.routine.deleteForGood}
 					</button>
 					<button
 						onclick={() => (confirmingDelete = false)}
 						class="min-h-14 flex-1 rounded-xl border border-zinc-700 py-4 text-base"
 					>
-						Keep it
+						{t.routine.keepIt}
 					</button>
 				</div>
 			{:else}
@@ -282,7 +283,7 @@
 					onclick={() => (confirmingDelete = true)}
 					class="min-h-14 rounded-xl border border-zinc-800 py-4 text-base text-zinc-400"
 				>
-					Delete routine
+					{t.routine.delete}
 				</button>
 			{/if}
 		</div>

@@ -1,7 +1,8 @@
 import { equipmentLabel } from '../catalog/equipment.js';
+import type { Messages } from '../i18n/index.js';
 import { countItems, describeItem } from '../db/routines.js';
 import { estimateSeconds, totalSets } from '../session/steps.js';
-import { A4, PdfDoc, textWidth, wrapText, type JpegImage } from './writer.js';
+import { A4, PdfDoc, textWidth, wrapText, type JpegImage, type PdfFonts } from './writer.js';
 import type { EquipmentId, Exercise, Routine, RoutineItem } from '../types.js';
 
 /**
@@ -30,6 +31,18 @@ const MARGIN = 48;
 const LINE = 12.5;
 
 export interface SheetOptions {
+	/**
+	 * The two weights the sheet sets type in, from `./fonts.ts`. Required,
+	 * because the sheet embeds its font rather than relying on the reader having
+	 * one (§16) — there is no sensible default to fall back to.
+	 */
+	fonts: PdfFonts;
+	/**
+	 * The language the sheet is printed in (§16). Everything the sheet writes
+	 * that is not the user's own words comes from here — including the date,
+	 * which used to be hard-coded `en-GB` no matter what.
+	 */
+	t: Messages;
 	/** Stamped in the footer, so a sheet found later says when it was printed. */
 	printedAt?: Date;
 	/**
@@ -43,17 +56,18 @@ export interface SheetOptions {
 const PHOTO_W = 64;
 const PHOTO_H = 48;
 
-/** What the sheet says a set is, next to its boxes. */
-function setLabel(item: RoutineItem): string {
+/** What the sheet says a set is, next to its boxes. Kept short: it is printed
+ *  pale inside a box that a pen has to fit in. */
+function setLabel(item: RoutineItem, t: Messages): string {
 	switch (item.target.kind) {
 		case 'duration':
-			return `${item.target.seconds} s`;
+			return t.units.seconds(item.target.seconds);
 		case 'amrap':
-			return 'max';
+			return t.pdf.max;
 		case 'reps_range':
-			return `${item.target.min}–${item.target.max}`;
+			return `${t.units.num(item.target.min)}–${t.units.num(item.target.max)}`;
 		case 'reps':
-			return `${item.target.reps}`;
+			return t.units.num(item.target.reps);
 	}
 }
 
@@ -102,21 +116,19 @@ export function sheetFilename(routine: Routine, printedAt = new Date()): string 
 export function routineSheet(
 	routine: Routine,
 	exercises: Map<string, Exercise>,
-	options: SheetOptions = {}
+	options: SheetOptions
 ): Uint8Array {
 	const printedAt = options.printedAt ?? new Date();
 	const images = options.images;
 	const indent = images?.size ? PHOTO_W + 10 : 0;
-	const doc = new PdfDoc(A4);
+	const doc = new PdfDoc(options.fonts, A4);
+	const regular = options.fonts.regular;
+	const t = options.t;
 	const right = A4.width - MARGIN;
 	const width = right - MARGIN;
 	const bottom = A4.height - MARGIN - 8; // the footer sits below this
 
-	const stamp = printedAt.toLocaleDateString('en-GB', {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric'
-	});
+	const stamp = t.pdf.printedOn(printedAt);
 
 	/** Every page says what it is and where in the routine it comes. */
 	function footer(): void {
@@ -124,8 +136,8 @@ export function routineSheet(
 			size: 8,
 			grey: 0.55
 		});
-		const n = `Page ${doc.pageCount}`;
-		doc.text(right - textWidth(n, 8), A4.height - MARGIN + 12, n, { size: 8, grey: 0.55 });
+		const n = t.pdf.page(doc.pageCount);
+		doc.text(right - textWidth(regular, n, 8), A4.height - MARGIN + 12, n, { size: 8, grey: 0.55 });
 	}
 
 	doc.newPage();
@@ -144,16 +156,16 @@ export function routineSheet(
 	y += 20;
 
 	const facts = [
-		`~${Math.max(1, Math.round(estimateSeconds(routine) / 60))} min`,
-		`${countItems(routine)} exercise${countItems(routine) === 1 ? '' : 's'}`,
-		`${totalSets(routine)} set${totalSets(routine) === 1 ? '' : 's'}`
+		t.routine.approxMinutes(Math.max(1, Math.round(estimateSeconds(routine) / 60))),
+		t.units.exercises(countItems(routine)),
+		t.units.sets(totalSets(routine))
 	];
 	if (routine.goal) facts.push(routine.goal);
 	doc.text(MARGIN, y, facts.join('  ·  '), { size: 10, grey: 0.35 });
 	y += LINE + 2;
 
 	if (routine.description) {
-		for (const line of wrapText(routine.description, 10, width)) {
+		for (const line of wrapText(regular, routine.description, 10, width)) {
 			room(LINE);
 			doc.text(MARGIN, y, line, { size: 10, grey: 0.2 });
 			y += LINE;
@@ -163,7 +175,7 @@ export function routineSheet(
 
 	const needs = equipmentNeeded(routine, exercises);
 	if (needs.length) {
-		doc.text(MARGIN, y, `Needs: ${needs.map(equipmentLabel).join(', ').toLowerCase()}`, {
+		doc.text(MARGIN, y, t.pdf.needs(t.units.list(needs.map((id) => equipmentLabel(id, t).toLowerCase()))), {
 			size: 9,
 			grey: 0.4
 		});
@@ -180,10 +192,9 @@ export function routineSheet(
 
 		if (block.label || block.mode === 'circuit') {
 			const rounds = Math.max(1, ...block.items.map((i) => Math.max(1, i.sets)));
-			const circuit =
-				block.mode === 'circuit' ? ` — circuit, ${rounds} round${rounds === 1 ? '' : 's'}` : '';
+			const circuit = block.mode === 'circuit' ? t.pdf.circuitRounds(rounds) : '';
 			room(LINE * 2);
-			doc.text(MARGIN, y, (block.label || 'Circuit').toUpperCase() + circuit, {
+			doc.text(MARGIN, y, (block.label || t.pdf.circuit).toUpperCase() + circuit, {
 				size: 9,
 				font: 'bold',
 				grey: 0.35
@@ -195,7 +206,7 @@ export function routineSheet(
 			const exercise = exercises.get(item.exerciseId);
 			const photo = images?.get(item.exerciseId);
 			const left = MARGIN + indent;
-			const notes = item.notes ? wrapText(item.notes, 9, right - left - 16) : [];
+			const notes = item.notes ? wrapText(regular, item.notes, 9, right - left - 16) : [];
 			// Kept together: an exercise split across a page break is a routine you
 			// cannot follow while holding the paper. With a photograph the row cannot
 			// be shorter than the photograph either.
@@ -215,16 +226,16 @@ export function routineSheet(
 			doc.text(left, y, exercise?.name ?? item.exerciseId, { size: 11, font: 'bold' });
 			y += LINE + 1;
 
-			const detail = [describeItem(item)];
-			if (item.restSeconds > 0) detail.push(`${item.restSeconds} s rest`);
-			if (item.tempo) detail.push(`tempo ${item.tempo}`);
+			const detail = [describeItem(item, t)];
+			if (item.restSeconds > 0) detail.push(t.pdf.restAfter(item.restSeconds));
+			if (item.tempo) detail.push(t.pdf.tempo(item.tempo));
 			doc.text(left + 16, y, detail.join('  ·  '), { size: 9, grey: 0.35 });
 
 			// The boxes: one per set, on the same line as the detail, right-aligned so
 			// they form a column down the page whatever the exercise is called.
 			const sets = Math.max(1, item.sets);
-			const label = setLabel(item);
-			const boxW = Math.max(30, textWidth(label, 8) + 14);
+			const label = setLabel(item, t);
+			const boxW = Math.max(30, textWidth(regular, label, 8) + 14);
 			const step = boxW + 6;
 			let bx = right - sets * step + 6;
 			for (let i = 0; i < sets; i++) {

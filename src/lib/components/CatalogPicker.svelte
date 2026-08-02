@@ -3,7 +3,8 @@
 	import { onMount } from 'svelte';
 	import { catalog, categories } from '$lib/catalog/index.js';
 	import { availableCatalog, equipmentLabel, ownedEquipment } from '$lib/catalog/equipment.js';
-	import { muscleInfo } from '$lib/catalog/muscles.js';
+	import { muscleShort } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import { getSettings } from '$lib/db/settings.js';
 	import type { Category, Exercise, Settings } from '$lib/types.js';
 
@@ -93,14 +94,16 @@
 					<span class="min-w-0">
 						<span class="block truncate font-medium">{e.name}</span>
 						<span class="mt-0.5 block text-xs text-zinc-400">
-							{e.category} · {e.level}{e.unilateral ? ' · per side' : ''}{e.equipment.length
-								? ' · ' + e.equipment.map(equipmentLabel).join(', ')
+							{t.catalog.categories[e.category]} · {t.catalog.levels[e.level]}{e.unilateral
+								? ` · ${t.units.perSide}`
+								: ''}{e.equipment.length
+								? ' · ' + t.units.list(e.equipment.map((id) => equipmentLabel(id, t)))
 								: ''}
 						</span>
 						<!-- Plain English while a routine is being built (§4.6), which is where
 							 the decision "is this the exercise I want" is actually made. -->
 						<span class="mt-0.5 block truncate text-xs text-zinc-500">
-							{e.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')}
+							{t.units.list(e.primaryMuscles.map((m) => muscleShort(m, t)))}
 						</span>
 					</span>
 				</button>

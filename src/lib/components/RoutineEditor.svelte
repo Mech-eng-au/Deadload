@@ -5,7 +5,8 @@
 	import SortableList from './SortableList.svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { isLoadable } from '$lib/catalog/equipment.js';
-	import { muscleInfo } from '$lib/catalog/muscles.js';
+	import { muscleShort } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import { emptyBlock, newItem } from '$lib/db/routines.js';
 	import { moveItem } from '$lib/reorder.js';
 	import type { Block, Exercise, Routine, RoutineItem, Target } from '$lib/types.js';
@@ -148,7 +149,7 @@
 								<span class="mt-0.5 block text-xs text-zinc-500">
 									{exercise?.category}{exercise?.primaryMuscles.length
 										? ' · ' +
-											exercise.primaryMuscles.map((m) => muscleInfo(m)?.short ?? m).join(', ')
+											t.units.list(exercise.primaryMuscles.map((m) => muscleShort(m, t)))
 										: ''}
 								</span>
 							</span>

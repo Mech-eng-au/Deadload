@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/index.js';
 import type { Session, SetEntry } from '../types.js';
 
 /**
@@ -29,28 +30,28 @@ export interface EntryEdit {
 }
 
 /** Plain-language reason a session cannot be corrected, or undefined if it can. */
-export function editableReason(session: Session): string | undefined {
+export function editableReason(session: Session, t: Messages): string | undefined {
 	if (!session.endedAt) {
-		return 'This session was never finished. Resume it or delete it — correcting it while the player could still be counting its sets would lose your place.';
+		return t.history.notFinished;
 	}
 	return undefined;
 }
 
-export function isEditable(session: Session): boolean {
-	return editableReason(session) === undefined;
+export function isEditable(session: Session, t: Messages): boolean {
+	return editableReason(session, t) === undefined;
 }
 
 /** Thrown for an edit that would make the log say something impossible. */
 export class EditError extends Error {}
 
-function assertEditable(session: Session): void {
-	const reason = editableReason(session);
+function assertEditable(session: Session, t: Messages): void {
+	const reason = editableReason(session, t);
 	if (reason) throw new EditError(reason);
 }
 
-function assertIndex(session: Session, index: number): void {
+function assertIndex(session: Session, index: number, t: Messages): void {
 	if (!Number.isInteger(index) || index < 0 || index >= session.entries.length) {
-		throw new EditError(`There is no set ${index} in this session.`);
+		throw new EditError(t.history.noSuchSet(index));
 	}
 }
 
@@ -66,10 +67,11 @@ export function applyEntryEdit(
 	session: Session,
 	index: number,
 	edit: EntryEdit,
+	t: Messages,
 	now = new Date()
 ): Session {
-	assertEditable(session);
-	assertIndex(session, index);
+	assertEditable(session, t);
+	assertIndex(session, index, t);
 
 	const current = session.entries[index];
 	const skipped = edit.skipped ?? current.skipped;
@@ -91,19 +93,19 @@ export function applyEntryEdit(
 		const rpe = 'rpe' in edit ? edit.rpe : current.rpe;
 
 		if (reps === undefined && seconds === undefined) {
-			throw new EditError('A set that was done needs either reps or seconds. Skip it instead.');
+			throw new EditError(t.history.needsAmount);
 		}
 		if (reps !== undefined && (!Number.isInteger(reps) || reps < 1)) {
-			throw new EditError('Reps have to be a whole number, one or more.');
+			throw new EditError(t.history.repsWhole);
 		}
 		if (seconds !== undefined && (!Number.isInteger(seconds) || seconds < 1)) {
-			throw new EditError('Seconds have to be a whole number, one or more.');
+			throw new EditError(t.history.secondsWhole);
 		}
 		if (loadKg !== undefined && (!Number.isFinite(loadKg) || loadKg <= 0)) {
-			throw new EditError('A load is a positive number of kilograms, or nothing at all.');
+			throw new EditError(t.history.loadPositive);
 		}
 		if (rpe !== undefined && (!Number.isInteger(rpe) || rpe < 1 || rpe > 10)) {
-			throw new EditError('RPE runs from 1 to 10.');
+			throw new EditError(t.history.rpeRange);
 		}
 
 		next = {
@@ -134,9 +136,9 @@ export function applyEntryEdit(
  * by *distinct* setIndex, so a per-side pair (§7) keeps sharing one number
  * instead of becoming two separate sets.
  */
-export function removeEntry(session: Session, index: number, now = new Date()): Session {
-	assertEditable(session);
-	assertIndex(session, index);
+export function removeEntry(session: Session, index: number, t: Messages, now = new Date()): Session {
+	assertEditable(session, t);
+	assertIndex(session, index, t);
 
 	const { itemId } = session.entries[index];
 	const entries = session.entries.filter((_, i) => i !== index);
@@ -155,8 +157,8 @@ export function removeEntry(session: Session, index: number, now = new Date()): 
 }
 
 /** Free-text note on the session as a whole. Empty text removes it. */
-export function setSessionNotes(session: Session, notes: string, now = new Date()): Session {
-	assertEditable(session);
+export function setSessionNotes(session: Session, notes: string, t: Messages, now = new Date()): Session {
+	assertEditable(session, t);
 	const trimmed = notes.trim();
 	const next = { ...session, editedAt: now.toISOString() };
 	if (trimmed) next.notes = trimmed;
@@ -165,10 +167,7 @@ export function setSessionNotes(session: Session, notes: string, now = new Date(
 }
 
 /** "Corrected by hand on 30 July" — shown on the session, so the edit is visible. */
-export function correctedLabel(session: Session): string | undefined {
+export function correctedLabel(session: Session, t: Messages): string | undefined {
 	if (!session.editedAt) return undefined;
-	return `Corrected by hand on ${new Date(session.editedAt).toLocaleDateString(undefined, {
-		day: 'numeric',
-		month: 'long'
-	})}`;
+	return t.history.corrected(session.editedAt);
 }

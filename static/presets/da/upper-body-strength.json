@@ -1,0 +1,100 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Styrke i overkroppen",
+	"goal": "styrke i overkroppen",
+	"description": "Skub og træk, gulv og stang. Skalér ved at ændre hældningen frem for at haste igennem gentagelserne.",
+	"tags": [
+		"styrke",
+		"overkrop"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "arm_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "dynamic_chest_stretch",
+					"sets": 1,
+					"reps": 12,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "scapular_pull_up",
+					"sets": 2,
+					"reps": 8,
+					"rest_seconds": 30
+				}
+			]
+		},
+		{
+			"label": "Hoveddel",
+			"items": [
+				{
+					"exercise": "pushups",
+					"sets": 4,
+					"reps_min": 8,
+					"reps_max": 12,
+					"rest_seconds": 60
+				},
+				{
+					"exercise": "pullups",
+					"sets": 4,
+					"amrap": true,
+					"rest_seconds": 90,
+					"notes": "Stop to gentagelser før udmattelse i alle sæt på nær det sidste."
+				},
+				{
+					"exercise": "dips_triceps_version",
+					"sets": 3,
+					"reps_min": 6,
+					"reps_max": 10,
+					"rest_seconds": 60
+				},
+				{
+					"exercise": "inverted_row",
+					"sets": 3,
+					"reps_min": 8,
+					"reps_max": 12,
+					"rest_seconds": 60
+				},
+				{
+					"exercise": "push_up_to_side_plank",
+					"sets": 2,
+					"reps": 6,
+					"per_side": true,
+					"rest_seconds": 45
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "shoulder_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "triceps_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "elbows_back",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}

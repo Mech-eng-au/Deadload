@@ -21,6 +21,7 @@ import {
 } from '../src/lib/stats/compute.js';
 import type { Exercise, Routine, Session, SetEntry } from '../src/lib/types.js';
 import type { ImportNote, WireItem } from '../src/lib/import/types.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 const fixture = (name: string) =>
 	readFileSync(join(import.meta.dirname, 'fixtures/imports', name), 'utf8');
@@ -103,9 +104,9 @@ describe('what can carry a load (§4.5)', () => {
 	});
 
 	it('trims a trailing zero rather than printing 10.0 kg', () => {
-		expect(formatKg(10)).toBe('10 kg');
-		expect(formatKg(2.5)).toBe('2.5 kg');
-		expect(formatKg(7.25)).toBe('7.25 kg');
+		expect(formatKg(10, en)).toBe('10 kg');
+		expect(formatKg(2.5, en)).toBe('2.5 kg');
+		expect(formatKg(7.25, en)).toBe('7.25 kg');
 	});
 });
 
@@ -153,13 +154,13 @@ describe('load on the routine and on the step', () => {
 		// Two sets per side, so four loaded steps and then the bodyweight one.
 		const steps = expandRoutine(routine);
 		expect(steps).toHaveLength(5);
-		expect(describeStep(steps[0])).toBe('Set 1 of 2 · 8 reps · 12 kg · left');
-		expect(describeStep(steps[4])).toBe('10 reps');
+		expect(describeStep(steps[0], en)).toBe('Set 1 of 2 · 8 reps · 12 kg · left');
+		expect(describeStep(steps[4], en)).toBe('10 reps');
 	});
 
 	it('shows the load in the routine item summary', () => {
-		expect(describeItem(routine.blocks[0].items[0])).toBe('2 × 8 reps at 12 kg per side');
-		expect(describeItem(routine.blocks[0].items[1])).toBe('10 reps');
+		expect(describeItem(routine.blocks[0].items[0], en)).toBe('2 × 8 reps at 12 kg per side');
+		expect(describeItem(routine.blocks[0].items[1], en)).toBe('10 reps');
 	});
 });
 
@@ -209,17 +210,17 @@ describe('the last-time line (§4.5)', () => {
 			entry({ setIndex: 1, reps: 11, loadKg: 10 }),
 			entry({ setIndex: 2, reps: 8, loadKg: 12 })
 		];
-		expect(formatSetList(sets)).toEqual(['12 × 10 kg', '11 × 10', '8 × 12 kg']);
+		expect(formatSetList(sets, en)).toEqual(['12 × 10 kg', '11 × 10', '8 × 12 kg']);
 	});
 
 	it('is unchanged for bodyweight work', () => {
 		const sets = [entry({ setIndex: 0, reps: 12 }), entry({ setIndex: 1, reps: 11 })];
-		expect(formatSetList(sets)).toEqual(['12', '11']);
-		expect(formatSet(sets[0])).toBe('12');
+		expect(formatSetList(sets, en)).toEqual(['12', '11']);
+		expect(formatSet(sets[0], en)).toBe('12');
 	});
 
 	it('handles a timed set with a load', () => {
-		expect(formatSetWithLoad(entry({ seconds: 45, loadKg: 8 }))).toBe('45 s × 8 kg');
+		expect(formatSetWithLoad(entry({ seconds: 45, loadKg: 8 }), en)).toBe('45 s × 8 kg');
 	});
 });
 

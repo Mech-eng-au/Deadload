@@ -1,0 +1,120 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Skub–træk supersæt",
+	"goal": "styrke i overkroppen",
+	"description": "Træk og skub parvis uden pause inde i parret og en rigtig pause efter det. Kræver en pull-up stang.",
+	"tags": [
+		"styrke",
+		"overkrop",
+		"supersæt"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "arm_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "shoulder_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "scapular_pull_up",
+					"sets": 2,
+					"reps": 8,
+					"rest_seconds": 30
+				}
+			]
+		},
+		{
+			"label": "Supersæt A",
+			"circuit": true,
+			"items": [
+				{
+					"exercise": "pullups",
+					"sets": 4,
+					"amrap": true,
+					"rest_seconds": 0,
+					"notes": "Stop to gentagelser før udmattelse i alle runder på nær den sidste."
+				},
+				{
+					"exercise": "pushups",
+					"sets": 4,
+					"reps_min": 8,
+					"reps_max": 12,
+					"rest_seconds": 90
+				}
+			]
+		},
+		{
+			"label": "Supersæt B",
+			"circuit": true,
+			"items": [
+				{
+					"exercise": "inverted_row",
+					"sets": 3,
+					"reps_min": 8,
+					"reps_max": 12,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "push_ups_close_triceps_position",
+					"sets": 3,
+					"reps_min": 6,
+					"reps_max": 10,
+					"rest_seconds": 75
+				}
+			]
+		},
+		{
+			"label": "Core-afslutning",
+			"circuit": true,
+			"items": [
+				{
+					"exercise": "plank",
+					"sets": 3,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "russian_twist",
+					"sets": 3,
+					"reps": 20,
+					"rest_seconds": 45
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "shoulder_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "one_arm_against_wall",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "triceps_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}

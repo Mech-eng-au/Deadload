@@ -14,6 +14,7 @@ import {
 } from '../src/lib/db/routines.js';
 import { ensureStoragePersisted, getSettings, putSettings } from '../src/lib/db/settings.js';
 import { closeDb, DB_NAME, getDb } from '../src/lib/db/schema.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 beforeEach(async () => {
 	await closeDb();
@@ -157,14 +158,14 @@ describe('item defaults', () => {
 
 	it('describes every target kind', () => {
 		const base = { id: 'x', exerciseId: 'e', sets: 1, perSide: false, restSeconds: 0 };
-		expect(describeItem({ ...base, target: { kind: 'reps', reps: 10 } })).toBe('10 reps');
-		expect(describeItem({ ...base, sets: 3, target: { kind: 'duration', seconds: 45 } })).toBe(
+		expect(describeItem({ ...base, target: { kind: 'reps', reps: 10 } }, en)).toBe('10 reps');
+		expect(describeItem({ ...base, sets: 3, target: { kind: 'duration', seconds: 45 } }, en)).toBe(
 			'3 × 45 s'
 		);
-		expect(describeItem({ ...base, target: { kind: 'reps_range', min: 8, max: 12 } })).toBe(
+		expect(describeItem({ ...base, target: { kind: 'reps_range', min: 8, max: 12 } }, en)).toBe(
 			'8–12 reps'
 		);
-		expect(describeItem({ ...base, perSide: true, target: { kind: 'amrap' } })).toBe(
+		expect(describeItem({ ...base, perSide: true, target: { kind: 'amrap' } }, en)).toBe(
 			'as many as possible per side'
 		);
 	});

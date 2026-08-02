@@ -1,0 +1,95 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Hoftemobilitet om morgenen",
+	"goal": "bevægelighed i hofterne",
+	"description": "En 15 minutters gulvsekvens mod stramme hofter fra kontorarbejde. Bevæg dig langsomt og følg vejrtrækningen.",
+	"tags": [
+		"morgen",
+		"mobilitet",
+		"hofter"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "cat_stretch",
+					"sets": 1,
+					"reps": 10,
+					"rest_seconds": 0,
+					"notes": "Bevæg dig med vejrtrækningen, ikke igennem den."
+				},
+				{
+					"exercise": "pelvic_tilt_into_bridge",
+					"sets": 1,
+					"reps": 10,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "hip_circles_prone",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				}
+			]
+		},
+		{
+			"label": "Hoveddel",
+			"items": [
+				{
+					"exercise": "worlds_greatest_stretch",
+					"sets": 2,
+					"duration_seconds": 45,
+					"per_side": true,
+					"rest_seconds": 15
+				},
+				{
+					"exercise": "kneeling_hip_flexor",
+					"sets": 2,
+					"duration_seconds": 45,
+					"per_side": true,
+					"rest_seconds": 15,
+					"notes": "Vip bækkenet under, før du læner dig ind."
+				},
+				{
+					"exercise": "90_90_hamstring",
+					"sets": 2,
+					"duration_seconds": 40,
+					"per_side": true,
+					"rest_seconds": 10
+				},
+				{
+					"exercise": "ankle_on_the_knee",
+					"sets": 2,
+					"duration_seconds": 40,
+					"per_side": true,
+					"rest_seconds": 10
+				},
+				{
+					"exercise": "the_straddle",
+					"sets": 2,
+					"duration_seconds": 45,
+					"rest_seconds": 15
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "childs_pose",
+					"sets": 1,
+					"duration_seconds": 60,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "hug_knees_to_chest",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}
