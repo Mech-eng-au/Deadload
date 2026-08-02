@@ -1,7 +1,7 @@
 import { backupFilename, buildBackup, serializeBackup } from './backup.js';
 import { catalog } from '../catalog/index.js';
 import { loadThumbnails } from '../pdf/images.js';
-import { routineSheet, sheetFilename } from '../pdf/routine-sheet.js';
+import { routineSheet, sheetFilename, type Orientation } from '../pdf/routine-sheet.js';
 import { sessionsToCsv } from '../stats/csv.js';
 import { listSessions } from './sessions.js';
 import type { Routine } from '../types.js';
@@ -79,13 +79,13 @@ export async function exportBackupFile(): Promise<{ filename: string; shared: bo
  */
 export async function exportRoutinePdf(
 	routine: Routine,
-	options: { photos?: boolean } = {}
+	options: { photos?: boolean; orientation?: Orientation } = {}
 ): Promise<{ filename: string; shared: boolean; bytes: number }> {
 	const byId = new Map(catalog.map((e) => [e.id, e]));
 	const used = routine.blocks
 		.flatMap((b) => b.items.map((i) => byId.get(i.exerciseId)))
 		.filter((e): e is NonNullable<typeof e> => !!e);
 	const images = options.photos === false ? undefined : await loadThumbnails(used);
-	const bytes = routineSheet(routine, byId, { images });
+	const bytes = routineSheet(routine, byId, { images, orientation: options.orientation });
 	return { ...(await deliver(sheetFilename(routine), bytes, 'application/pdf')), bytes: bytes.length };
 }

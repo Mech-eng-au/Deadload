@@ -178,6 +178,60 @@ describe('the file itself', () => {
 	});
 });
 
+describe('columns', () => {
+	/** Twelve exercises, three sections, notes on some — a real routine's shape. */
+	const twelve = routine(
+		Array.from({ length: 12 }, (_, i) =>
+			item({ id: `i${i}`, notes: i % 3 === 0 ? 'A note that takes a line or two of the column.' : undefined })
+		)
+	);
+
+	it('is portrait by default and landscape on request', () => {
+		expect(ascii(routineSheet(twelve, catalog))).toContain('/MediaBox [0 0 595.28 841.89]');
+		expect(ascii(routineSheet(twelve, catalog, { orientation: 'landscape' }))).toContain(
+			'/MediaBox [0 0 841.89 595.28]'
+		);
+	});
+
+	/**
+	 * The regression that mattered: balancing the columns by recomputing the share
+	 * per cell made every column break early, and twelve exercises came out over
+	 * three pages instead of one.
+	 */
+	it('puts a twelve-exercise routine on one page, either way up', () => {
+		for (const orientation of ['portrait', 'landscape'] as const) {
+			const text = ascii(routineSheet(twelve, catalog, { orientation }));
+			expect((text.match(/\/Type \/Page\b/g) ?? []).length).toBe(1);
+		}
+	});
+
+	// An exercise's words start 60 pt into its column, which is what these look for:
+	// a column nobody put anything in has no text at its own x.
+	it('actually uses the second column rather than one long first one', () => {
+		const text = ascii(routineSheet(twelve, catalog));
+		// Portrait: 40 pt margins, two columns of 247.64, a 20 pt gutter.
+		expect(text).toContain('1 0 0 1 100 ');
+		expect(text).toContain('1 0 0 1 367.64 ');
+	});
+
+	it('fills three columns on landscape paper', () => {
+		const text = ascii(routineSheet(twelve, catalog, { orientation: 'landscape' }));
+		expect(text).toContain('1 0 0 1 100 ');
+		expect(text).toContain('1 0 0 1 360.63 ');
+		expect(text).toContain('1 0 0 1 621.26 ');
+	});
+
+	it('rules the space left at the foot for notes', () => {
+		expect(ascii(routineSheet(routine([item()]), catalog))).toContain('(NOTES) Tj');
+	});
+
+	it('leaves no notes block when the page is full', () => {
+		const many = routine(Array.from({ length: 60 }, (_, i) => item({ id: `i${i}` })));
+		const pages = ascii(routineSheet(many, catalog));
+		expect((pages.match(/\(NOTES\) Tj/g) ?? []).length).toBeLessThanOrEqual(1);
+	});
+});
+
 describe('photographs', () => {
 	// Not a real JPEG: the writer copies the bytes through verbatim and never looks
 	// inside them, which is the point of using the one format a PDF stores as it is.

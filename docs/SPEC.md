@@ -964,7 +964,21 @@ routine on paper — a phone that has to stay in a pocket, somebody else followi
 week away from the app — and a picture of the app on A4 would serve none of them. It carries the
 name, the estimate, the description, what equipment it needs, each section, each exercise with its
 sets, target, rest and notes, and a footer on every page saying which routine it is and when it was
-printed.
+printed. Whatever is left at the foot of the last column is **ruled for notes**, because a log sheet
+with a third of a page of nothing on it invites the question of why it is blank.
+
+**Laid out in columns: two on portrait paper, three on landscape**, chosen with a control next to the
+button. One exercise needs about a fifth of the width of an A4 line, so a full-width row per exercise
+left most of the page empty and pushed a twelve-exercise routine onto two pages — it now fits on one
+side either way up. Columns are **balanced**, not filled newspaper-fashion: a column takes an even
+share of what is left to place, decided once as the column opens.
+
+Two mistakes are recorded because both look like reasonable code:
+
+- Recomputing that share per cell makes the target slide down as the column fills, so the column
+  breaks early and the next breaks earlier still. Twelve exercises came out over three pages.
+- Balancing when the remainder does *not* fit on the page ends a column short and spills onto a page
+  that need not exist. Past that point the page bottom is the only limit that applies.
 
 **With the photographs, and a checkbox to leave them out.** The first version had none, on a file-size
 argument, and that was wrong: somebody following the paper instead of the app cannot see the movement,

@@ -63,12 +63,13 @@
 	let printing = $state(false);
 	let printed = $state<string | null>(null);
 	let photos = $state(true);
+	let orientation = $state<'portrait' | 'landscape'>('portrait');
 
 	async function print() {
 		if (!routine) return;
 		printing = true;
 		try {
-			const { filename, shared, bytes } = await exportRoutinePdf(routine, { photos });
+			const { filename, shared, bytes } = await exportRoutinePdf(routine, { photos, orientation });
 			const size = `${Math.max(1, Math.round(bytes / 1024))} kB`;
 			printed = shared
 				? `Saved ${filename} (${size})`
@@ -247,7 +248,20 @@
 			>
 				{printing ? 'Making the PDF…' : 'Save as printable PDF'}
 			</button>
-			<label class="-mt-1 flex min-h-11 items-center gap-2 text-xs text-zinc-500">
+			<div class="-mt-1 flex items-center gap-2">
+				<!-- Two columns on portrait paper, three on landscape. -->
+				{#each [['portrait', 'Portrait, 2 columns'], ['landscape', 'Landscape, 3 columns']] as [value, label] (value)}
+					<button
+						onclick={() => (orientation = value as 'portrait' | 'landscape')}
+						class="min-h-11 flex-1 rounded-lg text-xs {orientation === value
+							? 'bg-zinc-800 text-zinc-100'
+							: 'border border-zinc-800 text-zinc-500'}"
+					>
+						{label}
+					</button>
+				{/each}
+			</div>
+			<label class="-mt-2 flex min-h-11 items-center gap-2 text-xs text-zinc-500">
 				<input
 					type="checkbox"
 					bind:checked={photos}
