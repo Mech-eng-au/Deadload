@@ -14,6 +14,7 @@
 	} from '$lib/db/routines.js';
 	import { estimateSeconds, totalSets } from '$lib/session/steps.js';
 	import { putSession } from '$lib/db/sessions.js';
+	import { exportRoutinePdf } from '$lib/db/export-file.js';
 	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
 	import { getSettings } from '$lib/db/settings.js';
 	import ExerciseSheet from '$lib/components/ExerciseSheet.svelte';
@@ -55,6 +56,28 @@
 		if (!routine) return;
 		await deleteRoutine(routine.id);
 		await goto(`${base}/`, { replaceState: true });
+	}
+
+	// A routine on paper (§8). The label reports what happened, because on Android
+	// the file goes to the share sheet and on a desktop browser it just downloads.
+	let printing = $state(false);
+	let printed = $state<string | null>(null);
+	let photos = $state(true);
+
+	async function print() {
+		if (!routine) return;
+		printing = true;
+		try {
+			const { filename, shared, bytes } = await exportRoutinePdf(routine, { photos });
+			const size = `${Math.max(1, Math.round(bytes / 1024))} kB`;
+			printed = shared
+				? `Saved ${filename} (${size})`
+				: `Written to app storage as ${filename} (${size})`;
+		} catch (e) {
+			printed = `Could not make the PDF: ${e instanceof Error ? e.message : String(e)}`;
+		} finally {
+			printing = false;
+		}
 	}
 
 	/** Which exercise the sheet is showing, or null when it is closed (§12). */
@@ -217,6 +240,28 @@
 			>
 				Edit routine
 			</a>
+			<button
+				onclick={print}
+				disabled={printing || countItems(routine) === 0}
+				class="min-h-14 rounded-xl border border-zinc-800 py-4 text-base text-zinc-300 disabled:opacity-50"
+			>
+				{printing ? 'Making the PDF…' : 'Save as printable PDF'}
+			</button>
+			<label class="-mt-1 flex min-h-11 items-center gap-2 text-xs text-zinc-500">
+				<input
+					type="checkbox"
+					bind:checked={photos}
+					class="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
+				/>
+				<span>Include the photos — bigger file, but you can see the movement</span>
+			</label>
+			{#if printed}
+				<p class="-mt-2 text-xs text-zinc-500">{printed}</p>
+			{:else}
+				<p class="-mt-2 text-xs text-zinc-600">
+					A4, with a box to write the number in for every set.
+				</p>
+			{/if}
 			{#if confirmingDelete}
 				<div class="flex gap-3">
 					<button

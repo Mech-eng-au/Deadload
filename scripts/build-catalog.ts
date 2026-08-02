@@ -60,7 +60,10 @@ const GATED: EquipmentId[] = [
 	'dumbbells',
 	'kettlebell',
 	'resistance_band',
-	'foam_roller'
+	'foam_roller',
+	'yoga_ball',
+	'suspension_trainer',
+	'ab_wheel'
 ];
 
 const ALL_EQUIPMENT: EquipmentId[] = [...GATED, 'chair'];
@@ -75,8 +78,10 @@ const GYM_EQUIPMENT = new Set([
 	'cable',
 	'barbell',
 	'e-z curl bar',
-	'medicine ball',
-	'exercise ball'
+	// `medicine ball` stays: its rows are almost all throws and slams, which need a
+	// partner and a room this app is not used in. `exercise ball` was on this list
+	// until 2026-07-30 and is not gym equipment — see §5.1's amendment.
+	'medicine ball'
 ]);
 
 /** Source values that need nothing but a floor and a wall. */

@@ -18,6 +18,9 @@ export type EquipmentId =
 	| 'kettlebell'
 	| 'resistance_band'
 	| 'foam_roller'
+	| 'yoga_ball'
+	| 'suspension_trainer'
+	| 'ab_wheel'
 	| 'chair';
 
 export interface Exercise {

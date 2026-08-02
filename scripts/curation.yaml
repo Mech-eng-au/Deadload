@@ -16,6 +16,9 @@ budgets:
   kettlebell: 12
   resistance_band: 12
   foam_roller: 10
+  yoga_ball: 10
+  suspension_trainer: 8
+  ab_wheel: 2
 
 # What each exercise needs beyond a floor and a wall. These lists do two jobs at
 # once: a name here is *admitted* to the pool even when the source tags it
@@ -130,6 +133,35 @@ equipment:
 # (bench, ball, dumbbell, towel, partner), near-duplicates of a kept
 # exercise, track-and-field drills that don't fit home routines, or
 # safety-questionable movements.
+  # A yoga ball, added 2026-07-30 (§5.1). The source calls it an exercise ball;
+  # the label does not, because nobody buying one calls it that. The two
+  # "Weighted Ball" rows are absent on purpose: both hold a weight plate.
+  yoga_ball:
+    - Ball Leg Curl
+    - Chest Stretch on Stability Ball
+    - Downward Facing Balance
+    - Exercise Ball Crunch
+    - Exercise Ball Pull-In
+    - Hug A Ball
+    - Physioball Hip Bridge
+    - Push-Ups With Feet On An Exercise Ball
+    - Pyramid
+    - Torso Rotation
+
+  # Straps with handles over a door. `Ring Dips` is the seventh "Suspended" row in
+  # the source and is not here: rings are a different purchase.
+  suspension_trainer:
+    - Suspended Fallout
+    - Suspended Push-Up
+    - Suspended Reverse Crunch
+    - Suspended Row
+    - Suspended Split Squat
+    - Inverted Row with Straps
+
+  # One exercise, and the Settings row says so — the same honesty jumping_rope gets.
+  ab_wheel:
+    - Ab Roller
+
 exclude:
   # equipment actually required
   - Crunch - Legs On Exercise Ball
