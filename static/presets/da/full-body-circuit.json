@@ -1,0 +1,97 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Cirkeltræning for hele kroppen",
+	"goal": "kondition",
+	"description": "Fem stationer, tre runder, pause kun mellem runderne. Kun gulv, ingen stang.",
+	"tags": [
+		"kondition",
+		"hele kroppen",
+		"cirkel"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "inchworm",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "standing_toe_touches",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "sit_squats",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				}
+			]
+		},
+		{
+			"label": "Cirkel",
+			"circuit": true,
+			"items": [
+				{
+					"exercise": "bodyweight_squat",
+					"sets": 3,
+					"reps": 15,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "pushups",
+					"sets": 3,
+					"reps": 10,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "bodyweight_walking_lunge",
+					"sets": 3,
+					"reps": 12,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "mountain_climbers",
+					"sets": 3,
+					"reps": 20,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "plank",
+					"sets": 3,
+					"duration_seconds": 40,
+					"rest_seconds": 60,
+					"notes": "Den eneste pause i runden kommer efter den her. Fordel kræfterne på hele omgangen derefter."
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "childs_pose",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "runners_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "overhead_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}

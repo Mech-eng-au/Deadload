@@ -17,6 +17,7 @@ import {
 import { buildLlmCatalog, buildPrompt, equipmentSentence } from '../src/lib/import/prompt.js';
 import { ladders } from '../src/lib/catalog/ladders.js';
 import type { EquipmentId, Settings } from '../src/lib/types.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 const ALL: EquipmentId[] = EQUIPMENT.map((t) => t.id);
 
@@ -202,13 +203,13 @@ describe('what a gate hides (§5.1)', () => {
 
 describe('labels', () => {
 	it('labels every type', () => {
-		for (const id of ALL) expect(equipmentLabel(id)).not.toBe(id);
+		for (const id of ALL) expect(equipmentLabel(id, en)).not.toBe(id);
 	});
 
 	it('says "1 exercise" rather than hiding a count of one', () => {
 		// jumping_rope really is one exercise in this source, and the row says so.
-		expect(exerciseCountLabel('jumping_rope')).toBe('1 exercise');
-		expect(exerciseCountLabel('dumbbells')).toMatch(/^\d+ exercises$/);
+		expect(exerciseCountLabel('jumping_rope', en)).toBe('1 exercise');
+		expect(exerciseCountLabel('dumbbells', en)).toMatch(/^\d+ exercises$/);
 	});
 });
 
@@ -228,17 +229,17 @@ describe('the LLM catalog file and prompt (§14)', () => {
 	});
 
 	it('writes the equipment line rather than leaving a blank to fill in', () => {
-		expect(equipmentSentence(['dumbbells', 'jumping_rope'])).toBe('jumping rope, dumbbells');
-		expect(buildPrompt(['dumbbells'])).toContain('Equipment available: dumbbells');
+		expect(equipmentSentence(['dumbbells', 'jumping_rope'], en)).toBe('jumping rope, dumbbells');
+		expect(buildPrompt(['dumbbells'], en, 'English')).toContain('Equipment available: dumbbells');
 	});
 
 	it('says none, out loud, when nothing is owned', () => {
-		expect(equipmentSentence([])).toBe('none — floor, wall and chair only');
-		expect(buildPrompt([])).toContain('Equipment available: none — floor, wall and chair only');
+		expect(equipmentSentence([], en)).toBe('none — floor, wall and chair only');
+		expect(buildPrompt([], en, 'English')).toContain('Equipment available: none — floor, wall and chair only');
 	});
 
 	it('does not mention a chair as equipment the model can choose', () => {
 		// It is not a gate, so it is not a thing to declare owning.
-		expect(equipmentSentence(['chair'])).toBe('none — floor, wall and chair only');
+		expect(equipmentSentence(['chair'], en)).toBe('none — floor, wall and chair only');
 	});
 });

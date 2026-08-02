@@ -29,9 +29,14 @@
 		EQUIPMENT,
 		GATED_EQUIPMENT,
 		availableCatalog,
+		equipmentLabel,
+		equipmentNeeds,
+		equipmentNote,
 		exerciseCountLabel,
 		ownedEquipment
 	} from '$lib/catalog/equipment.js';
+	import { LOCALES, resolveLocale, type Locale } from '$lib/i18n/index.js';
+	import { adoptSaved, locale, setLocale, t } from '$lib/i18n/locale.svelte.js';
 	import type { EquipmentId, Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
@@ -123,9 +128,9 @@
 		try {
 			const { filename, shared } = await exportBackupFile();
 			settings = await recordExport(sessionCount);
-			exportedAs = shared ? filename : `${filename} (saved to app storage)`;
+			exportedAs = shared ? filename : t.settings.savedToAppStorage(filename);
 		} catch (err) {
-			error = { message: 'The backup could not be written.', detail: String(err) };
+			error = { message: t.settings.backupFailed, detail: String(err) };
 		} finally {
 			exporting = false;
 		}
@@ -139,7 +144,7 @@
 			const { filename } = await exportCsvFile();
 			exportedAs = filename;
 		} catch (err) {
-			error = { message: 'The CSV could not be written.', detail: String(err) };
+			error = { message: t.settings.csvFailed, detail: String(err) };
 		} finally {
 			exporting = false;
 		}
@@ -167,40 +172,99 @@
 			pending = null;
 			await refresh();
 		} catch (err) {
-			error = { message: 'The restore failed part way.', detail: String(err) };
+			error = { message: t.settings.restoreFailed, detail: String(err) };
 		} finally {
 			restoring = false;
 		}
 	}
 
 	function mb(bytes?: number) {
-		return bytes === undefined ? 'unknown' : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+		return bytes === undefined ? t.common.unknown : t.units.megabytes(bytes / 1024 / 1024);
+	}
+
+	/**
+	 * Language (§16). Three-valued exactly as the equipment above is: "Follow the
+	 * phone" is the *absence* of an answer, not a third language, so choosing it
+	 * clears the setting rather than writing the phone's current language into it
+	 * — otherwise a user who moves the phone to another language keeps the old one
+	 * for reasons the app can no longer explain.
+	 */
+	const deviceLocale = $derived(
+		resolveLocale(undefined, typeof navigator === 'undefined' ? [] : navigator.languages)
+	);
+
+	async function chooseLanguage(value: Locale | null) {
+		if (value === null) {
+			settings = await putSettings({ ...(await getSettings()), language: undefined });
+			adoptSaved(undefined);
+		} else {
+			await setLocale(value);
+			settings = await getSettings();
+		}
 	}
 </script>
 
 <svelte:head>
-	<title>Settings · Deadload</title>
+	<title>{t.settings.title} · Deadload</title>
 </svelte:head>
 
 <section class="flex flex-col gap-6 pt-2 pb-12">
-	<h1 class="font-display text-3xl font-bold">Settings</h1>
+	<h1 class="font-display text-3xl font-bold">{t.settings.title}</h1>
 
 	{#if due}
 		<div class="rounded-2xl border border-amber-800/70 bg-amber-950/30 p-4 text-sm">
-			<p class="font-medium text-amber-100">You have {sessionCount} sessions logged.</p>
+			<p class="font-medium text-amber-100">{t.settings.backupDue(sessionCount)}</p>
 			<p class="mt-1 text-amber-200/80">
-				Worth exporting a backup — it all lives on this phone and nowhere else.
+				{t.settings.backupDueHint}
 			</p>
 		</div>
 	{/if}
 
+	<!-- §16. First, because it changes every other word on this screen. -->
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.language}</h2>
+		<p class="mt-2 text-sm text-zinc-400">{t.settings.languageIntro}</p>
+		<ul class="mt-4 flex flex-col gap-2">
+			{#each [{ id: null, endonym: t.settings.followDevice }, ...LOCALES] as option (option.id ?? 'device')}
+				{@const chosen =
+					option.id === null ? settings?.language === undefined : settings?.language === option.id}
+				<li>
+					<button
+						onclick={() => chooseLanguage(option.id)}
+						aria-pressed={chosen}
+						class="flex min-h-14 w-full items-center gap-3 rounded-xl border px-4 py-3 text-left {chosen
+							? 'border-zinc-500 bg-zinc-800/60'
+							: 'border-zinc-800'}"
+					>
+						<span
+							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm {chosen
+								? 'border-zinc-100 bg-zinc-100 font-bold text-zinc-900'
+								: 'border-zinc-600'}"
+							aria-hidden="true">{chosen ? '✓' : ''}</span
+						>
+						<span class="min-w-0 flex-1">
+							<span class="block font-medium">{option.endonym}</span>
+							{#if option.id === null}
+								<span class="mt-0.5 block text-xs text-zinc-500">
+									{t.settings.followDeviceHint(
+										LOCALES.find((l) => l.id === deviceLocale)?.endonym ?? deviceLocale
+									)}
+								</span>
+							{/if}
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+		<p class="mt-3 text-xs text-zinc-500">{t.settings.spokenStaysEnglish}</p>
+	</div>
+
 	<!-- §5.1. The app assumes a floor, a wall and a chair; everything else is
 		 something that had to be bought, so it is asked about rather than assumed. -->
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">What you own</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.whatYouOwn}</h2>
 		<p class="mt-2 text-sm text-zinc-400">
-			Tick what you have. Unticked equipment is left out of the catalog and out of the exercise
-			picker, so you are only ever offered what you can actually do.
+			{t.settings.whatYouOwnIntro}
 		</p>
 		<ul class="mt-4 flex flex-col gap-2">
 			{#each GATED_EQUIPMENT as type (type.id)}
@@ -225,176 +289,168 @@
 							{owned.includes(type.id) ? '✓' : ''}
 						</span>
 						<span class="min-w-0 flex-1">
-							<span class="block font-medium">{type.label}</span>
-							<span class="mt-0.5 block text-xs text-zinc-500">{type.needs}</span>
+							<span class="block font-medium">{equipmentLabel(type.id, t)}</span>
+							<span class="mt-0.5 block text-xs text-zinc-500">{equipmentNeeds(type.id, t)}</span>
 						</span>
 						<span class="shrink-0 text-xs whitespace-nowrap text-zinc-500 tabular-nums">
-							{exerciseCountLabel(type.id)}
+							{exerciseCountLabel(type.id, t)}
 						</span>
 					</button>
 				</li>
 			{/each}
 		</ul>
 		<p class="mt-3 text-xs text-zinc-500">
-			{availableCount} of {catalog.length} exercises available.
+			{t.settings.availableCount(availableCount, catalog.length)}
 			{#if owned.length === 0}
-				Nothing ticked, so that is everything you can do with a floor, a wall and a chair.
+				{t.settings.nothingTicked}
 			{/if}
 		</p>
 		{#if chair}
-			<p class="mt-2 text-xs text-zinc-500">{chair.note}</p>
+			<p class="mt-2 text-xs text-zinc-500">{equipmentNote(chair.id, t)}</p>
 		{/if}
 		<p class="mt-2 text-xs text-zinc-500">
-			This only changes what you get offered. A routine you already have, anything you have logged,
-			and the built-in routines all keep every exercise in them — with a note about what they need.
+			{t.settings.gatingScope}
 		</p>
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Sound</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.sound}</h2>
 		<p class="mt-2 text-sm text-zinc-400">
-			Cues during a session: when a timed set starts, the last three seconds, time being up, a set
-			logged, and the end of the workout. Without them you have to watch the screen.
+			{t.settings.soundIntro}
 		</p>
 		<button
 			onclick={toggleSound}
 			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
 		>
-			<span class="font-medium">Session sounds</span>
+			<span class="font-medium">{t.settings.sessionSounds}</span>
 			<span
 				class="rounded-full px-3 py-1 text-sm {settings?.soundEnabled === false
 					? 'bg-zinc-800 text-zinc-400'
 					: 'bg-zinc-100 font-medium text-zinc-900'}"
 			>
-				{settings?.soundEnabled === false ? 'Off' : 'On'}
+				{settings?.soundEnabled === false ? t.common.off : t.common.on}
 			</span>
 		</button>
 
 		<p class="mt-5 text-sm text-zinc-400">
-			The tones say that something changed. Speech says what: the next exercise, its set and its
-			target, spoken as the rest starts. It is the last reason to look at the phone mid-workout.
+			{t.settings.speechIntro}
 		</p>
 		{#if canSpeak}
 			<button
 				onclick={toggleSpeech}
 				class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
 			>
-				<span class="font-medium">Speak the next exercise</span>
+				<span class="font-medium">{t.settings.speakNext}</span>
 				<span
 					class="rounded-full px-3 py-1 text-sm {settings?.speechEnabled === false
 						? 'bg-zinc-800 text-zinc-400'
 						: 'bg-zinc-100 font-medium text-zinc-900'}"
 				>
-					{settings?.speechEnabled === false ? 'Off' : 'On'}
+					{settings?.speechEnabled === false ? t.common.off : t.common.on}
 				</span>
 			</button>
 		{:else}
 			<p class="mt-4 text-sm text-zinc-500">
-				This device has no speech engine, so there is nothing to turn on.
+				{t.settings.noSpeechEngine}
 			</p>
 		{/if}
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Auto mode</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.autoMode}</h2>
 		<p class="mt-2 text-sm text-zinc-400">
-			Normally the app waits for you at every set. These two hand it the parts it can be sure
-			about. They work independently, and take effect on the next session you start.
+			{t.settings.autoModeIntro}
 		</p>
 		<button
 			onclick={toggleAutoStart}
 			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
 		>
-			<span class="font-medium">Start sets by itself</span>
+			<span class="font-medium">{t.settings.autoStart}</span>
 			<span
 				class="rounded-full px-3 py-1 text-sm {settings?.autoStartSets
 					? 'bg-zinc-100 font-medium text-zinc-900'
 					: 'bg-zinc-800 text-zinc-400'}"
 			>
-				{settings?.autoStartSets ? 'On' : 'Off'}
+				{settings?.autoStartSets ? t.common.on : t.common.off}
 			</span>
 		</button>
 		<p class="mt-2 text-xs text-zinc-500">
-			The set begins once the announcement has been read, instead of waiting for Start.
+			{t.settings.autoStartHint}
 		</p>
 		<button
 			onclick={toggleAutoLog}
 			class="mt-4 flex min-h-14 w-full items-center justify-between rounded-xl border border-zinc-700 px-4"
 		>
-			<span class="font-medium">Log timed sets by itself</span>
+			<span class="font-medium">{t.settings.autoLog}</span>
 			<span
 				class="rounded-full px-3 py-1 text-sm {settings?.autoLogTimedSets
 					? 'bg-zinc-100 font-medium text-zinc-900'
 					: 'bg-zinc-800 text-zinc-400'}"
 			>
-				{settings?.autoLogTimedSets ? 'On' : 'Off'}
+				{settings?.autoLogTimedSets ? t.common.on : t.common.off}
 			</span>
 		</button>
 		<p class="mt-2 text-xs text-zinc-500">
-			A hold logs its target at zero and moves on. Overtime is not recorded in this mode, and reps
-			sets are untouched — the app cannot see you finish those.
+			{t.settings.autoLogHint}
 		</p>
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Backup</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.backup}</h2>
 		<p class="mt-2 text-sm text-zinc-400">
-			One file with every routine, every logged session, your learned exercise names and your
-			settings.
+			{t.settings.backupIntro}
 		</p>
 		<button
 			onclick={doExport}
 			disabled={exporting}
 			class="mt-4 min-h-14 w-full rounded-xl bg-zinc-100 py-3.5 font-semibold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
 		>
-			{exporting ? 'Preparing…' : 'Export backup'}
+			{exporting ? t.settings.preparing : t.settings.exportBackup}
 		</button>
 		{#if exportedAs}
-			<p class="mt-2 text-xs text-zinc-400">Wrote {exportedAs}</p>
+			<p class="mt-2 text-xs text-zinc-400">{t.settings.wrote(exportedAs)}</p>
 		{/if}
 		<button
 			onclick={doExportCsv}
 			disabled={exporting || sessionCount === 0}
 			class="mt-3 min-h-14 w-full rounded-xl border border-zinc-700 py-3.5 font-medium disabled:opacity-40"
 		>
-			Export sets as CSV
+			{t.settings.exportCsv}
 		</button>
 		<p class="mt-2 text-xs text-zinc-500">
-			The JSON restores the app. The CSV is one row per set, for reading in a spreadsheet.
+			{t.settings.exportHint}
 		</p>
 		{#if settings?.lastExportAt}
 			<p class="mt-2 text-xs text-zinc-500">
-				Last export: {new Date(settings.lastExportAt).toLocaleString()}
+				{t.settings.lastExport(t.units.dateTime(settings.lastExportAt))}
 			</p>
 		{:else}
-			<p class="mt-2 text-xs text-zinc-500">Never exported.</p>
+			<p class="mt-2 text-xs text-zinc-500">{t.settings.neverExported}</p>
 		{/if}
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Restore</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.restore}</h2>
 		{#if !pending && !summary}
 			<p class="mt-2 text-sm text-zinc-400">
-				Read a backup file back in. You choose whether to merge it with what is here or replace
-				everything.
+				{t.settings.restoreIntro}
 			</p>
 			<label
 				class="mt-4 block min-h-14 cursor-pointer rounded-xl border border-zinc-700 py-3.5 text-center font-medium"
 			>
-				Choose a backup file
+				{t.settings.chooseBackup}
 				<input type="file" accept=".json,application/json" class="hidden" onchange={pickFile} />
 			</label>
 		{:else if pending}
 			<p class="mt-2 text-sm text-zinc-300">
-				{pending.routines.length} routine{pending.routines.length === 1 ? '' : 's'},
-				{pending.sessions.length} session{pending.sessions.length === 1 ? '' : 's'},
-				{Object.keys(pending.aliasOverrides).length} learned name{Object.keys(pending.aliasOverrides)
-					.length === 1
-					? ''
-					: 's'}.
+				{t.settings.fileHolds(
+					t.units.routines(pending.routines.length),
+					t.units.sessions(pending.sessions.length),
+					t.units.learnedNames(Object.keys(pending.aliasOverrides).length)
+				)}
 			</p>
 			<p class="mt-1 text-xs text-zinc-500">
-				Exported {new Date(pending.exportedAt).toLocaleString()}
+				{t.settings.exportedOn(t.units.dateTime(pending.exportedAt))}
 			</p>
 			<div class="mt-4 flex flex-col gap-3">
 				<button
@@ -402,32 +458,37 @@
 					disabled={restoring}
 					class="min-h-14 w-full rounded-xl bg-zinc-100 py-3.5 font-semibold text-zinc-900"
 				>
-					Merge into what is here
+					{t.settings.merge}
 				</button>
 				<button
 					onclick={() => applyRestore('replace')}
 					disabled={restoring}
 					class="min-h-14 w-full rounded-xl border border-red-900 py-3.5 font-medium text-red-200"
 				>
-					Replace everything
+					{t.settings.replace}
 				</button>
 				<button onclick={() => (pending = null)} class="min-h-12 text-sm text-zinc-500 underline">
-					Cancel
+					{t.common.cancel}
 				</button>
 			</div>
 			<p class="mt-3 text-xs text-zinc-500">
-				Merge keeps what is on this phone, adds anything missing, and updates a routine only when
-				the file's copy is newer. Replace deletes everything here first.
+				{t.settings.restoreHint}
 			</p>
 		{:else if summary}
-			<p class="mt-2 text-sm text-zinc-100">Restored.</p>
+			<p class="mt-2 text-sm text-zinc-100">{t.settings.restored}</p>
 			<ul class="mt-2 flex flex-col gap-1 text-sm text-zinc-400">
-				<li>{summary.routinesAdded} routines added, {summary.routinesUpdated} updated{summary.routinesSkipped ? `, ${summary.routinesSkipped} already current` : ''}</li>
-				<li>{summary.sessionsAdded} sessions added{summary.sessionsSkipped ? `, ${summary.sessionsSkipped} already here` : ''}</li>
-				<li>{summary.aliasesAdded} learned names added</li>
+				<li>
+					{t.settings.routinesAdded(
+						summary.routinesAdded,
+						summary.routinesUpdated,
+						summary.routinesSkipped
+					)}
+				</li>
+				<li>{t.settings.sessionsAdded(summary.sessionsAdded, summary.sessionsSkipped)}</li>
+				<li>{t.settings.aliasesAdded(summary.aliasesAdded)}</li>
 			</ul>
 			<button onclick={() => (summary = null)} class="mt-4 min-h-12 text-sm text-zinc-400 underline">
-				Done
+				{t.common.done}
 			</button>
 		{/if}
 	</div>
@@ -442,38 +503,36 @@
 	{/if}
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Storage</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.storage}</h2>
 		{#if settings?.persistGranted}
-			<p class="mt-2 text-zinc-100">Your data is marked as persistent.</p>
+			<p class="mt-2 text-zinc-100">{t.settings.persistent}</p>
 			<p class="mt-1 text-sm text-zinc-400">
-				Android will not clear it automatically when the device runs low on space. Uninstalling the
-				app still deletes everything, so keep a backup.
+				{t.settings.persistentHint}
 			</p>
 		{:else if settings}
-			<p class="mt-2 text-zinc-100">Your data is stored, but not marked as persistent.</p>
+			<p class="mt-2 text-zinc-100">{t.settings.notPersistent}</p>
 			<p class="mt-1 text-sm text-zinc-400">
-				It survives restarts, but the system may clear it if the device runs very low on space.
-				Export a backup.
+				{t.settings.notPersistentHint}
 			</p>
 		{:else}
-			<p class="mt-2 text-zinc-500">Checking…</p>
+			<p class="mt-2 text-zinc-500">{t.common.checking}</p>
 		{/if}
 	</div>
 
 	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 text-sm">
-		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Data</h2>
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.settings.data}</h2>
 		<dl class="mt-2 flex flex-col gap-1 text-zinc-300">
-			<div class="flex justify-between"><dt>Routines</dt><dd>{routineCount}</dd></div>
-			<div class="flex justify-between"><dt>Sessions</dt><dd>{sessionCount}</dd></div>
-			<div class="flex justify-between"><dt>Learned names</dt><dd>{aliasCount}</dd></div>
-			<div class="flex justify-between"><dt>Space used</dt><dd>{mb(usage)}</dd></div>
-			<div class="flex justify-between"><dt>Database version</dt><dd>{DB_VERSION}</dd></div>
-			<div class="flex justify-between"><dt>App build</dt><dd>{BUILD_LABEL}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.routines}</dt><dd>{routineCount}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.sessions}</dt><dd>{sessionCount}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.learnedNames}</dt><dd>{aliasCount}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.spaceUsed}</dt><dd>{mb(usage)}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.databaseVersion}</dt><dd>{DB_VERSION}</dd></div>
+			<div class="flex justify-between"><dt>{t.settings.appBuild}</dt><dd>{BUILD_LABEL}</dd></div>
 		</dl>
-		<p class="mt-3 text-xs text-zinc-500">Everything stays on this device.</p>
+		<p class="mt-3 text-xs text-zinc-500">{t.settings.staysOnDevice}</p>
 	</div>
 
 	<a href="{base}/about/" class="text-center text-sm text-zinc-500 underline">
-		About and attribution
+		{t.settings.aboutLink}
 	</a>
 </section>

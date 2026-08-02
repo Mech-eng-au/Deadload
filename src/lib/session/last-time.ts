@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/index.js';
 import type { Session, SetEntry } from '../types.js';
 
 /**
@@ -52,9 +53,9 @@ export function pickLastPerformance(
 }
 
 /** "12, 11, 9" or "45 s, 45 s, 40 s". */
-export function formatSet(entry: SetEntry): string {
-	if (entry.seconds !== undefined) return `${entry.seconds} s`;
-	if (entry.reps !== undefined) return String(entry.reps);
+export function formatSet(entry: SetEntry, t: Messages): string {
+	if (entry.seconds !== undefined) return t.units.seconds(entry.seconds);
+	if (entry.reps !== undefined) return t.units.num(entry.reps);
 	return '–';
 }
 
@@ -64,34 +65,28 @@ export function formatSet(entry: SetEntry): string {
  * changes, because a line read at 1 m out of breath does not need "kg" three
  * times to make its point — but it does need to know when the weight moved.
  */
-export function formatSetWithLoad(entry: SetEntry, previous?: SetEntry): string {
-	const base = formatSet(entry);
+export function formatSetWithLoad(entry: SetEntry, t: Messages, previous?: SetEntry): string {
+	const base = formatSet(entry, t);
 	if (entry.loadKg === undefined) return base;
 	const same = previous?.loadKg !== undefined && previous.loadKg === entry.loadKg;
-	const load = Number(entry.loadKg.toFixed(2));
-	return `${base} × ${load}${same ? '' : ' kg'}`;
+	return `${base} × ${same ? t.units.kgBare(entry.loadKg) : t.units.kg(entry.loadKg)}`;
 }
 
 /** The whole last-time line, in order, so the caller only decides emphasis. */
-export function formatSetList(sets: SetEntry[]): string[] {
-	return sets.map((entry, i) => formatSetWithLoad(entry, sets[i - 1]));
+export function formatSetList(sets: SetEntry[], t: Messages): string[] {
+	return sets.map((entry, i) => formatSetWithLoad(entry, t, sets[i - 1]));
 }
 
 /** Short, unambiguous, and no year unless it is not this one. */
-export function formatWhen(iso: string, now = new Date()): string {
+export function formatWhen(iso: string, t: Messages, now = new Date()): string {
 	const then = new Date(iso);
 	const days = Math.floor(
 		(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() -
 			new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime()) /
 			86400000
 	);
-	if (days <= 0) return 'earlier today';
-	if (days === 1) return 'yesterday';
-	if (days < 7) return `${days} days ago`;
-	const sameYear = then.getFullYear() === now.getFullYear();
-	return then.toLocaleDateString(undefined, {
-		day: 'numeric',
-		month: 'short',
-		...(sameYear ? {} : { year: 'numeric' })
-	});
+	if (days <= 0) return t.history.earlierToday;
+	if (days === 1) return t.history.yesterday;
+	if (days < 7) return t.history.daysAgo(days);
+	return t.history.shortDate(iso, then.getFullYear() === now.getFullYear());
 }

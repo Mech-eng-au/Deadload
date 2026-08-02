@@ -1,25 +1,48 @@
+import type { Messages } from '../i18n/index.js';
 import { catalog } from './index.js';
 
 /**
- * Plain English for the seventeen muscle names in the catalog (docs/SPEC.md
- * §4.6).
+ * The seventeen muscle names in the catalog (docs/SPEC.md §4.6).
  *
- * The catalog is generated from free-exercise-db, which names muscles the way an
- * anatomy textbook does — `adductors`, `abductors`, `lats`. The app printed those
- * words at the user and left them to work it out. This file is the translation,
- * and like `ladders.ts` it is **hand-authored and deliberately not in
- * `catalog.json`**: it is editorial writing, and it belongs in a file a person is
- * expected to argue with rather than in generated output.
+ * **Amended 2026-08-02 by §16.** This file used to hold the plain-English
+ * `short`, `where` and `does` for each muscle as well as the list itself. The
+ * writing has moved to `src/lib/i18n/<locale>/muscles.ts`; what stays here is
+ * the part that is not writing: the closed vocabulary, the lookups, and the
+ * count of how much of the catalog trains each one.
  *
- * `short` is the one that earns its keep. It appears in brackets after the
- * technical name everywhere a muscle is listed, so the answer is already on
- * screen and nobody has to go and look it up.
+ * The split is the same one the catalog already had between `catalog.json` and
+ * `ladders.ts` — generated or structural data in one place, editorial writing in
+ * a file a person is expected to argue with — and it is what makes a second
+ * language a file rather than a rewrite.
  *
- * The vocabulary is closed — the source has exactly these seventeen — and
- * `tests/muscles.test.ts` fails if the catalog ever mentions one that is missing
- * here, the same referential-integrity rule the build script applies to
- * `curation.yaml`.
+ * The vocabulary is closed, which is what makes this tractable:
+ * free-exercise-db uses exactly these seventeen, and `tests/muscles.test.ts`
+ * fails if the catalog ever names one that a locale does not explain.
  */
+
+/** Exactly the names that appear in `Exercise.primaryMuscles`, in catalog order. */
+export const MUSCLE_IDS = [
+	'abdominals',
+	'abductors',
+	'adductors',
+	'biceps',
+	'calves',
+	'chest',
+	'forearms',
+	'glutes',
+	'hamstrings',
+	'lats',
+	'lower back',
+	'middle back',
+	'neck',
+	'quadriceps',
+	'shoulders',
+	'traps',
+	'triceps'
+] as const;
+
+export type MuscleId = (typeof MUSCLE_IDS)[number];
+
 export interface MuscleInfo {
 	/** Exactly as it appears in `Exercise.primaryMuscles`. */
 	id: string;
@@ -33,149 +56,43 @@ export interface MuscleInfo {
 	does: string;
 }
 
-export const MUSCLES: MuscleInfo[] = [
-	{
-		id: 'abdominals',
-		label: 'Abdominals',
-		short: 'stomach',
-		where: 'The front of your stomach, between the ribs and the hips.',
-		does: 'Curls your trunk forwards, and stops it arching when you hold a plank.'
-	},
-	{
-		id: 'abductors',
-		label: 'Abductors',
-		short: 'outer hip',
-		where: 'The outer hip, at the side of your bottom.',
-		does: 'Takes the leg out sideways, and keeps your hips level when you stand on one leg.'
-	},
-	{
-		id: 'adductors',
-		label: 'Adductors',
-		short: 'inner thigh',
-		where: 'The inner thigh, running up into the groin.',
-		does: 'Pulls the leg back in towards the other one. What a wide squat stretches.'
-	},
-	{
-		id: 'biceps',
-		label: 'Biceps',
-		short: 'front of upper arm',
-		where: 'The front of the upper arm, between shoulder and elbow.',
-		does: 'Bends the elbow. Does most of the extra work in a chin-up over a pull-up.'
-	},
-	{
-		id: 'calves',
-		label: 'Calves',
-		short: 'back of lower leg',
-		where: 'The back of the lower leg, between knee and heel.',
-		does: 'Points the foot down: every step, every jump, every heel raise.'
-	},
-	{
-		id: 'chest',
-		label: 'Chest',
-		short: 'front of ribs',
-		where: 'Across the front of the ribs, below the collarbone.',
-		does: 'Pushes your arms forwards and inwards. The main muscle of a push-up.'
-	},
-	{
-		id: 'forearms',
-		label: 'Forearms',
-		short: 'elbow to wrist',
-		where: 'Between the elbow and the wrist, all the way round.',
-		does: 'Grip, and the wrist. Usually what gives out first on a long hang.'
-	},
-	{
-		id: 'glutes',
-		label: 'Glutes',
-		short: 'bottom',
-		where: 'Your bottom, from the top of the hip down to the thigh.',
-		does: 'Straightens the hip: standing up out of a squat, and every bridge.'
-	},
-	{
-		id: 'hamstrings',
-		label: 'Hamstrings',
-		short: 'back of thigh',
-		where: 'The back of the thigh, from the bottom down to behind the knee.',
-		does: 'Bends the knee, and helps the glutes straighten the hip. What a toe-touch stretches.'
-	},
-	{
-		id: 'lats',
-		label: 'Lats',
-		short: 'sides of back',
-		where: 'The broad sheet down the sides of the back, starting under the armpit.',
-		does: 'Pulls the arms down and in towards the body. The muscle a pull-up is really about.'
-	},
-	{
-		id: 'lower back',
-		label: 'Lower back',
-		short: 'above the belt',
-		where: 'Either side of the spine, above the belt.',
-		does: 'Holds the spine straight. Mostly braces rather than moves, which is why it is trained with holds.'
-	},
-	{
-		id: 'middle back',
-		label: 'Middle back',
-		short: 'between shoulder blades',
-		where: 'Between the shoulder blades.',
-		does: 'Squeezes the shoulder blades together. This, not the arms, is what a row trains.'
-	},
-	{
-		id: 'neck',
-		label: 'Neck',
-		// The one name that needs no translating, so the hint gives the location
-		// instead of restating the word.
-		short: 'front, back and sides',
-		where: 'The front, back and sides of the neck.',
-		does: 'Holds your head up and turns it.'
-	},
-	{
-		id: 'quadriceps',
-		label: 'Quadriceps',
-		short: 'front of thigh',
-		where: 'The front of the thigh, from hip to kneecap.',
-		does: 'Straightens the knee: squats, lunges, and every flight of stairs.'
-	},
-	{
-		id: 'shoulders',
-		label: 'Shoulders',
-		short: 'cap of the arm',
-		where: 'The cap sitting on top of each arm, front, side and back.',
-		does: 'Lifts the arm in any direction, and overhead most of all.'
-	},
-	{
-		id: 'traps',
-		label: 'Traps',
-		short: 'neck to shoulders',
-		where: 'From the back of the neck out to each shoulder, and down between the blades.',
-		does: 'Shrugs the shoulders, and holds the shoulder blades back and down.'
-	},
-	{
-		id: 'triceps',
-		label: 'Triceps',
-		short: 'back of upper arm',
-		where: 'The back of the upper arm, between shoulder and elbow.',
-		does: 'Straightens the elbow: push-ups, dips, and any press.'
-	}
-];
+function isMuscleId(id: string): id is MuscleId {
+	return (MUSCLE_IDS as readonly string[]).includes(id);
+}
 
-const byId = new Map<string, MuscleInfo>(MUSCLES.map((m) => [m.id, m]));
-
-export function muscleInfo(id: string): MuscleInfo | undefined {
-	return byId.get(id);
+export function muscleInfo(id: string, t: Messages): MuscleInfo | undefined {
+	if (!isMuscleId(id)) return undefined;
+	return { id, ...t.muscles.names[id] };
 }
 
 /** "Quadriceps", or the raw id if it is somehow unknown. */
-export function muscleLabel(id: string): string {
-	return byId.get(id)?.label ?? id;
+export function muscleLabel(id: string, t: Messages): string {
+	return isMuscleId(id) ? t.muscles.names[id].label : id;
 }
 
 /** "quadriceps (front of thigh)" — the inline form, for lists of muscles. */
-export function muscleWithHint(id: string): string {
-	const info = byId.get(id);
-	return info ? `${info.id} (${info.short})` : id;
+export function muscleWithHint(id: string, t: Messages): string {
+	const info = muscleInfo(id, t);
+	return info ? t.muscles.withHint(info.label, info.short) : id;
+}
+
+/**
+ * How the figure is coarser than the word, for the three muscles where it is
+ * (§4.6, `APPROXIMATED` in `body-map.ts`). Completes "On the figure this ___."
+ * and is `undefined` for the fourteen the model maps exactly.
+ */
+export function muscleApproximation(id: string, t: Messages): string | undefined {
+	const approximated = t.muscles.approximated;
+	return id in approximated ? approximated[id as keyof typeof approximated] : undefined;
+}
+
+/** The short hint on its own, for the picker and the routine editor. */
+export function muscleShort(id: string, t: Messages): string {
+	return isMuscleId(id) ? t.muscles.names[id].short : id;
 }
 
 export interface MuscleUsage {
-	muscle: MuscleInfo;
+	id: MuscleId;
 	/** Exercises where this is a primary muscle. */
 	primary: number;
 	/** Exercises where it only assists. */
@@ -186,12 +103,16 @@ export interface MuscleUsage {
  * How much of the catalog trains each muscle, for the compendium. Counted over
  * the whole catalog rather than the owned subset: the page explains the words,
  * and the words do not change when a box is ticked.
+ *
+ * Ordering by the count is locale-independent, so it is computed once here.
+ * Ties are broken by id rather than by label, because a label is now a
+ * translation and the order of the page should not change with the language.
  */
-export const muscleUsage: MuscleUsage[] = MUSCLES.map((muscle) => ({
-	muscle,
-	primary: catalog.filter((e) => e.primaryMuscles.includes(muscle.id)).length,
-	secondary: catalog.filter((e) => e.secondaryMuscles.includes(muscle.id)).length
-})).sort((a, b) => b.primary - a.primary || a.muscle.label.localeCompare(b.muscle.label));
+export const muscleUsage: MuscleUsage[] = MUSCLE_IDS.map((id) => ({
+	id,
+	primary: catalog.filter((e) => e.primaryMuscles.includes(id)).length,
+	secondary: catalog.filter((e) => e.secondaryMuscles.includes(id)).length
+})).sort((a, b) => b.primary - a.primary || a.id.localeCompare(b.id));
 
 /** Every muscle name the catalog actually uses, primary or secondary. */
 export function musclesInCatalog(): string[] {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatSet, formatWhen, pickLastPerformance } from '../src/lib/session/last-time.js';
 import type { Session, SetEntry } from '../src/lib/types.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 function entry(over: Partial<SetEntry> = {}): SetEntry {
 	return {
@@ -95,17 +96,17 @@ describe('picking the last performance', () => {
 
 describe('formatting', () => {
 	it('shows reps plainly and durations with a unit', () => {
-		expect(formatSet(entry({ reps: 12 }))).toBe('12');
-		expect(formatSet(entry({ seconds: 45 }))).toBe('45 s');
-		expect(formatSet(entry())).toBe('–');
+		expect(formatSet(entry({ reps: 12 }), en)).toBe('12');
+		expect(formatSet(entry({ seconds: 45 }), en)).toBe('45 s');
+		expect(formatSet(entry(), en)).toBe('–');
 	});
 
 	it('reads as a person would say it', () => {
 		const now = new Date(2026, 6, 25, 9, 0);
-		expect(formatWhen(new Date(2026, 6, 25, 7, 0).toISOString(), now)).toBe('earlier today');
-		expect(formatWhen(new Date(2026, 6, 24, 7, 0).toISOString(), now)).toBe('yesterday');
-		expect(formatWhen(new Date(2026, 6, 22, 7, 0).toISOString(), now)).toBe('3 days ago');
+		expect(formatWhen(new Date(2026, 6, 25, 7, 0).toISOString(), en, now)).toBe('earlier today');
+		expect(formatWhen(new Date(2026, 6, 24, 7, 0).toISOString(), en, now)).toBe('yesterday');
+		expect(formatWhen(new Date(2026, 6, 22, 7, 0).toISOString(), en, now)).toBe('3 days ago');
 		// Beyond a week it becomes a date rather than an ever-growing count.
-		expect(formatWhen(new Date(2026, 6, 1, 7, 0).toISOString(), now)).toMatch(/1|Jul/);
+		expect(formatWhen(new Date(2026, 6, 1, 7, 0).toISOString(), en, now)).toMatch(/1|Jul/);
 	});
 });

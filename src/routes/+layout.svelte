@@ -5,6 +5,8 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { isTabRoot, pushBackGuard, registerBackHandler } from '$lib/nav/back.js';
+	import { adoptSaved, t } from '$lib/i18n/locale.svelte.js';
+	import { getSettings } from '$lib/db/settings.js';
 
 	/**
 	 * Slide between screens in the direction you actually moved: forward from the
@@ -41,21 +43,27 @@
 	/**
 	 * The four places worth going. Everything else in the app is reached by
 	 * drilling into one of them, so a tab is always the way back out (§12).
+	 *
+	 * **`key` is not the label**, and that distinction is the whole point of it:
+	 * the icon below used to be chosen with `tab.label === 'Routines'`, so
+	 * translating the four labels would have silently given every tab the
+	 * Settings icon. A key is a name for the destination; a label is words on a
+	 * screen, and only one of the two is allowed to change with the language.
 	 */
 	const tabs = [
-		{ href: '/', label: 'Routines', match: (id: string) => id === '/' },
-		{ href: '/catalog/', label: 'Catalog', match: (id: string) => id.startsWith('/catalog') },
+		{ key: 'routines', href: '/', match: (id: string) => id === '/' },
+		{ key: 'catalog', href: '/catalog/', match: (id: string) => id.startsWith('/catalog') },
 		{
+			key: 'stats',
 			href: '/stats/',
-			label: 'Stats',
 			match: (id: string) => id.startsWith('/stats') || id.startsWith('/history')
 		},
 		{
+			key: 'settings',
 			href: '/settings/',
-			label: 'Settings',
 			match: (id: string) => id.startsWith('/settings') || id.startsWith('/about')
 		}
-	];
+	] as const;
 	const activeTab = $derived(tabs.findIndex((t) => t.match(page.route.id ?? '')));
 
 	/**
@@ -71,6 +79,16 @@
 			return true;
 		})
 	);
+
+	/**
+	 * The language is worked out synchronously from `localStorage` and the device
+	 * before the first paint (see `locale.svelte.ts`); this is where the database
+	 * confirms it. The two normally agree, and the one case they do not is a user
+	 * who chose a language other than their phone's.
+	 */
+	onMount(async () => {
+		adoptSaved((await getSettings()).language);
+	});
 
 	onMount(() => {
 		let unregister: (() => void) | undefined;
@@ -112,17 +130,17 @@
 					href="{base}{tab.href}"
 					data-sveltekit-replacestate
 					aria-current={i === activeTab ? 'page' : undefined}
-					class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 pt-2 text-xs {i ===
+					class="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 pt-2 text-[11px] {i ===
 					activeTab
 						? 'text-zinc-100'
 						: 'text-zinc-500'}"
 				>
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="h-5 w-5">
-						{#if tab.label === 'Routines'}
+						{#if tab.key === 'routines'}
 							<path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round" />
-						{:else if tab.label === 'Catalog'}
+						{:else if tab.key === 'catalog'}
 							<path d="M4 5h7v14H4zM13 5h7v14h-7z" stroke-linejoin="round" />
-						{:else if tab.label === 'Stats'}
+						{:else if tab.key === 'stats'}
 							<path d="M5 19V11M12 19V5M19 19v-5" stroke-linecap="round" />
 						{:else}
 							<path d="M6 8h12M6 16h12" stroke-linecap="round" />
@@ -130,7 +148,7 @@
 							<circle cx="15" cy="16" r="2" />
 						{/if}
 					</svg>
-					{tab.label}
+					<span class="w-full truncate px-0.5 text-center">{t.nav[tab.key]}</span>
 				</a>
 			{/each}
 		</div>

@@ -9,6 +9,7 @@ import {
 } from '../src/lib/session/steps.js';
 import { isTabRoot } from '../src/lib/nav/back.js';
 import type { Routine } from '../src/lib/types.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 function routine(
 	items: Partial<Routine['blocks'][0]['items'][0]>[],
@@ -125,12 +126,12 @@ describe('circuit blocks (§7)', () => {
 
 	it('labels circuit steps by round, not by set', () => {
 		const [first] = expandRoutine(routine([{ sets: 3 }, { sets: 3 }], undefined, 'circuit'));
-		expect(describeStep(first)).toBe('Round 1 of 3 · 10 reps');
+		expect(describeStep(first, en)).toBe('Round 1 of 3 · 10 reps');
 	});
 
 	it('does not label rounds on a single-round circuit', () => {
 		const [only] = expandRoutine(routine([{ sets: 1 }, { sets: 1 }], undefined, 'circuit'));
-		expect(describeStep(only)).toBe('10 reps');
+		expect(describeStep(only, en)).toBe('10 reps');
 	});
 
 	it('leaves plain blocks exactly as before', () => {
@@ -145,19 +146,19 @@ describe('step labels', () => {
 		const [first] = expandRoutine(
 			routine([{ sets: 3, perSide: true, target: { kind: 'duration', seconds: 45 } }])
 		);
-		expect(describeStep(first)).toBe('Set 1 of 3 · 45 s · left');
+		expect(describeStep(first, en)).toBe('Set 1 of 3 · 45 s · left');
 	});
 
 	it('omits the set counter for a single set', () => {
 		const [only] = expandRoutine(routine([{ sets: 1, target: { kind: 'reps', reps: 12 } }]));
-		expect(describeStep(only)).toBe('12 reps');
+		expect(describeStep(only, en)).toBe('12 reps');
 	});
 
 	it('spells out amrap and rep ranges', () => {
 		const [amrap] = expandRoutine(routine([{ target: { kind: 'amrap' } }]));
-		expect(describeStep(amrap)).toBe('as many as possible');
+		expect(describeStep(amrap, en)).toBe('as many as possible');
 		const [range] = expandRoutine(routine([{ target: { kind: 'reps_range', min: 8, max: 12 } }]));
-		expect(describeStep(range)).toBe('8–12 reps');
+		expect(describeStep(range, en)).toBe('8–12 reps');
 	});
 });
 

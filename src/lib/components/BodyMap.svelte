@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { muscleLabel } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import { slugsFor, type View } from '$lib/catalog/body-map.js';
 	import frontSvg from '../../../static/muscles/front.svg?raw';
 	import backSvg from '../../../static/muscles/back.svg?raw';
@@ -74,8 +75,8 @@
 		const p = primary.filter((m) => slugsFor([m], view).length);
 		const s = secondary.filter((m) => slugsFor([m], view).length);
 		const parts = [];
-		if (p.length) parts.push(`works ${p.map(muscleLabel).join(', ')}`);
-		if (s.length) parts.push(`assists ${s.map(muscleLabel).join(', ')}`);
+		if (p.length) parts.push(`${t.muscles.works}: ${t.units.list(p.map((m) => muscleLabel(m, t)))}`);
+		if (s.length) parts.push(`${t.muscles.assists}: ${t.units.list(s.map((m) => muscleLabel(m, t)))}`);
 		return parts.length ? `${view} view: ${parts.join('; ')}` : `${view} view`;
 	}
 </script>

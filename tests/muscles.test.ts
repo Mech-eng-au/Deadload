@@ -9,75 +9,90 @@ import {
 	slugsFor
 } from '../src/lib/catalog/body-map.js';
 import {
-	MUSCLES,
+	MUSCLE_IDS,
 	muscleInfo,
 	muscleLabel,
 	muscleUsage,
 	muscleWithHint,
 	musclesInCatalog
 } from '../src/lib/catalog/muscles.js';
+import { LOCALES, messages } from '../src/lib/i18n/index.js';
+import { en } from '../src/lib/i18n/en/index.js';
 
 /**
- * The glossary is hand-authored (src/lib/catalog/muscles.ts) and the catalog is
- * generated, so the two can drift apart exactly as the ladders can. Same
- * referential-integrity rules as tests/ladders.test.ts.
+ * The glossary is hand-authored and the catalog is generated, so the two can
+ * drift apart exactly as the ladders can. Same referential-integrity rules as
+ * tests/ladders.test.ts.
+ *
+ * **Amended 2026-08-02 (§16):** the writing moved to the locale dictionaries, so
+ * every rule below now runs for **every** language. A Danish glossary missing a
+ * muscle is the same defect as an English one missing it, and it has to fail
+ * here rather than print a raw anatomy word at somebody in the wrong language.
  */
 describe('muscle glossary (§4.6)', () => {
-	it('explains every muscle the catalog names', () => {
+	it.each(LOCALES)('explains every muscle the catalog names, in $id', ({ id: locale }) => {
 		// The failure this exists for: a regenerated catalog introducing a muscle
 		// name nobody has written a translation for, which would print the raw word
 		// at the user again.
+		const t = messages(locale);
 		for (const id of musclesInCatalog()) {
-			expect(muscleInfo(id), `no glossary entry for "${id}"`).toBeDefined();
+			expect(muscleInfo(id, t), `${locale}: no glossary entry for "${id}"`).toBeDefined();
 		}
 	});
 
-	it('has no entries the catalog never uses', () => {
+	it.each(LOCALES)('has no entries the catalog never uses, in $id', ({ id: locale }) => {
 		// Dead entries are how a glossary starts lying: it would claim the app knows
 		// about a muscle nothing trains.
 		const used = new Set(musclesInCatalog());
-		for (const m of MUSCLES) {
-			expect(used.has(m.id), `"${m.id}" is in the glossary but not in the catalog`).toBe(true);
+		for (const id of Object.keys(messages(locale).muscles.names)) {
+			expect(used.has(id), `${locale}: "${id}" is in the glossary but not in the catalog`).toBe(
+				true
+			);
 		}
 	});
 
 	it('covers the seventeen names this source uses, and no more', () => {
-		expect(MUSCLES).toHaveLength(17);
+		expect(MUSCLE_IDS).toHaveLength(17);
 		expect(musclesInCatalog()).toHaveLength(17);
+		expect([...MUSCLE_IDS].sort()).toEqual(musclesInCatalog());
 	});
 
 	it('never repeats an id', () => {
-		expect(new Set(MUSCLES.map((m) => m.id)).size).toBe(MUSCLES.length);
+		expect(new Set(MUSCLE_IDS).size).toBe(MUSCLE_IDS.length);
 	});
 
-	it('says something real in every field', () => {
-		for (const m of MUSCLES) {
-			expect(m.label.length, m.id).toBeGreaterThan(2);
+	it.each(LOCALES)('says something real in every field, in $id', ({ id: locale }) => {
+		const t = messages(locale);
+		for (const id of MUSCLE_IDS) {
+			const m = t.muscles.names[id];
+			expect(m.label.length, `${locale} ${id}`).toBeGreaterThan(2);
 			// `short` goes in brackets after a name, so it has to stay short.
-			expect(m.short.length, `${m.id} short is too long for a bracket`).toBeLessThanOrEqual(24);
-			expect(m.short, `${m.id} short just repeats the jargon`).not.toBe(m.id);
+			expect(
+				m.short.length,
+				`${locale}: ${id} short is too long for a bracket`
+			).toBeLessThanOrEqual(24);
 			// `where` and `does` are sentences a person could act on.
-			expect(m.where.endsWith('.'), `${m.id} where is not a sentence`).toBe(true);
-			expect(m.does.endsWith('.'), `${m.id} does is not a sentence`).toBe(true);
-			expect(m.where.length, m.id).toBeGreaterThan(20);
-			expect(m.does.length, m.id).toBeGreaterThan(20);
+			expect(m.where.endsWith('.'), `${locale}: ${id} where is not a sentence`).toBe(true);
+			expect(m.does.endsWith('.'), `${locale}: ${id} does is not a sentence`).toBe(true);
+			expect(m.where.length, `${locale} ${id}`).toBeGreaterThan(20);
+			expect(m.does.length, `${locale} ${id}`).toBeGreaterThan(20);
 		}
 	});
 
 	it('formats a name with its hint', () => {
-		expect(muscleWithHint('quadriceps')).toBe('quadriceps (front of thigh)');
-		expect(muscleWithHint('adductors')).toBe('adductors (inner thigh)');
-		expect(muscleLabel('lower back')).toBe('Lower back');
+		expect(muscleWithHint('quadriceps', en)).toBe('quadriceps (front of thigh)');
+		expect(muscleWithHint('adductors', en)).toBe('adductors (inner thigh)');
+		expect(muscleLabel('lower back', en)).toBe('Lower back');
 	});
 
 	it('falls back to the raw id rather than throwing on an unknown muscle', () => {
-		expect(muscleLabel('spleen')).toBe('spleen');
-		expect(muscleWithHint('spleen')).toBe('spleen');
-		expect(muscleInfo('spleen')).toBeUndefined();
+		expect(muscleLabel('spleen', en)).toBe('spleen');
+		expect(muscleWithHint('spleen', en)).toBe('spleen');
+		expect(muscleInfo('spleen', en)).toBeUndefined();
 	});
 
 	it('counts the catalog per muscle, most-trained first', () => {
-		const quads = muscleUsage.find((r) => r.muscle.id === 'quadriceps')!;
+		const quads = muscleUsage.find((r) => r.id === 'quadriceps')!;
 		expect(quads.primary).toBe(
 			catalog.filter((e) => e.primaryMuscles.includes('quadriceps')).length
 		);
@@ -102,15 +117,15 @@ describe('the body map colours what the glossary explains (§4.6)', () => {
 	it('maps every muscle in the glossary to at least one region', () => {
 		// The failure this exists for: adding a muscle to the glossary and forgetting
 		// to map it, which leaves a compendium entry whose figure lights nothing.
-		for (const m of MUSCLES) {
-			expect(mappedMuscles(), `nothing on the figures for ${m.id}`).toContain(m.id);
-			const total = slugsFor([m.id], 'front').length + slugsFor([m.id], 'back').length;
-			expect(total, `${m.id} maps to no region in either view`).toBeGreaterThan(0);
+		for (const id of MUSCLE_IDS) {
+			expect(mappedMuscles(), `nothing on the figures for ${id}`).toContain(id);
+			const total = slugsFor([id], 'front').length + slugsFor([id], 'back').length;
+			expect(total, `${id} maps to no region in either view`).toBeGreaterThan(0);
 		}
 	});
 
 	it('maps nothing the glossary does not explain', () => {
-		const known = new Set(MUSCLES.map((m) => m.id));
+		const known = new Set<string>(MUSCLE_IDS);
 		for (const id of mappedMuscles()) {
 			expect(known.has(id), `the map knows "${id}", which is not a known muscle`).toBe(true);
 		}
@@ -146,13 +161,17 @@ describe('the body map colours what the glossary explains (§4.6)', () => {
 	it('records the three approximations rather than hiding them', () => {
 		// 14 of 17 map exactly. The rest share a region or sit on a neighbour, and
 		// that is written down so nobody later reads it as a bug.
-		expect(Object.keys(APPROXIMATED).sort()).toEqual(['abductors', 'lats', 'middle back']);
-		// Each value completes "On the figure this ___." on the compendium, so a
-		// phrase that does not fit the sentence reads as a typo on screen.
-		for (const [muscle, phrase] of Object.entries(APPROXIMATED)) {
-			expect(`On the figure this ${phrase}.`, muscle).toMatch(
-				/^On the figure this (?:is |shares |sits |uses )/
-			);
+		expect([...APPROXIMATED].sort()).toEqual(['abductors', 'lats', 'middle back']);
+		// Every locale has to explain all three, because the compendium prints the
+		// phrase and an English sentence in a Danish app is worse than none.
+		for (const { id: locale } of LOCALES) {
+			const approximated = messages(locale).muscles.approximated;
+			expect(Object.keys(approximated).sort(), locale).toEqual([...APPROXIMATED].sort());
+			for (const phrase of Object.values(approximated)) {
+				expect(phrase.endsWith('.'), `${locale}: "${phrase}" ends a sentence it is inside`).toBe(
+					false
+				);
+			}
 		}
 		expect(slugsFor(['lats'], 'back')).toEqual(slugsFor(['middle back'], 'back'));
 		expect(slugsFor(['abductors'], 'back')).toEqual(slugsFor(['glutes'], 'back'));

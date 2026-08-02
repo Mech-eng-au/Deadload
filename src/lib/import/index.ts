@@ -32,6 +32,25 @@ export function parseText(text: string, filename?: string): ParsedRoutine {
 }
 
 /** Built-in routines, shipped as files in the wire format (§9). */
+/**
+ * Where a preset is read from, for a language (§16).
+ *
+ * Presets are **files in the import format**, and §9 requires them to go
+ * through the very same parser and resolver as a user's own import so that any
+ * drift between the two fails loudly on a fresh install. A translated preset is
+ * therefore a translated *file*, not a layer of overrides applied afterwards —
+ * so a Danish preset is validated by exactly the same code, and adding a third
+ * language is a directory.
+ *
+ * The English originals are the fallback, and stay the canonical structure:
+ * `tests/presets.test.ts` asserts that every translation names the same
+ * exercises, with the same sets and the same targets, so a translation can
+ * never quietly become a different workout.
+ */
+export function presetPath(file: string, locale: string): string {
+	return locale === 'en' ? `/presets/${file}` : `/presets/${locale}/${file}`;
+}
+
 export const PRESET_FILES = [
 	'hip-flexibility.json',
 	'lower-back-relief.json',

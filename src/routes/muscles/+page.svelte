@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import BodyMap from '$lib/components/BodyMap.svelte';
-	import { muscleUsage } from '$lib/catalog/muscles.js';
-	import { APPROXIMATED } from '$lib/catalog/body-map.js';
+	import { muscleApproximation, muscleUsage } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 
 	/**
 	 * The muscle compendium (docs/SPEC.md §4.6): seventeen words, each with where
@@ -16,33 +16,33 @@
 </script>
 
 <svelte:head>
-	<title>Muscles · Deadload</title>
+	<title>{t.muscles.title} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/catalog/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Catalog</a>
-<h1 class="mt-2 font-display text-2xl font-bold">Muscles</h1>
+<a href="{base}/catalog/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.common.backCatalog}</a>
+<h1 class="mt-2 font-display text-2xl font-bold">{t.muscles.title}</h1>
 <p class="mt-2 mb-5 text-sm text-zinc-400">
-	The catalog names muscles the way an anatomy book does. Here is each one in plain English, and
-	where to find it on yourself. Tap one to see it on the diagram.
+	{t.muscles.intro}
 </p>
 
 <ul class="flex flex-col gap-2 pb-12">
-	{#each muscleUsage as row (row.muscle.id)}
-		{@const isOpen = open === row.muscle.id}
+	{#each muscleUsage as row (row.id)}
+		{@const isOpen = open === row.id}
+		{@const info = t.muscles.names[row.id]}
 		<li class="rounded-2xl border border-zinc-800 bg-zinc-900">
 			<button
-				onclick={() => (open = isOpen ? null : row.muscle.id)}
+				onclick={() => (open = isOpen ? null : row.id)}
 				aria-expanded={isOpen}
 				class="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
 			>
 				<span class="min-w-0 flex-1">
-					<span class="block font-medium">{row.muscle.label}</span>
-					<span class="mt-0.5 block text-sm text-zinc-400">{row.muscle.short}</span>
+					<span class="block font-medium">{info.label}</span>
+					<span class="mt-0.5 block text-sm text-zinc-400">{info.short}</span>
 				</span>
 				<span class="shrink-0 text-right text-xs text-zinc-500 tabular-nums">
-					{row.primary} exercise{row.primary === 1 ? '' : 's'}
+					{t.muscles.trains(row.primary)}
 					{#if row.secondary}
-						<span class="block text-zinc-600">+{row.secondary} assisting</span>
+						<span class="block text-zinc-600">{t.muscles.assisting(row.secondary)}</span>
 					{/if}
 				</span>
 			</button>
@@ -51,16 +51,16 @@
 				<div class="border-t border-zinc-800 px-4 pt-4 pb-4">
 					<!-- No legend: the row is already titled with the muscle, and only one
 						 colour is in play. -->
-					<BodyMap primary={[row.muscle.id]} size="small" legend={false} />
-					{#if APPROXIMATED[row.muscle.id]}
-						<!-- Say where the figure is imprecise rather than let it quietly
-								 mislead: two of these share a region and one sits on a neighbour. -->
-						<p class="mt-3 text-xs text-zinc-500">
-							On the figure this {APPROXIMATED[row.muscle.id]}.
-						</p>
-					{/if}
-					<p class="mt-4 text-sm text-zinc-200">{row.muscle.where}</p>
-					<p class="mt-2 text-sm text-zinc-400">{row.muscle.does}</p>
+					<BodyMap primary={[row.id]} size="small" legend={false} />
+					{#each [muscleApproximation(row.id, t)] as approximation (row.id)}
+						{#if approximation}
+							<!-- Say where the figure is imprecise rather than let it quietly
+									 mislead: two of these share a region and one sits on a neighbour. -->
+							<p class="mt-3 text-xs text-zinc-500">{t.muscles.onTheFigure(approximation)}</p>
+						{/if}
+					{/each}
+					<p class="mt-4 text-sm text-zinc-200">{info.where}</p>
+					<p class="mt-2 text-sm text-zinc-400">{info.does}</p>
 					{#if row.primary > 0}
 						<!-- Deliberately no count in the link. The counts above are over the
 							 whole catalog, because the page explains words and the words do not
@@ -68,14 +68,14 @@
 							 you own, so promising a number here would over-promise by however
 							 many of them need equipment. -->
 						<a
-							href="{base}/catalog/?muscle={encodeURIComponent(row.muscle.id)}"
+							href="{base}/catalog/?muscle={encodeURIComponent(row.id)}"
 							class="mt-4 inline-block min-h-11 text-sm text-zinc-300 underline"
 						>
-							Show the exercises that train it →
+							{t.muscles.showExercises}
 						</a>
 					{:else}
 						<p class="mt-4 text-xs text-zinc-600">
-							Nothing in this catalog trains it directly — it only ever assists.
+							{t.muscles.onlyAssists}
 						</p>
 					{/if}
 				</div>

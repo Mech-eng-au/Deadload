@@ -18,6 +18,8 @@
 		type ExerciseProgress
 	} from '$lib/stats/compute.js';
 	import { formatKg } from '$lib/catalog/load.js';
+	import { muscleLabel } from '$lib/catalog/muscles.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Session } from '$lib/types.js';
 
 	let sessions = $state<Session[]>([]);
@@ -62,10 +64,7 @@
 		return 'bg-zinc-600';
 	}
 
-	function minutes(seconds: number): string {
-		if (seconds < 60) return `${seconds} s`;
-		return `${Math.round(seconds / 60)} min`;
-	}
+	const minutes = (seconds: number) => t.stats.duration(seconds);
 
 	/** Sparkline over an exercise's best set per day. */
 	function spark(row: ExerciseProgress): string {
@@ -78,23 +77,23 @@
 </script>
 
 <svelte:head>
-	<title>Statistics · Deadload</title>
+	<title>{t.stats.title} · Deadload</title>
 </svelte:head>
 
 <section class="flex flex-col gap-6 pt-2 pb-12">
-	<h1 class="font-display text-3xl font-bold">Statistics</h1>
+	<h1 class="font-display text-3xl font-bold">{t.stats.title}</h1>
 
 	{#if !loaded}
-		<p class="text-zinc-500">Loading…</p>
+		<p class="text-zinc-500">{t.common.loading}</p>
 	{:else if summary.sessions === 0}
 		<div class="rounded-2xl border border-dashed border-zinc-800 p-8 text-center">
-			<p class="text-zinc-300">Nothing logged yet.</p>
-			<p class="mt-1 text-sm text-zinc-500">Finish a session and the numbers start here.</p>
+			<p class="text-zinc-300">{t.stats.empty}</p>
+			<p class="mt-1 text-sm text-zinc-500">{t.stats.emptyHint}</p>
 			<a
 				href="{base}/" data-sveltekit-replacestate
 				class="mt-5 inline-block min-h-12 rounded-xl bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-900"
 			>
-				Go to routines
+				{t.stats.goToRoutines}
 			</a>
 		</div>
 	{:else}
@@ -102,29 +101,29 @@
 		<div class="grid grid-cols-2 gap-3">
 			<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 				<div class="font-display text-4xl font-bold tabular-nums">{summary.sessions}</div>
-				<div class="mt-1 text-xs text-zinc-400">sessions</div>
+				<div class="mt-1 text-xs text-zinc-400">{t.stats.sessions}</div>
 			</div>
 			<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 				<div class="font-display text-4xl font-bold tabular-nums">{summary.sets}</div>
-				<div class="mt-1 text-xs text-zinc-400">sets logged</div>
+				<div class="mt-1 text-xs text-zinc-400">{t.stats.setsLogged}</div>
 			</div>
 			<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 				<div class="font-display text-4xl font-bold tabular-nums">{streak}</div>
 				<div class="mt-1 text-xs text-zinc-400">
-					day streak{best > streak ? ` · best ${best}` : ''}
+					{t.stats.dayStreak}{best > streak ? t.stats.bestStreak(best) : ''}
 				</div>
 			</div>
 			<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 				<div class="font-display text-4xl font-bold tabular-nums">{summary.reps}</div>
 				<div class="mt-1 text-xs text-zinc-400">
-					reps{summary.seconds ? ` · ${minutes(summary.seconds)} held` : ''}
+					{t.stats.reps}{summary.seconds ? t.stats.heldFor(minutes(summary.seconds)) : ''}
 				</div>
 			</div>
 		</div>
 
 		<!-- Sixteen weeks of daily activity, shaded by how much was logged. -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Activity</h2>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.stats.activity}</h2>
 			<div class="mt-3 flex gap-[3px] overflow-x-auto pb-1">
 				{#each calendar as week (week[0].key)}
 					<div class="flex shrink-0 flex-col gap-[3px]">
@@ -133,21 +132,21 @@
 								class="h-3.5 w-3.5 rounded-[3px] {day.future ? 'bg-transparent' : shade(day.sets)}"
 								title={day.future
 									? ''
-									: `${day.date.toLocaleDateString()} — ${day.sets} set${day.sets === 1 ? '' : 's'}`}
+									: t.stats.daySets(t.units.date(day.date, {}), day.sets)}
 							></div>
 						{/each}
 					</div>
 				{/each}
 			</div>
 			<div class="mt-2 flex items-center justify-between text-[10px] text-zinc-600">
-				<span>16 weeks ago</span>
+				<span>{t.stats.weeksAgo(16)}</span>
 				<span class="flex items-center gap-1">
-					less
+					{t.stats.less}
 					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-900"></span>
 					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-600"></span>
 					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-400"></span>
 					<span class="h-2.5 w-2.5 rounded-[2px] bg-zinc-100"></span>
-					more
+					{t.stats.more}
 				</span>
 			</div>
 		</section>
@@ -155,7 +154,7 @@
 		<!-- Sessions per week, last 12 -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-				Sessions per week
+				{t.stats.sessionsPerWeek}
 			</h2>
 			<div class="mt-4 flex h-32 items-end gap-1">
 				{#each weeks as week (week.label)}
@@ -172,15 +171,15 @@
 			</div>
 			<div class="mt-2 flex justify-between text-[10px] text-zinc-600">
 				<span>{weeks[0]?.label}</span>
-				<span>this week</span>
+				<span>{t.stats.thisWeek}</span>
 			</div>
 		</section>
 
 		<!-- Recent sessions, with the way through to the full log. -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 			<div class="flex items-baseline justify-between">
-				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Recent sessions</h2>
-				<a href="{base}/history/" data-sveltekit-replacestate class="text-sm text-zinc-400 underline">See all</a>
+				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.stats.recentSessions}</h2>
+				<a href="{base}/history/" data-sveltekit-replacestate class="text-sm text-zinc-400 underline">{t.stats.seeAll}</a>
 			</div>
 			<ul class="mt-3 flex flex-col gap-2 text-sm">
 				{#each recent as row (row.id)}
@@ -188,7 +187,7 @@
 						<a href="{base}/history/{row.id}/" class="flex justify-between gap-3">
 							<span class="min-w-0 truncate text-zinc-300">{row.routineName}</span>
 							<span class="shrink-0 text-zinc-500 tabular-nums">
-								{new Date(row.startedAt).toLocaleDateString()} · {row.sets} sets
+								{t.stats.sessionLine(t.units.date(row.startedAt, {}), row.sets)}
 							</span>
 						</a>
 					</li>
@@ -199,19 +198,17 @@
 		<!-- Volume by muscle group -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
 			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-				Sets per muscle group
+				{t.stats.setsPerMuscle}
 			</h2>
 			<ul class="mt-3 flex flex-col gap-2">
 				{#each muscles.slice(0, 10) as m (m.muscle)}
 					<li>
 						<div class="flex justify-between text-sm">
-							<span class="text-zinc-300 capitalize">{m.muscle}</span>
+							<span class="text-zinc-300 capitalize">{muscleLabel(m.muscle, t)}</span>
 							<!-- kg-reps only where there are some (§10.1): "0 kg" beside a
 								 muscle trained with bodyweight work reads as a result. -->
 							<span class="text-zinc-500 tabular-nums">
-								{m.sets} set{m.sets === 1 ? '' : 's'}{m.reps ? ` · ${m.reps} reps` : ''}{m.kgReps
-									? ` · ${Math.round(m.kgReps)} kg·reps`
-									: ''}
+								{t.stats.muscleLine(m.sets, m.reps, m.kgReps)}
 							</span>
 						</div>
 						<div class="mt-1 h-2 rounded-full bg-zinc-800">
@@ -225,7 +222,7 @@
 			</ul>
 			{#if muscles.length > 10}
 				<p class="mt-3 text-xs text-zinc-600">
-					Showing the top 10 of {muscles.length}.
+					{t.stats.topTen(muscles.length)}
 				</p>
 			{/if}
 		</section>
@@ -235,10 +232,9 @@
 				 with its own axis, never stacked on the rep chart — 240 kg·reps and
 				 24 reps are not comparable quantities. -->
 			<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Loaded work</h2>
+				<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.stats.loadedWork}</h2>
 				<p class="mt-1 text-xs text-zinc-500">
-					Kilogram-reps per week, from sets done with a dumbbell or kettlebell. Counted apart from
-					everything above, because there is no unit in which a plank and a 10 kg row add up.
+					{t.stats.loadedWorkIntro}
 				</p>
 				<div class="mt-3 flex h-28 items-end gap-1">
 					{#each loadWeeks as w (w.label)}
@@ -246,7 +242,7 @@
 							<div
 								class="w-full rounded-t bg-amber-300/80"
 								style="height: {(w.kgReps / peakKgReps) * 100}%"
-								title="{w.label}: {Math.round(w.kgReps)} kg·reps, {w.sets} loaded sets"
+								title={t.stats.loadedWeekTitle(w.label, w.kgReps, w.sets)}
 							></div>
 						</div>
 					{/each}
@@ -258,10 +254,11 @@
 				</div>
 				{#each [loadWeeks[loadWeeks.length - 1]] as current (current.label)}
 					<p class="mt-3 text-xs text-zinc-500">
-						This week: {Math.round(current.kgReps)} kg·reps over {current.sets} loaded set{current.sets ===
-						1
-							? ''
-							: 's'}{current.bestKg ? `, heaviest ${formatKg(current.bestKg)}` : ''}.
+						{t.stats.thisWeekLoaded(
+							current.kgReps,
+							current.sets,
+							current.bestKg ? formatKg(current.bestKg, t) : null
+						)}
 					</p>
 				{/each}
 			</section>
@@ -269,7 +266,7 @@
 
 		<!-- Per-exercise progression -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">By exercise</h2>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.stats.byExercise}</h2>
 			<ul class="mt-3 flex flex-col gap-2">
 				{#each progress.slice(0, 12) as row (row.exerciseId)}
 					{@const exercise = getExercise(row.exerciseId)}
@@ -290,9 +287,11 @@
 									{exercise?.name ?? row.exerciseId}
 								</span>
 								<span class="text-xs text-zinc-500">
-									{row.sets} sets · best {row.bestReps || `${row.bestSeconds} s`}{row.bestKg
-										? ` at ${formatKg(row.bestKg)}`
-										: ''}
+									{t.stats.exerciseLine(
+										row.sets,
+										row.bestReps ? t.units.num(row.bestReps) : t.units.seconds(row.bestSeconds),
+										row.bestKg ? formatKg(row.bestKg, t) : null
+									)}
 								</span>
 							</span>
 							{#if spark(row)}
@@ -311,27 +310,33 @@
 
 						{#if openExercise === row.exerciseId}
 							<dl class="mt-3 grid grid-cols-2 gap-2 text-xs text-zinc-400">
-								<div><dt class="inline">Total reps:</dt> <dd class="inline">{row.totalReps}</dd></div>
 								<div>
-									<dt class="inline">Time held:</dt>
+									<dt class="inline">{t.stats.totalReps}</dt>
+									<dd class="inline">{row.totalReps}</dd>
+								</div>
+								<div>
+									<dt class="inline">{t.stats.timeHeld}</dt>
 									<dd class="inline">{minutes(row.totalSeconds)}</dd>
 								</div>
 								{#if row.bestKg}
 									<!-- Load belongs here above all: one exercise, so the unit means
 										 the same thing at every point on the series (§10.1). -->
 									<div>
-										<dt class="inline">Heaviest:</dt>
-										<dd class="inline">{formatKg(row.bestKg)}</dd>
+										<dt class="inline">{t.stats.heaviest}</dt>
+										<dd class="inline">{formatKg(row.bestKg, t)}</dd>
 									</div>
 									<div>
-										<dt class="inline">Kg·reps:</dt>
+										<dt class="inline">{t.stats.kgReps}</dt>
 										<dd class="inline">{Math.round(row.kgReps)}</dd>
 									</div>
 								{/if}
-								<div><dt class="inline">Sessions:</dt> <dd class="inline">{row.history.length}</dd></div>
 								<div>
-									<dt class="inline">Last:</dt>
-									<dd class="inline">{new Date(row.lastPerformed).toLocaleDateString()}</dd>
+									<dt class="inline">{t.stats.sessionCount}</dt>
+									<dd class="inline">{row.history.length}</dd>
+								</div>
+								<div>
+									<dt class="inline">{t.stats.last}</dt>
+									<dd class="inline">{t.units.date(row.lastPerformed, {})}</dd>
 								</div>
 							</dl>
 						{/if}
@@ -342,25 +347,25 @@
 
 		<!-- Routine usage -->
 		<section class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Routines used</h2>
+			<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">{t.stats.routinesUsed}</h2>
 			<ul class="mt-3 flex flex-col gap-2 text-sm">
 				{#each routines as r (r.routineId)}
 					<li class="flex justify-between">
 						<span class="truncate text-zinc-300">{r.routineName}</span>
 						<span class="shrink-0 text-zinc-500 tabular-nums">
-							{r.sessions}× · {new Date(r.lastUsed).toLocaleDateString()}
+							{t.stats.timesUsed(r.sessions)} · {t.units.date(r.lastUsed, {})}
 						</span>
 					</li>
 				{/each}
 			</ul>
 			<p class="mt-3 text-xs text-zinc-600">
-				Anything missing from this list has never been used.
+				{t.stats.neverUsed}
 			</p>
 		</section>
 
 		{#if summary.skipped > 0}
 			<p class="text-xs text-zinc-600">
-				{summary.skipped} set{summary.skipped === 1 ? '' : 's'} skipped and recorded as such.
+				{t.stats.skipped(summary.skipped)}
 			</p>
 		{/if}
 	{/if}

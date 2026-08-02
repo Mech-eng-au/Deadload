@@ -1,4 +1,5 @@
 import type { EquipmentId } from '../types.js';
+import type { Messages } from '../i18n/index.js';
 import { availableCatalog, equipmentLabel, GATED_EQUIPMENT } from '../catalog/equipment.js';
 
 /**
@@ -14,15 +15,23 @@ import { availableCatalog, equipmentLabel, GATED_EQUIPMENT } from '../catalog/eq
  */
 
 /** "dumbbells, jumping rope" — the owned gated types, in Settings order. */
-export function equipmentSentence(owned: EquipmentId[]): string {
-	const labels = GATED_EQUIPMENT.filter((t) => owned.includes(t.id)).map((t) =>
-		t.label.toLowerCase()
+export function equipmentSentence(owned: EquipmentId[], t: Messages): string {
+	const labels = GATED_EQUIPMENT.filter((type) => owned.includes(type.id)).map((type) =>
+		equipmentLabel(type.id, t).toLowerCase()
 	);
-	if (labels.length === 0) return 'none — floor, wall and chair only';
+	if (labels.length === 0) return t.equipment.noneOwned;
 	return labels.join(', ');
 }
 
-export function buildPrompt(owned: EquipmentId[]): string {
+/**
+ * The prompt stays **English whatever the interface language is** (§16): it is
+ * an instruction to a model, its JSON keys are English, and the exercise ids it
+ * has to quote are English. What is generated per language is the one line
+ * telling the model which language to write the routine's prose in — because
+ * the name, the description and the notes end up as the user's own data, on
+ * their screen, in their language.
+ */
+export function buildPrompt(owned: EquipmentId[], t: Messages, language: string): string {
 	return `You are writing a bodyweight training routine that will be imported into an app.
 
 Use only exercises from the attached catalog file, and reference them by their exact \`id\` value. Do not invent exercises. If the routine needs a movement that is not in the catalog, pick the closest available one and note the substitution in the item's \`notes\`.
@@ -50,9 +59,11 @@ Every exercise in the catalog file lists what it needs in \`equipment\`. The fil
 
 For an exercise whose \`equipment\` includes \`dumbbells\` or \`kettlebell\`, you may set \`load_kg\` to the mass of the implement in kilograms. Set it on nothing else: there is no load to record for a band, and a weighted pull-up is not supported because the real load includes body weight, which this app does not track.
 
+${t.importer.promptLanguageLine(language)}
+
 Goal: [describe the goal here]
 Target duration: [minutes]
-Equipment available: ${equipmentSentence(owned)}
+Equipment available: ${equipmentSentence(owned, t)}
 Constraints: [injuries, available space, and so on]`;
 }
 
@@ -84,6 +95,6 @@ export function llmCatalogJson(owned: EquipmentId[]): string {
 }
 
 /** Human-readable equipment list for the chip on the import screen. */
-export function equipmentChipLabels(owned: EquipmentId[]): string[] {
-	return owned.map(equipmentLabel);
+export function equipmentChipLabels(owned: EquipmentId[], t: Messages): string[] {
+	return owned.map((id) => equipmentLabel(id, t));
 }

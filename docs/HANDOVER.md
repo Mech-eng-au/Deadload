@@ -39,10 +39,11 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Muscles | Plain English for all seventeen catalog muscle names, front/back body figures (MIT) with each muscle filled in on a grey-to-red ramp, and a `/muscles/` compendium linking through to the exercises for each. Catalog and routine builder only, never the player (added 2026-07-30) |
 | Statistics | Weekly sessions, activity calendar, muscle volume, per-exercise progression, streaks, routine usage, loaded work in kg-reps |
 | History | Browse past sessions, inspect every logged set, correct a mislogged one, delete. Corrections are marked as such (added 2026-07-30) |
-| Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29) |
+| Speech | Announces the next exercise as rest begins; native TTS via Capacitor on Android, Web Speech in a browser; own Settings switch (added 2026-07-29). **English whatever the interface language is** — see §16 of the spec |
+| Language | English and Danish, chosen in Settings or followed from the phone. The interface, the muscle glossary, the equipment table, the nine presets and the printable sheet; the exercise catalog stays English on purpose (added 2026-08-02) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **288 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **326 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -139,6 +140,9 @@ necessarily present in the WebView*, and the only place to find out is the devic
 **The spoken language is fixed to English, not `navigator.language`.** Everything the app says is
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
 English words. The locale says what interface the user wants, not what can pronounce this text.
+**Still true with the interface in Danish** (2026-08-02, SPEC §16): the interface language and the
+spoken language are separate questions, and they have different answers because the exercise names
+are English. `tests/i18n.test.ts` fails if `speech.ts` reads `navigator.language` again.
 
 **A backward link replaces, it does not push.** Every `←`, every sideways hop and every `goto`
 after a commit uses `replaceState`; only drilling into something pushes. Adding a plain
@@ -300,6 +304,36 @@ things are easy to undo by accident:
   resolution the same sheet is 900 kB instead of 83 kB. And they go in as JPEG because that is the one
   format a PDF stores verbatim — the catalog's WebP would have to be decoded either way.
 
+**`Settings.language: undefined` and `Settings.language: 'en'` mean different things**, added
+2026-08-02 (SPEC §16.3). This is `ownedEquipment` above wearing a different hat, and it fails the
+same way: `undefined` is "never asked" and follows the phone, an explicit value is an answer and
+outranks it. `settings.language ?? deviceLanguage()` collapses the two and puts a Dane who chose
+English back into Danish on the next launch, silently. Read it through `resolveLocale()` and nowhere
+else. There is a test named after this one too.
+
+**The catalog stays English, and the seam for changing that is deliberately empty.** 166 exercise
+names, 577 instruction steps and 216 aliases are generated data, not copy we wrote — and translating
+them would break the import resolver's inputs (§6.3), invalidate the LLM prompt's ids (§14), and make
+the "everything spoken is English" rule half-true. `src/lib/catalog/names.ts` is where a translation
+goes if that is ever wanted; read the note at the top of it first, because it is a decision about
+speech and about the importer, not only about words on a screen.
+
+**A tab's icon is chosen by a key, not by its label.** `+layout.svelte` used to pick the icon with
+`tab.label === 'Routines'`. Translating the four labels would have given every tab the Settings icon,
+in silence, on a screen that is on every page of the app. The lesson generalises: **anything that
+branches on a user-visible string is a bug waiting for a translator.**
+
+**A translated preset is a translated file, not a layer of overrides.** `static/presets/da/*.json`
+are complete copies in the import format, so §9's rule that presets go through the import path holds
+for every language. `tests/presets-i18n.test.ts` asserts that a translation names the same exercises
+with the same sets and targets — the words may change and the workout may not. And because a preset
+is *copied into IndexedDB* when it is added, a routine keeps the language it was added in; switching
+afterwards does not rewrite it, which is the same principle as a gate never editing a routine the
+user already has.
+
+**The CSV, the backup and the import format are never localised.** Danish writes `2,5` for two and a
+half kilos, which is a column break in a comma-separated file. There is a test.
+
 **A streak that ended yesterday still counts.** Otherwise it reads as broken before the day's
 session has happened.
 
@@ -328,9 +362,11 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 288 unit tests
+npm test           # 326 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
+npm run build:fonts    # re-cuts the PDF's font subsets; run by hand, output committed
+npm run build:catalog  # same arrangement, and the older of the two
 ```
 
 Browser suites live in the session scratchpad rather than the repo, and are worth recreating if
@@ -346,6 +382,11 @@ that pdf.js in Node parses the file fine and draws no glyphs at all, so a blank 
 nothing — the last one seeded a finished session straight into
 IndexedDB rather than performing a whole workout to reach the screen under test, which is worth
 copying for anything that only cares about a logged session.
+
+The 2026-08-02 language round added a ninth: **both locales driven side by side at 360 × 808**, which
+is the only way the two layout defects it found were ever going to surface. Danish is what exposed
+them; both were already latent in English. The PDF was rendered with MuPDF in Danish as well, from a
+real preset rather than a fixture, which is how "æøå prints" became evidence rather than a claim.
 
 Two techniques worth reusing:
 
@@ -371,6 +412,13 @@ free-exercise-db simply does not contain most of the intermediate rungs. Writing
 afternoon, not a curation pass. What took the thinking was the invariant — a swap must not change
 the *number* of steps, or the player loses its place on resume, which is why swaps live on the
 session and `perSide` only follows the new exercise once the session is over.
+
+**Danish exercise names, if they are wanted.** The interface is Danish and the exercise names are not,
+which is a seam a user can see: the sheet says *Kræver: stol eller bænk* above *Bodyweight Squat*.
+`src/lib/catalog/names.ts` takes 166 short names and nothing else has to change — but read SPEC §16.1
+first, because it also decides whether the app starts speaking Danish, and that pulls in a voice that
+may not be installed. Instructions are a separate and much larger question: 577 steps, ~14,400 words,
+and no test that can check a translation is any good.
 
 **Dragging an exercise between sections.** The drag added 2026-07-30 reorders within one section
 only, exactly as far as the arrow buttons it replaced could reach. Moving an exercise from Warm-up

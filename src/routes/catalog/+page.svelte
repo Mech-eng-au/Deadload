@@ -7,6 +7,7 @@
 	import { availableCatalog, equipmentLabel, ownedEquipment } from '$lib/catalog/equipment.js';
 	import { muscleInfo, muscleLabel } from '$lib/catalog/muscles.js';
 	import { getSettings } from '$lib/db/settings.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Category, Settings } from '$lib/types.js';
 
 	let query = $state('');
@@ -46,13 +47,13 @@
 </script>
 
 <svelte:head>
-	<title>Catalog · Deadload</title>
+	<title>{t.catalog.title} · Deadload</title>
 </svelte:head>
 
 <div class="flex flex-col gap-4">
 	<input
 		type="search"
-		placeholder="Search {available.length} exercises…"
+		placeholder={t.catalog.search(available.length)}
 		bind:value={query}
 		class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-base placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
 	/>
@@ -65,7 +66,7 @@
 					? 'bg-zinc-100 font-medium text-zinc-900'
 					: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}"
 			>
-				{c}
+				{c === 'all' ? t.catalog.all : t.catalog.categories[c as Category]}
 			</button>
 		{/each}
 	</div>
@@ -73,20 +74,20 @@
 	{#if muscle}
 		<div class="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3">
 			<p class="min-w-0 text-sm">
-				<span class="font-medium">{muscleLabel(muscle)}</span>
-				<span class="text-zinc-500"> — {muscleInfo(muscle)?.short ?? ''}</span>
+				<span class="font-medium">{muscleLabel(muscle, t)}</span>
+				<span class="text-zinc-500"> — {muscleInfo(muscle, t)?.short ?? ''}</span>
 			</p>
 			<a href="{base}/catalog/" data-sveltekit-replacestate class="shrink-0 text-xs text-zinc-400 underline">
-				Clear
+				{t.common.clear}
 			</a>
 		</div>
 	{/if}
 
 	<p class="text-xs text-zinc-500">
-		{filtered.length} shown
+		{t.catalog.shown(filtered.length)}
 		{#if hidden > 0}
 			· <a href="{base}/settings/" data-sveltekit-replacestate class="underline">
-				{hidden} need equipment you have not ticked
+				{t.catalog.needEquipment(hidden)}
 			</a>
 		{/if}
 	</p>
@@ -109,12 +110,12 @@
 					<div class="min-w-0">
 						<div class="truncate font-medium">{e.name}</div>
 						<div class="mt-0.5 flex flex-wrap gap-2 text-xs text-zinc-400">
-							<span>{e.category}</span>
+							<span>{t.catalog.categories[e.category]}</span>
 							<span>·</span>
-							<span>{e.level}</span>
-							{#if e.unilateral}<span>·</span><span>per side</span>{/if}
+							<span>{t.catalog.levels[e.level]}</span>
+							{#if e.unilateral}<span>·</span><span>{t.units.perSide}</span>{/if}
 							{#each e.equipment as id (id)}
-								<span>·</span><span class="text-zinc-500">{equipmentLabel(id)}</span>
+								<span>·</span><span class="text-zinc-500">{equipmentLabel(id, t)}</span>
 							{/each}
 						</div>
 					</div>
@@ -124,15 +125,15 @@
 	</ul>
 
 	<a href="{base}/muscles/" class="pb-4 text-center text-sm text-zinc-500 underline">
-		What all these muscle names mean
+		{t.muscles.whatTheyMean}
 	</a>
 
 	{#if filtered.length === 0}
 		<p class="py-8 text-center text-zinc-500">
-			Nothing matches. Try a different name — or clear the category filter.
+			{t.catalog.nothingMatches}
 			{#if hidden > 0}
 				<a href="{base}/settings/" data-sveltekit-replacestate class="underline">
-					{hidden} more are hidden until you tick the equipment.
+					{t.catalog.moreHidden(hidden)}
 				</a>
 			{/if}
 		</p>

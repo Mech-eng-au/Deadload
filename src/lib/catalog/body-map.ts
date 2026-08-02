@@ -73,12 +73,10 @@ export function mappedMuscles(): string[] {
 }
 
 /**
- * The muscles whose region is shared with another, or approximated. Each value
- * completes the sentence "On the figure this ___." — the compendium renders it
- * that way, so a phrase that does not fit reads as a typo.
+ * The muscles whose region on the figure is shared with another, or
+ * approximated. The wording that explains each one is a locale's job — see
+ * `t.muscles.approximated`, whose values complete the sentence "On the figure
+ * this ___." What stays here is *which* three, because that is a fact about the
+ * figure rather than about English.
  */
-export const APPROXIMATED: Record<string, string> = {
-	lats: 'shares the upper-back region with the middle back',
-	'middle back': 'shares the upper-back region with the lats',
-	abductors: 'is shown on the glutes, where gluteus medius actually sits'
-};
+export const APPROXIMATED: string[] = ['lats', 'middle back', 'abductors'];

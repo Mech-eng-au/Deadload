@@ -14,6 +14,7 @@
 	import { finishedTotals } from '$lib/stats/compute.js';
 	import NumberWheel from '$lib/components/NumberWheel.svelte';
 	import { pushBackGuard } from '$lib/nav/back.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Routine, Session } from '$lib/types.js';
 
 	/** Frames alternate this slowly when "playing" — fast enough to read as one
@@ -220,7 +221,7 @@
 		class="sticky top-0 z-10 -mx-4 bg-zinc-950 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2"
 	>
 		<div class="flex items-center justify-between">
-			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">← Leave</button>
+			<button onclick={() => (confirmLeave = true)} class="text-sm text-zinc-400">{t.session.leave}</button>
 			<span class="text-sm text-zinc-500 tabular-nums">
 				{(player?.stepIndex ?? 0) + 1} / {player?.steps.length ?? 0}
 			</span>
@@ -241,7 +242,7 @@
 		<button
 			onclick={onImageTap}
 			class="block w-full"
-			aria-label="Swap photo, double tap to play"
+			aria-label={t.exercise.swapPhoto}
 		>
 			<img
 				src="{base}{exercise.media[frame].path}"
@@ -251,41 +252,59 @@
 				class="max-h-[30dvh] w-full rounded-2xl bg-white object-cover"
 			/>
 		</button>
-		{#if exercise.media.length > 1}
-			<span
-				class="pointer-events-none absolute right-3 bottom-3 rounded-full px-3 py-1 text-xs {playing
-					? 'bg-zinc-100 font-medium text-zinc-900'
-					: 'bg-zinc-950/80 text-zinc-200'}"
-			>
-				{playing ? 'playing · double tap to stop' : `${frame + 1}/${exercise.media.length} · double tap to play`}
-			</span>
-		{/if}
-		<!-- Progression ladder (§4.1): one rung down or up the same movement, for
-			 the rest of this exercise. Over the photo because that height is
-			 already paid for — a row of its own would push the countdown back
-			 under the fold, which is the thing §7 just bought. -->
-		{#if easier || harder}
-			<div class="absolute bottom-3 left-3 flex gap-2">
-				{#if easier}
-					<button
-						onclick={() => player?.swapTo(easier)}
-						aria-label="Easier: {variantName(easier)}"
-						class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
-					>
-						↓ Easier
-					</button>
-				{/if}
-				{#if harder}
-					<button
-						onclick={() => player?.swapTo(harder)}
-						aria-label="Harder: {variantName(harder)}"
-						class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs text-zinc-200"
-					>
-						↑ Harder
-					</button>
-				{/if}
-			</div>
-		{/if}
+		<!--
+			The two overlays share **one row** rather than being pinned to opposite
+			corners, which is what they used to be.
+
+			Absolute bottom-left and bottom-right cannot both be right: the moment
+			the two are wider than the photo they slide under each other, and the
+			frame counter is the one that loses because it is drawn first. English
+			already grazed it — `↑ Harder` touching `1/2 · double tap to play` at
+			360 dp — and Danish, where the same hint is `dobbelttryk for at afspille`,
+			overlapped it outright. Found in a screenshot, exactly as §3 says.
+
+			As one flex row the two can never overlap: the ladder pills keep their
+			width, and the counter, which is a hint rather than a control, is what
+			gives way and truncates.
+
+			Progression ladder (§4.1): one rung down or up the same movement, for the
+			rest of this exercise. Over the photo because that height is already paid
+			for — a row of its own would push the countdown back under the fold,
+			which is the thing §7 just bought.
+		-->
+		<div class="pointer-events-none absolute inset-x-3 bottom-3 flex items-end gap-2">
+			{#if easier || harder}
+				<div class="pointer-events-auto flex shrink-0 gap-2">
+					{#if easier}
+						<button
+							onclick={() => player?.swapTo(easier)}
+							aria-label={t.session.easierTo(variantName(easier))}
+							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs whitespace-nowrap text-zinc-200"
+						>
+							{t.session.easier}
+						</button>
+					{/if}
+					{#if harder}
+						<button
+							onclick={() => player?.swapTo(harder)}
+							aria-label={t.session.harderTo(variantName(harder))}
+							class="flex min-h-11 items-center rounded-full bg-zinc-950/80 px-3 text-xs whitespace-nowrap text-zinc-200"
+						>
+							{t.session.harder}
+						</button>
+					{/if}
+				</div>
+			{/if}
+			{#if exercise.media.length > 1}
+				<span
+					class="ml-auto min-w-0 truncate rounded-full px-3 py-1 text-xs {playing
+						? 'bg-zinc-100 font-medium text-zinc-900'
+						: 'bg-zinc-950/80 text-zinc-200'}"
+				>
+					{playing ? t.exercise.playing : t.exercise.frameOf(frame + 1, exercise.media.length)}
+				</span>
+			{/if}
+		</div>
 	</div>
 	{/if}
 {/snippet}
@@ -297,14 +316,14 @@
 			<p class="text-xs tracking-wide text-zinc-500 uppercase">{step.blockLabel}</p>
 		{/if}
 		<h1 class="font-display text-2xl font-bold">{exercise.name}</h1>
-		<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step)}</p>
+		<p class="mt-1 font-display text-xl text-zinc-300">{describeStep(step, t)}</p>
 		{#if lastTime}
 			<!-- What you did for this exercise last time, side matched. The set
 				 you are on now is emphasised. Loads read "12 × 10 kg, 11 × 10": the
 				 unit once, and again only when the weight moved (§4.5). -->
-			{@const formatted = formatSetList(lastTime.sets)}
+			{@const formatted = formatSetList(lastTime.sets, t)}
 			<p class="mt-2 text-sm text-zinc-500">
-				Last time, {formatWhen(lastTime.performedAt)}:
+				{t.session.lastTime(formatWhen(lastTime.performedAt, t))}
 				{#each lastTime.sets as entry, i (entry.setIndex + '-' + i)}<span
 						class={entry.setIndex === step.setIndex ? 'font-semibold text-zinc-200' : ''}
 						>{formatted[i]}</span
@@ -332,14 +351,14 @@
 {/snippet}
 
 <svelte:head>
-	<title>{player?.session.routineName ?? 'Session'} · Deadload</title>
+	<title>{player?.session.routineName ?? t.session.fallbackTitle} · Deadload</title>
 </svelte:head>
 
 {#if !loaded}
-	<p class="mt-8 text-zinc-500">Loading…</p>
+	<p class="mt-8 text-zinc-500">{t.common.loading}</p>
 {:else if missing || !player}
-	<p class="mt-8 text-zinc-300">That session is no longer here.</p>
-	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
+	<p class="mt-8 text-zinc-300">{t.session.gone}</p>
+	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">{t.common.backToRoutines}</a>
 {:else if player.phase === 'ready'}
 	<!-- The layout hands the player a bare screen (no header), so every phase
 		 below pads itself clear of the status bar. -->
@@ -347,30 +366,27 @@
 		class="flex min-h-[70dvh] flex-col justify-between pt-[max(env(safe-area-inset-top),1rem)]"
 	>
 		<div>
-			<button onclick={leave} class="text-sm text-zinc-400">← Leave</button>
+			<button onclick={leave} class="text-sm text-zinc-400">{t.session.leave}</button>
 			<h1 class="mt-4 font-display text-3xl font-bold">{player.session.routineName}</h1>
 			<p class="mt-2 text-zinc-400">
-				{player.steps.length} sets across {player.routine.blocks.reduce(
-					(n, b) => n + b.items.length,
-					0
-				)} exercises.
+				{t.session.setsAcross(
+					player.steps.length,
+					player.routine.blocks.reduce((n, b) => n + b.items.length, 0)
+				)}
 			</p>
-			<p class="mt-6 text-sm text-zinc-500">
-				The screen stays awake for the whole session, and the rest timer beeps. Press start with the
-				volume up.
-			</p>
+			<p class="mt-6 text-sm text-zinc-500">{t.session.stayAwake}</p>
 		</div>
 		<button
 			onclick={start}
 			class="mt-10 min-h-20 w-full rounded-2xl bg-zinc-100 py-6 font-display text-2xl font-bold text-zinc-900"
 		>
-			Start
+			{t.session.start}
 		</button>
 	</section>
 {:else if player.phase === 'finished'}
 	<section class="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),1rem)]">
 		<div>
-			<h1 class="font-display text-3xl font-bold">Done.</h1>
+			<h1 class="font-display text-3xl font-bold">{t.session.finished}</h1>
 			<p class="mt-2 text-zinc-400">{player.session.routineName}</p>
 		</div>
 
@@ -378,7 +394,7 @@
 			 numbers rather than a sentence about them. -->
 		{#if totals}
 			<div class="grid grid-cols-3 rounded-2xl border border-zinc-800 bg-zinc-900 py-5">
-				{#each [{ label: 'Sets', value: totals.sets }, { label: 'Exercises', value: totals.exercises }, { label: 'Minutes', value: totals.minutes }] as stat (stat.label)}
+				{#each [{ label: t.session.totals.sets, value: totals.sets }, { label: t.session.totals.exercises, value: totals.exercises }, { label: t.session.totals.minutes, value: totals.minutes }] as stat (stat.label)}
 					<div class="border-zinc-800 text-center not-last:border-r">
 						<div class="font-display text-4xl font-bold tabular-nums">{stat.value}</div>
 						<div class="mt-1 text-xs tracking-wide text-zinc-500 uppercase">{stat.label}</div>
@@ -391,7 +407,7 @@
 				 decision, made when nothing is urgent (§7). -->
 			<div class="rounded-2xl border border-zinc-700 bg-zinc-900 p-5">
 				<p class="font-medium">
-					{swapped.length === 1 ? 'You swapped an exercise.' : `You swapped ${swapped.length} exercises.`}
+					{swapped.length === 1 ? t.session.swappedOne : t.session.swappedMany(swapped.length)}
 				</p>
 				<ul class="mt-2 flex flex-col gap-1 text-sm text-zinc-400">
 					{#each swapped as s (s.from)}
@@ -400,24 +416,24 @@
 				</ul>
 				{#if keptSwaps}
 					<p class="mt-4 text-sm text-zinc-500">
-						Kept in {player.session.routineName}.
+						{t.session.keptIn(player.session.routineName)}
 					</p>
 				{:else}
 					<button
 						onclick={keepSwaps}
 						class="mt-4 min-h-14 w-full rounded-xl border border-zinc-700 font-medium"
 					>
-						Keep in {player.session.routineName}
+						{t.session.keepIn(player.session.routineName)}
 					</button>
 					<p class="mt-2 text-xs text-zinc-500">
-						Otherwise the routine is unchanged and next time starts where it did today.
+						{t.session.keepHint}
 					</p>
 				{/if}
 			</div>
 		{/if}
 
 		<textarea
-			placeholder="Session notes (optional)"
+			placeholder={t.session.notesPlaceholder}
 			rows="3"
 			onchange={(e) => player?.setNotes(e.currentTarget.value)}
 			class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
@@ -426,7 +442,7 @@
 			href="{base}/"
 			class="min-h-14 rounded-xl bg-zinc-100 py-4 text-center font-semibold text-zinc-900"
 		>
-			Back to routines
+			{t.common.backToRoutines}
 		</a>
 	</section>
 {:else if player.phase === 'preview' && step && exercise}
@@ -441,7 +457,7 @@
 
 		{#if exercise.instructions.length}
 			<details class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
+				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">{t.exercise.howToDoIt}</summary>
 				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
 					{#each exercise.instructions as line, i (i)}
 						<li>{line}</li>
@@ -459,7 +475,7 @@
 				onclick={() => player?.beginStep()}
 				class="min-h-20 w-full rounded-2xl bg-zinc-100 py-5 font-display text-2xl font-bold text-zinc-900"
 			>
-				{timed ? `Start ${mmss(player.targetSeconds ?? 0)}` : 'Start set'}
+				{timed ? t.session.startTimed(mmss(player.targetSeconds ?? 0)) : t.session.startSet}
 			</button>
 			{#if player.autoStartOn}
 				<!-- Auto mode (§7). A screen about to act on its own has to say so, and
@@ -483,31 +499,31 @@
 								pathLength="100"
 							/>
 						</svg>
-						Starting on its own
+						{t.session.startingOnItsOwn}
 					</div>
 				{:else}
-					<p class="text-center text-xs text-zinc-500">Starts when the reading is over</p>
+					<p class="text-center text-xs text-zinc-500">{t.session.startsWhenReadingOver}</p>
 				{/if}
 			{/if}
-			<div class="flex gap-3 text-sm">
+			<div class="flex gap-2 text-xs leading-tight">
 				<button
 					onclick={() => player?.undo()}
 					disabled={!player.canUndo}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400 disabled:opacity-30"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400 disabled:opacity-30"
 				>
-					← Back a set
+					{t.session.backASet}
 				</button>
 				<button
 					onclick={() => player?.skip()}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400"
 				>
-					Skip set
+					{t.session.skipSet}
 				</button>
 				<button
 					onclick={endEarly}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400"
 				>
-					End
+					{t.session.end}
 				</button>
 			</div>
 		</div>
@@ -517,12 +533,12 @@
 	<section
 		class="flex min-h-[80dvh] flex-col items-center justify-center gap-8 pt-[env(safe-area-inset-top)]"
 	>
-		<p class="text-sm tracking-wide text-zinc-400 uppercase">Rest</p>
+		<p class="text-sm tracking-wide text-zinc-400 uppercase">{t.session.rest}</p>
 		<p class="font-display text-8xl font-bold tabular-nums">{mmss(player.restRemaining)}</p>
 		{#if step && exercise}
 			<p class="text-center text-zinc-400">
-				Next: {exercise.name}<br />
-				<span class="text-sm text-zinc-500">{describeStep(step)}</span>
+				{t.session.next(exercise.name)}<br />
+				<span class="text-sm text-zinc-500">{describeStep(step, t)}</span>
 			</p>
 		{/if}
 		<div class="fixed inset-x-0 bottom-0 px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
@@ -532,27 +548,27 @@
 						onclick={() => player?.adjustRest(-15)}
 						class="min-h-16 flex-1 rounded-xl border border-zinc-700 text-lg"
 					>
-						−15 s
+						{t.session.minusFifteen}
 					</button>
 					<button
 						onclick={() => player?.adjustRest(15)}
 						class="min-h-16 flex-1 rounded-xl border border-zinc-700 text-lg"
 					>
-						+15 s
+						{t.session.plusFifteen}
 					</button>
 				</div>
 				<button
 					onclick={() => player?.endRest()}
 					class="min-h-16 w-full rounded-xl bg-zinc-100 text-lg font-semibold text-zinc-900"
 				>
-					Skip rest
+					{t.session.skipRest}
 				</button>
 				<button
 					onclick={() => player?.undo()}
 					disabled={!player.canUndo}
 					class="min-h-12 w-full rounded-lg border border-zinc-800 text-sm text-zinc-400 disabled:opacity-30"
 				>
-					← Back a set
+					{t.session.backASet}
 				</button>
 			</div>
 		</div>
@@ -588,12 +604,12 @@
 				</p>
 				<p class="mt-1 text-xs {player.paused ? 'text-amber-300' : 'text-zinc-500'}">
 					{player.paused
-						? 'paused — tap to resume'
+						? t.session.paused
 						: left > 0
-							? 'left · tap to pause'
+							? t.session.timeLeft
 							: left === 0
-								? 'time — log the set'
-								: 'over the target'}
+								? t.session.timeUp
+								: t.session.overTarget}
 				</p>
 			</button>
 		{/if}
@@ -602,7 +618,7 @@
 
 		{#if exercise.instructions.length}
 			<details bind:open={showCues} class="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">How to do it</summary>
+				<summary class="min-h-11 cursor-pointer text-sm text-zinc-300">{t.exercise.howToDoIt}</summary>
 				<ol class="mt-2 flex list-decimal flex-col gap-2 pl-5 text-sm text-zinc-300">
 					{#each exercise.instructions as line, i (i)}
 						<li>{line}</li>
@@ -620,17 +636,22 @@
 			<div class="flex items-center gap-3">
 				<button
 					onclick={() => (value = Math.max(0, value - 1))}
-					aria-label="One fewer"
+					aria-label={t.session.oneFewer}
 					class="min-h-16 min-w-16 shrink-0 rounded-xl border border-zinc-700 font-display text-2xl"
 				>
 					−
 				</button>
 				<div class="min-w-0 flex-1">
-					<NumberWheel bind:value min={0} max={timed ? 300 : 60} label={timed ? 'seconds' : 'reps'} />
+					<NumberWheel
+						bind:value
+						min={0}
+						max={timed ? 300 : 60}
+						label={timed ? t.session.seconds : t.session.reps}
+					/>
 				</div>
 				<button
 					onclick={() => (value += 1)}
-					aria-label="One more"
+					aria-label={t.session.oneMore}
 					class="min-h-16 min-w-16 shrink-0 rounded-xl border border-zinc-700 font-display text-2xl"
 				>
 					+
@@ -645,19 +666,19 @@
 					<button
 						onclick={() => nudgeLoad(-LOAD_STEP_KG)}
 						disabled={loadKg === undefined}
-						aria-label="Lighter"
+						aria-label={t.session.lighter}
 						class="min-h-14 min-w-14 shrink-0 rounded-xl border border-zinc-700 font-display text-xl disabled:opacity-30"
 					>
 						−
 					</button>
 					<div class="min-w-0 flex-1 text-center">
 						<span class="font-display text-2xl tabular-nums">
-							{loadKg === undefined ? 'No load' : formatKg(loadKg)}
+							{loadKg === undefined ? t.session.noLoad : formatKg(loadKg, t)}
 						</span>
 					</div>
 					<button
 						onclick={() => nudgeLoad(LOAD_STEP_KG)}
-						aria-label="Heavier"
+						aria-label={t.session.heavier}
 						class="min-h-14 min-w-14 shrink-0 rounded-xl border border-zinc-700 font-display text-xl"
 					>
 						+
@@ -667,7 +688,7 @@
 
 			{#if showRpe}
 				<div class="flex items-center gap-2">
-					<span class="text-xs text-zinc-500">RPE</span>
+					<span class="text-xs text-zinc-500">{t.session.rpe}</span>
 					{#each [6, 7, 8, 9, 10] as n (n)}
 						<button
 							onclick={() => (rpe = rpe === n ? undefined : n)}
@@ -685,34 +706,41 @@
 				onclick={logSet}
 				class="min-h-16 w-full rounded-xl bg-zinc-100 font-display text-xl font-bold text-zinc-900"
 			>
-				Log set
+				{t.session.logSet}
 			</button>
 
-			<div class="flex gap-3 text-sm">
+			<!--
+				Four labels across 360 dp, so the row sets its own type size rather than
+				inheriting the body's: at `text-sm` even English wrapped "← Back a set"
+				onto two lines, and Danish is longer again. `leading-tight` and a common
+				minimum height mean a label that does wrap still leaves the four buttons
+				the same size as each other.
+			-->
+			<div class="flex gap-2 text-xs leading-tight">
 				<button
 					onclick={() => player?.undo()}
 					disabled={!player.canUndo}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400 disabled:opacity-30"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400 disabled:opacity-30"
 				>
-					← Back a set
+					{t.session.backASet}
 				</button>
 				<button
 					onclick={() => (showRpe = !showRpe)}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400"
 				>
-					{showRpe ? 'Hide RPE' : 'Add RPE'}
+					{showRpe ? t.session.hideRpe : t.session.addRpe}
 				</button>
 				<button
 					onclick={() => player?.skip()}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400"
 				>
-					Skip set
+					{t.session.skipSet}
 				</button>
 				<button
 					onclick={endEarly}
-					class="min-h-12 flex-1 rounded-lg border border-zinc-800 text-zinc-400"
+					class="min-h-12 flex-1 rounded-lg border border-zinc-800 px-1 text-zinc-400"
 				>
-					End
+					{t.session.end}
 				</button>
 			</div>
 		</div>
@@ -722,22 +750,22 @@
 {#if confirmLeave}
 	<div class="fixed inset-0 z-50 flex items-end bg-zinc-950/80 p-4">
 		<div class="mx-auto w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-			<p class="font-medium">Leave this session?</p>
+			<p class="font-medium">{t.session.leaveQuestion}</p>
 			<p class="mt-1 text-sm text-zinc-400">
-				It stays unfinished, and the home screen will offer to pick it back up.
+				{t.session.leaveHint}
 			</p>
 			<div class="mt-4 flex gap-3">
 				<button
 					onclick={leave}
 					class="min-h-14 flex-1 rounded-xl border border-zinc-700 font-medium"
 				>
-					Leave
+					{t.session.leaveConfirm}
 				</button>
 				<button
 					onclick={() => (confirmLeave = false)}
 					class="min-h-14 flex-1 rounded-xl bg-zinc-100 font-semibold text-zinc-900"
 				>
-					Keep going
+					{t.session.keepGoing}
 				</button>
 			</div>
 		</div>

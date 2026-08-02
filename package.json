@@ -10,6 +10,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "build:catalog": "tsx scripts/build-catalog.ts",
+    "build:fonts": "tsx scripts/build-fonts.ts",
     "build:apk": "VITE_CAPACITOR=1 vite build && cap sync android && cd android && ./gradlew assembleRelease"
   },
   "devDependencies": {

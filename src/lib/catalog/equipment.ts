@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/index.js';
 import type { EquipmentId, Exercise, Settings } from '../types.js';
 import { catalog } from './index.js';
 
@@ -10,83 +11,25 @@ import { catalog } from './index.js';
  */
 export interface EquipmentType {
 	id: EquipmentId;
-	/** Shown on chips and on the Settings row. */
-	label: string;
-	/** What owning it actually means, so the user can answer the question. */
-	needs: string;
 	/**
 	 * Gated types are filtered out of catalog browse and the exercise picker when
 	 * unticked. `chair` is not gated: furniture is not a purchase, so it earns a
 	 * chip and nothing more.
 	 */
 	gated: boolean;
-	/** Anything about this type worth one line in Settings. */
-	note?: string;
 }
 
 export const EQUIPMENT: EquipmentType[] = [
-	{
-		id: 'pull_up_bar',
-		label: 'Pull-up bar',
-		needs: 'A doorway, wall or ceiling bar you can hang from.',
-		gated: true,
-		note: 'Ticked to begin with: the catalog has been built around a bar since the start, and two presets and one progression need it.'
-	},
-	{
-		id: 'jumping_rope',
-		label: 'Jumping rope',
-		needs: 'A skipping rope, and about 2 m of clearance overhead.',
-		gated: true
-	},
-	{
-		id: 'dumbbells',
-		label: 'Dumbbells',
-		needs: 'One or a pair, any weight.',
-		gated: true
-	},
-	{
-		id: 'kettlebell',
-		label: 'Kettlebell',
-		needs: 'One, any weight.',
-		gated: true
-	},
-	{
-		id: 'resistance_band',
-		label: 'Resistance band',
-		needs: 'A loop band, or a tube band with handles.',
-		gated: true
-	},
-	{
-		id: 'foam_roller',
-		label: 'Foam roller',
-		needs: 'A roller, for the self-massage entries.',
-		gated: true
-	},
-	{
-		id: 'yoga_ball',
-		label: 'Yoga ball',
-		needs: 'A big inflatable ball, 55–75 cm. Also sold as an exercise, stability or Swiss ball.',
-		gated: true
-	},
-	{
-		id: 'suspension_trainer',
-		label: 'Suspension straps',
-		needs: 'Two straps with handles, anchored to a door or a beam.',
-		gated: true
-	},
-	{
-		id: 'ab_wheel',
-		label: 'Ab wheel',
-		needs: 'The small wheel with a handle through it.',
-		gated: true
-	},
-	{
-		id: 'chair',
-		label: 'Chair or bench',
-		needs: 'A dining chair, the edge of a sofa or bed, a step, a low table.',
-		gated: false,
-		note: 'Never hidden, and not in the list above: a chair is furniture, not a purchase. Two exercises tagged with it — the two dip variants — are written for parallel bars in the source, and two sturdy chairs are how they are done at home.'
-	}
+	{ id: 'pull_up_bar', gated: true },
+	{ id: 'jumping_rope', gated: true },
+	{ id: 'dumbbells', gated: true },
+	{ id: 'kettlebell', gated: true },
+	{ id: 'resistance_band', gated: true },
+	{ id: 'foam_roller', gated: true },
+	{ id: 'yoga_ball', gated: true },
+	{ id: 'suspension_trainer', gated: true },
+	{ id: 'ab_wheel', gated: true },
+	{ id: 'chair', gated: false }
 ];
 
 const byId = new Map<EquipmentId, EquipmentType>(EQUIPMENT.map((t) => [t.id, t]));
@@ -100,8 +43,18 @@ export const GATED_EQUIPMENT: EquipmentType[] = EQUIPMENT.filter((t) => t.gated)
  */
 export const DEFAULT_OWNED: EquipmentId[] = ['pull_up_bar'];
 
-export function equipmentLabel(id: EquipmentId): string {
-	return byId.get(id)?.label ?? id;
+export function equipmentLabel(id: EquipmentId, t: Messages): string {
+	return t.equipment.labels[id] ?? id;
+}
+
+/** What owning it actually means, so the user can answer the question. */
+export function equipmentNeeds(id: EquipmentId, t: Messages): string {
+	return t.equipment.needs[id] ?? '';
+}
+
+/** Anything about this type worth one line in Settings, if there is any. */
+export function equipmentNote(id: EquipmentId, t: Messages): string | undefined {
+	return id === 'pull_up_bar' || id === 'chair' ? t.equipment.notes[id] : undefined;
 }
 
 export function isGated(id: EquipmentId): boolean {
@@ -160,9 +113,8 @@ export const countByEquipment: Record<EquipmentId, number> = EQUIPMENT.reduce(
 );
 
 /** "1 exercise" / "14 exercises" — the count is shown even when it is 1 (§5.1). */
-export function exerciseCountLabel(id: EquipmentId): string {
-	const n = countByEquipment[id] ?? 0;
-	return `${n} exercise${n === 1 ? '' : 's'}`;
+export function exerciseCountLabel(id: EquipmentId, t: Messages): string {
+	return t.equipment.exerciseCount(countByEquipment[id] ?? 0);
 }
 
 // Load (§4.5) lives in ./load.ts, which needs no catalog data. Re-exported here

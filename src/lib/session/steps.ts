@@ -1,4 +1,5 @@
 import { formatKg } from '../catalog/load.js';
+import type { Messages } from '../i18n/index.js';
 import type { ExerciseId, Routine, RoutineItem, Target } from '../types.js';
 
 /** `RoutineItem.id` -> the exercise actually being performed (§4.3, §7). */
@@ -99,33 +100,40 @@ interface RoundInfo {
 	count: number;
 }
 
-/** "Set 2 of 3 · 45 s per side" — the line under the exercise name. */
-export function describeStep(step: Step): string {
+/**
+ * "Set 2 of 3 · 45 s per side" — the line under the exercise name.
+ *
+ * Written for the eye. The sentence the app *says* is `announce.ts`, which
+ * stays English whatever the interface is set to (§16): the exercise names it
+ * reads out are English, and a Danish voice reading English words is worse than
+ * an English one.
+ */
+export function describeStep(step: Step, t: Messages): string {
 	let target: string;
 	switch (step.target.kind) {
 		case 'reps':
-			target = `${step.target.reps} reps`;
+			target = t.units.reps(step.target.reps);
 			break;
 		case 'reps_range':
-			target = `${step.target.min}–${step.target.max} reps`;
+			target = t.units.repsRange(step.target.min, step.target.max);
 			break;
 		case 'duration':
-			target = `${step.target.seconds} s`;
+			target = t.units.seconds(step.target.seconds);
 			break;
 		case 'amrap':
-			target = 'as many as possible';
+			target = t.units.amrap;
 			break;
 	}
 	// In a circuit the round is the number worth knowing; the per-item set
 	// counter would just restate it.
 	const set =
 		step.round !== undefined && step.roundCount !== undefined && step.roundCount > 1
-			? `Round ${step.round + 1} of ${step.roundCount} · `
+			? `${t.units.roundOf(step.round + 1, step.roundCount)} · `
 			: step.setCount > 1
-				? `Set ${step.setIndex + 1} of ${step.setCount} · `
+				? `${t.units.setOf(step.setIndex + 1, step.setCount)} · `
 				: '';
-	const side = step.side ? ` · ${step.side}` : '';
-	const load = step.loadKg !== undefined ? ` · ${formatKg(step.loadKg)}` : '';
+	const side = step.side ? ` · ${step.side === 'left' ? t.units.left : t.units.right}` : '';
+	const load = step.loadKg === undefined ? '' : ` · ${formatKg(step.loadKg, t)}`;
 	return `${set}${target}${load}${side}`;
 }
 

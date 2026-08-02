@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/index.js';
 import type { EquipmentId, Exercise } from '../types.js';
 
 /**
@@ -26,7 +27,15 @@ export function isLoadable(exercise: Pick<Exercise, 'equipment'>): boolean {
 	return exercise.equipment.some((id) => LOADABLE_EQUIPMENT.includes(id));
 }
 
-/** "10 kg", "2.5 kg" — trailing zeros trimmed, because "10.0 kg" reads as a scale. */
-export function formatKg(kg: number): string {
-	return `${Number(kg.toFixed(2))} kg`;
+/**
+ * "10 kg", "2.5 kg" — trailing zeros trimmed, because "10.0 kg" reads as a
+ * scale. The separator is the locale's, so the same number is "2,5 kg" in
+ * Danish; that comes from `Intl.NumberFormat` rather than from a rule here.
+ *
+ * **Never used for a file.** The CSV and the backup are machine formats and
+ * write the raw number, because a spreadsheet in one locale must not fail to
+ * read a file written in another (§16).
+ */
+export function formatKg(kg: number, t: Messages): string {
+	return t.units.kg(kg);
 }

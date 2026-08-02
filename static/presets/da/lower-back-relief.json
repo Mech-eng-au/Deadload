@@ -1,0 +1,93 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Lindring i lænden",
+	"goal": "lindring i ryggen",
+	"description": "Blid aflastning og let arbejde for bagsiden til en stiv lænd. Stop ved spænding, aldrig ved smerte.",
+	"tags": [
+		"aften",
+		"ryg",
+		"restitution"
+	],
+	"blocks": [
+		{
+			"label": "Aflastning",
+			"items": [
+				{
+					"exercise": "hug_knees_to_chest",
+					"sets": 1,
+					"duration_seconds": 60,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "knee_across_the_body",
+					"sets": 1,
+					"duration_seconds": 45,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "cat_stretch",
+					"sets": 1,
+					"reps": 12,
+					"rest_seconds": 0,
+					"notes": "Lille bevægelse, langsomt tempo."
+				},
+				{
+					"exercise": "childs_pose",
+					"sets": 1,
+					"duration_seconds": 60,
+					"rest_seconds": 0
+				}
+			]
+		},
+		{
+			"label": "Støtte",
+			"items": [
+				{
+					"exercise": "dead_bug",
+					"sets": 2,
+					"reps": 8,
+					"per_side": true,
+					"rest_seconds": 30,
+					"notes": "Hold lænden fladt mod gulvet."
+				},
+				{
+					"exercise": "butt_lift_bridge",
+					"sets": 2,
+					"reps": 12,
+					"rest_seconds": 30
+				},
+				{
+					"exercise": "side_bridge",
+					"sets": 2,
+					"duration_seconds": 20,
+					"per_side": true,
+					"rest_seconds": 30
+				},
+				{
+					"exercise": "superman",
+					"sets": 2,
+					"duration_seconds": 15,
+					"rest_seconds": 30
+				}
+			]
+		},
+		{
+			"label": "Afslutning",
+			"items": [
+				{
+					"exercise": "seated_floor_hamstring_stretch",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "spinal_stretch",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}

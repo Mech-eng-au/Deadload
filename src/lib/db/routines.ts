@@ -1,4 +1,5 @@
 import { formatKg } from '../catalog/load.js';
+import type { Messages } from '../i18n/index.js';
 import type { Block, Routine, RoutineItem, Target } from '../types.js';
 import { getDb, toPlain } from './schema.js';
 
@@ -74,26 +75,33 @@ export function newItem(exercise: {
 	};
 }
 
-/** Human-readable target, e.g. "3 × 45 s per side". */
-export function describeItem(item: RoutineItem): string {
+/**
+ * Human-readable target, e.g. "3 × 45 s per side".
+ *
+ * Built rather than looked up, which is why every piece of it comes from the
+ * dictionary separately: a language is free to put the set count after the
+ * target, or to inflect "per side", and it can do that because the pieces are
+ * message functions rather than slots in one template string.
+ */
+export function describeItem(item: RoutineItem, t: Messages): string {
 	let target: string;
 	switch (item.target.kind) {
 		case 'reps':
-			target = `${item.target.reps} reps`;
+			target = t.units.reps(item.target.reps);
 			break;
 		case 'reps_range':
-			target = `${item.target.min}–${item.target.max} reps`;
+			target = t.units.repsRange(item.target.min, item.target.max);
 			break;
 		case 'duration':
-			target = `${item.target.seconds} s`;
+			target = t.units.seconds(item.target.seconds);
 			break;
 		case 'amrap':
-			target = 'as many as possible';
+			target = t.units.amrap;
 			break;
 	}
-	const sets = item.sets > 1 ? `${item.sets} × ` : '';
-	const load = item.loadKg !== undefined ? ` at ${formatKg(item.loadKg)}` : '';
-	return `${sets}${target}${load}${item.perSide ? ' per side' : ''}`;
+	const sets = t.units.setsPrefix(item.sets);
+	const load = item.loadKg === undefined ? '' : t.units.atLoad(formatKg(item.loadKg, t));
+	return `${sets}${target}${load}${item.perSide ? ` ${t.units.perSide}` : ''}`;
 }
 
 export function countItems(routine: Routine): number {

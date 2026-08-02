@@ -12,5 +12,13 @@
 		"author": "ELABBASSI Hicham and Stefan Poindl",
 		"sourceUrl": "https://www.npmjs.com/package/svelte-body-highlighter",
 		"covers": "The front and back body figures on the exercise and muscle screens"
+	},
+	{
+		"id": "noto_sans",
+		"source": "noto-fonts",
+		"license": "OFL-1.1",
+		"author": "The Noto Project Authors",
+		"sourceUrl": "https://github.com/notofonts/latin-greek-cyrillic",
+		"covers": "The typeface embedded in the printable routine sheet"
 	}
 ]

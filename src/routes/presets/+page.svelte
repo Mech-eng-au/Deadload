@@ -2,11 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { PRESET_FILES, type ReviewModel } from '$lib/import/index.js';
+	import { PRESET_FILES, presetPath, type ReviewModel } from '$lib/import/index.js';
 	import { commitReview, itemCount, outstanding, reviewFromText } from '$lib/import/runner.svelte.js';
 	import { getExercise } from '$lib/catalog/index.js';
 	import { equipmentLabel, missingEquipment, ownedEquipment } from '$lib/catalog/equipment.js';
 	import { getSettings } from '$lib/db/settings.js';
+	import { locale, t } from '$lib/i18n/locale.svelte.js';
 	import type { EquipmentId, Settings } from '$lib/types.js';
 
 	type Loaded = { file: string; review: ReviewModel; problems: number };
@@ -41,8 +42,11 @@
 		const loaded: Loaded[] = [];
 		for (const file of PRESET_FILES) {
 			try {
-				const text = await (await fetch(`${base}/presets/${file}`)).text();
-				const review = await reviewFromText(text, file);
+				// The translation if there is one, the English original if not, so a
+				// language can be added a file at a time rather than all nine at once.
+				let response = await fetch(`${base}${presetPath(file, locale())}`);
+				if (!response.ok) response = await fetch(`${base}${presetPath(file, 'en')}`);
+				const review = await reviewFromText(await response.text(), file);
 				loaded.push({ file, review, problems: outstanding(review) });
 			} catch (err) {
 				console.error(`preset ${file} failed to load`, err);
@@ -64,19 +68,19 @@
 </script>
 
 <svelte:head>
-	<title>Built-in routines · Deadload</title>
+	<title>{t.presets.title} · Deadload</title>
 </svelte:head>
 
-<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Routines</a>
-<h1 class="mt-2 font-display text-2xl font-bold">Built-in routines</h1>
+<a href="{base}/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.common.backRoutines}</a>
+<h1 class="mt-2 font-display text-2xl font-bold">{t.presets.title}</h1>
 <p class="mt-2 mb-5 text-sm text-zinc-500">
-	These are general training routines, not medical advice.
+	{t.presets.notMedicalAdvice}
 </p>
 
 {#if loading}
-	<p class="text-zinc-500">Loading…</p>
+	<p class="text-zinc-500">{t.common.loading}</p>
 {:else if presets.length === 0}
-	<p class="text-zinc-300">The built-in routines could not be read.</p>
+	<p class="text-zinc-300">{t.presets.unreadable}</p>
 {:else}
 	<ul class="flex flex-col gap-3 pb-12">
 		{#each presets as preset (preset.file)}
@@ -86,17 +90,18 @@
 					<p class="mt-1 text-sm text-zinc-400">{preset.review.description}</p>
 				{/if}
 				<p class="mt-2 text-xs text-zinc-500">
-					{itemCount(preset.review)} exercises
+					{t.units.exercises(itemCount(preset.review))}
 					{#if preset.review.goal}· {preset.review.goal}{/if}
 					{#if preset.problems > 0}
-						· <span class="text-amber-300">{preset.problems} need matching</span>
+						· <span class="text-amber-300">{t.presets.needMatching(preset.problems)}</span>
 					{/if}
 				</p>
 				{#each [needs(preset.review, owned)] as missing (preset.file)}
 					{#if missing.length}
 						<p class="mt-2 text-xs text-amber-200/90">
-							Uses {missing.map(equipmentLabel).join(' and ').toLowerCase()}, which you have not
-							ticked in Settings. It is added complete either way.
+							{t.presets.usesUnticked(
+								t.units.list(missing.map((id) => equipmentLabel(id, t).toLowerCase()))
+							)}
 						</p>
 					{/if}
 				{/each}
@@ -105,7 +110,7 @@
 					disabled={adding !== null}
 					class="mt-4 min-h-14 w-full rounded-xl bg-zinc-100 py-3.5 font-semibold text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-500"
 				>
-					{adding === preset.file ? 'Adding…' : 'Add to my routines'}
+					{adding === preset.file ? t.presets.adding : t.presets.add}
 				</button>
 			</li>
 		{/each}

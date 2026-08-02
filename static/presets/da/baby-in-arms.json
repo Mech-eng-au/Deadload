@@ -1,0 +1,111 @@
+{
+	"schema": "deadload.routine/1",
+	"name": "Baby på armen",
+	"goal": "bærestyrke",
+	"description": "Stående arbejde for de muskler, det faktisk kræver at bære en baby, og udstrækning af dem det strammer. Til de dage, hvor de ikke vil sættes ned.",
+	"tags": [
+		"baby",
+		"stående",
+		"holdning"
+	],
+	"blocks": [
+		{
+			"label": "Opvarmning",
+			"items": [
+				{
+					"exercise": "shoulder_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "Babyen ned under opvarmningen — få dine egne skuldre i gang først."
+				},
+				{
+					"exercise": "arm_circles",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "sit_squats",
+					"sets": 1,
+					"duration_seconds": 45,
+					"rest_seconds": 0
+				}
+			]
+		},
+		{
+			"label": "Hoveddel",
+			"items": [
+				{
+					"exercise": "bodyweight_squat",
+					"sets": 3,
+					"reps": 10,
+					"rest_seconds": 40,
+					"notes": "Babyen holdt ind mod brystet, eller i bæreselen. Langsomt ned, op mens du ånder ud."
+				},
+				{
+					"exercise": "bodyweight_walking_lunge",
+					"sets": 2,
+					"reps": 8,
+					"per_side": true,
+					"rest_seconds": 40,
+					"notes": "Bæresele til den her — frie hænder hjælper på balancen langt mere, end man skulle tro."
+				},
+				{
+					"exercise": "side_leg_raises",
+					"sets": 2,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 20,
+					"notes": "Hold fast i en stol med den frie hånd. Det er den her, der holder hofterne vandrette, når du bærer i den ene side hele dagen."
+				},
+				{
+					"exercise": "front_leg_raises",
+					"sets": 2,
+					"duration_seconds": 30,
+					"per_side": true,
+					"rest_seconds": 20,
+					"notes": "Samme stol, samme frie hånd."
+				},
+				{
+					"exercise": "elbows_back",
+					"sets": 2,
+					"duration_seconds": 25,
+					"rest_seconds": 20,
+					"notes": "Babyen ned til den her. Den trækker alt det tilbage, som bæringen trækker fremad."
+				}
+			]
+		},
+		{
+			"label": "Nedkøling",
+			"items": [
+				{
+					"exercise": "kneeling_hip_flexor",
+					"sets": 1,
+					"duration_seconds": 40,
+					"per_side": true,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "standing_toe_touches",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0
+				},
+				{
+					"exercise": "chin_to_chest_stretch",
+					"sets": 1,
+					"duration_seconds": 30,
+					"rest_seconds": 0,
+					"notes": "Til en nakke, der har set nedad hele dagen."
+				},
+				{
+					"exercise": "upper_back_stretch",
+					"sets": 1,
+					"duration_seconds": 40,
+					"rest_seconds": 0
+				}
+			]
+		}
+	]
+}
