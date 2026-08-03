@@ -9,6 +9,8 @@ import {
 	calibrationWindow,
 	calibratingSessions,
 	isCalibrating,
+	applyOffer,
+	declineOffer,
 	offerFor,
 	offersFor,
 	performedIn,
@@ -183,6 +185,7 @@ describe('the criterion (§17.1)', () => {
 			kind: 'add_rep',
 			itemId: 'i1',
 			exerciseId: 'pushups',
+			cleared: { kind: 'reps_range', min: 8, max: 12 },
 			target: { kind: 'reps_range', min: 9, max: 13 }
 		});
 	});
@@ -277,6 +280,7 @@ describe('the top of a ladder (§17.1, amended)', () => {
 			kind: 'next_rung',
 			itemId: 'i1',
 			exerciseId: 'pushups',
+			cleared: { kind: 'reps', reps: REP_CEILING },
 			to: 'push_ups_with_feet_elevated',
 			target: { kind: 'reps_range', min: 5, max: 8 }
 		});
@@ -301,7 +305,8 @@ describe('the top of a ladder (§17.1, amended)', () => {
 		expect(offer(cleared('bodyweight_squat', REP_CEILING), it)).toEqual({
 			kind: 'ladder_end',
 			itemId: 'i1',
-			exerciseId: 'bodyweight_squat'
+			exerciseId: 'bodyweight_squat',
+			cleared: { kind: 'reps', reps: REP_CEILING }
 		});
 	});
 
@@ -407,5 +412,106 @@ describe('what §17 refuses to do', () => {
 		offerFor({ item: it, sessions: cleared('pushups', 12), owned: ['pull_up_bar'], now: NOW });
 		expect(it.target).toEqual(before);
 		expect(it.progressDeclinedAt).toBeUndefined();
+	});
+});
+
+describe('applying and declining (§17.3)', () => {
+	const routine = (items: RoutineItem[]): Routine => ({
+		id: 'r',
+		name: 'R',
+		tags: [],
+		source: 'user',
+		createdAt: at(0),
+		updatedAt: at(0),
+		blocks: [
+			{ id: 'b1', items: [item({ id: 'other', exerciseId: 'crunches' })] },
+			{ id: 'b2', items }
+		]
+	});
+	const owned = ['pull_up_bar' as const];
+	const find = (r: Routine, id: string) => r.blocks.flatMap((b) => b.items).find((i) => i.id === id)!;
+
+	it('raises the target and touches nothing else', () => {
+		const before = routine([item()]);
+		const offer = offerFor({ item: find(before, 'i1'), sessions: cleared('pushups', 12), owned, now: NOW })!;
+		const after = applyOffer(before, offer);
+		expect(find(after, 'i1').target).toEqual({ kind: 'reps_range', min: 9, max: 13 });
+		expect(find(after, 'i1').sets).toBe(3);
+		expect(find(after, 'other')).toEqual(find(before, 'other'));
+		// A new routine, not a mutation — a caller that changes its mind has
+		// changed nothing, exactly as applySwaps behaves.
+		expect(find(before, 'i1').target).toEqual({ kind: 'reps_range', min: 8, max: 12 });
+	});
+
+	it('follows perSide onto a rung that crosses to one limb', () => {
+		// A limb_count step changes what one logged rep means, so the item has to
+		// say so — the same rule §7's kept swap follows.
+		const it = item({
+			id: 'i1',
+			exerciseId: 'butt_lift_bridge',
+			target: { kind: 'reps', reps: REP_CEILING }
+		});
+		const before = routine([it]);
+		const offer = offerFor({
+			item: it,
+			sessions: cleared('butt_lift_bridge', REP_CEILING),
+			owned,
+			now: NOW
+		})!;
+		expect(offer).toMatchObject({ kind: 'next_rung', to: 'single_leg_glute_bridge' });
+		const after = applyOffer(before, offer, (id) => id === 'single_leg_glute_bridge');
+		expect(find(after, 'i1').exerciseId).toBe('single_leg_glute_bridge');
+		expect(find(after, 'i1').perSide).toBe(true);
+		expect(find(after, 'i1').target).toEqual({ kind: 'reps_range', min: 5, max: 8 });
+	});
+
+	it('clears a stale decline when an offer is taken up', () => {
+		const before = routine([item({ progressDeclinedAt: at(0) })]);
+		const after = applyOffer(before, {
+			kind: 'add_rep',
+			itemId: 'i1',
+			exerciseId: 'pushups',
+			cleared: { kind: 'reps', reps: 10 },
+			target: { kind: 'reps', reps: 11 }
+		});
+		expect(find(after, 'i1').progressDeclinedAt).toBeUndefined();
+	});
+
+	it('stamps a decline, and silences that item for a fortnight', () => {
+		const before = routine([item()]);
+		const after = declineOffer(before, 'i1', NOW);
+		expect(find(after, 'i1').progressDeclinedAt).toBe(NOW.toISOString());
+		expect(
+			offerFor({ item: find(after, 'i1'), sessions: cleared('pushups', 12), owned, now: NOW })
+		).toBeUndefined();
+	});
+
+	it('dismisses a ladder_end the same way, since there is nothing to apply', () => {
+		const before = routine([item()]);
+		const after = applyOffer(before, {
+			kind: 'ladder_end',
+			itemId: 'i1',
+			exerciseId: 'pushups',
+			cleared: { kind: 'reps', reps: REP_CEILING }
+		});
+		expect(find(after, 'i1').progressDeclinedAt).toBeDefined();
+		expect(find(after, 'i1').target).toEqual(find(before, 'i1').target);
+	});
+
+	it('composes, so a second decision does not undo the first', () => {
+		// The finished screen can make two of these in a row, and it builds each on
+		// the result of the last. Applying both to the *original* routine would
+		// silently drop whichever was saved first.
+		const before = routine([item(), item({ id: 'i2', exerciseId: 'bench_dips' })]);
+		const step1 = applyOffer(before, {
+			kind: 'add_rep',
+			itemId: 'i1',
+			exerciseId: 'pushups',
+			cleared: { kind: 'reps', reps: 10 },
+			target: { kind: 'reps', reps: 11 }
+		});
+		const step2 = declineOffer(step1, 'i2', NOW);
+		expect(find(step2, 'i1').target).toEqual({ kind: 'reps', reps: 11 });
+		expect(find(step2, 'i2').progressDeclinedAt).toBe(NOW.toISOString());
 	});
 });

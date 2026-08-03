@@ -190,6 +190,29 @@ dip chain, where the catalog calls the ~100%-of-bodyweight rung `beginner` and t
   honest deletions (59% → 44%). What replaced it is an explicit list of the exercises deliberately
   left off with a reason each, so the suite fails when somebody quietly ladders one instead.
 
+**Progression suggests; it never applies.** Built 2026-08-03 (SPEC §17, `src/lib/progress/`). Five
+things here are decisions rather than implementation detail, and four of them are invisible from the
+code that uses them:
+
+- **The rule is pure and lives outside the screen.** The criterion that decides to move somebody up
+  a ladder is the last thing that should only be reachable by finishing a workout. `progress/` takes
+  the log and the routine as arguments and reads no database; `calibration.ts` imports only types,
+  which is what lets `stats/compute.ts` use it without gaining a catalog dependency.
+- **The streak is matched on `itemId` *and* `exerciseId`.** A §7 swap keeps the item and changes the
+  exercise, and sessions performed on the easier rung are not evidence that the harder one is too
+  easy. Drop the `exerciseId` half and a swap inherits a streak it did not earn.
+- **A set is counted by distinct `setIndex`**, the same way §4.3's renumbering counts one, so a
+  per-side pair is one set. Counting entries instead means a unilateral item can never satisfy the
+  criterion, silently.
+- **The finished screen builds each write on the last.** `player.routine` is a readonly snapshot
+  taken when the session started, so taking one suggestion and then declining a second — or keeping
+  a ladder swap afterwards — would each write a routine that had forgotten the others. There is a
+  test named for this.
+- **`ladder_end` still needs a tap.** It offers nothing, so the temptation is to stamp
+  `progressDeclinedAt` when it is *shown* and save a button. That would be the app writing to the
+  user's routine on its own, which §17.3 forbids for good reasons; the button is the price of the
+  rule staying true without exceptions.
+
 **A backward link replaces, it does not push.** Every `←`, every sideways hop and every `goto`
 after a commit uses `replaceState`; only drilling into something pushes. Adding a plain
 `<a href>` back to a parent is how the app grew four separate navigation loops (§12), and it is
@@ -511,9 +534,15 @@ into it. §17 itself changed in three places as a result: its scope was widened 
 reason for excluding it was factually wrong), the offer is now filtered by owned equipment, and the
 top of a ladder says the catalog has run out rather than offering another set.
 
-**What is left of §17 to build:** `src/lib/progress/` as a pure module, the finished-screen offer,
-`RoutineItem.progressDeclinedAt`, and §17.2's consequence for §10 — the per-exercise sparkline still
-plots calibration sessions, so it draws motor learning as progress.
+**§17 is now built** (2026-08-03): `src/lib/progress/` as a pure module, the calibration window,
+the finished-screen offer, `RoutineItem.progressDeclinedAt`, and §10's sparkline, which was plotting
+calibration sessions and therefore drawing motor learning as progress.
+
+**Nothing is left of §17 as specified.** What is deliberately *not* built is §17.4's honest
+variation offer — *"this will not build more muscle, but people who change exercises report enjoying
+training more"*. It needs a place to live that is not a nudge, and §17.4 is explicit that it is never
+automatic, never scheduled and never presented as a fix for a plateau. That is a screen decision
+rather than a rule, and it has not been made.
 
 ~~**Editing a past session.**~~ **Built 2026-07-30** (SPEC §4.3 amendment, `src/lib/session/edit.ts`,
 the History detail page). Tap a set, change reps/seconds, load, RPE or skipped, save; remove a set and

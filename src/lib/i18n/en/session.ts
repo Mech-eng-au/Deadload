@@ -21,6 +21,31 @@ export const session = {
 	keptIn: (routine: string) => `Kept in ${routine}.`,
 	keepIn: (routine: string) => `Keep in ${routine}`,
 	keepHint: 'Otherwise the routine is unchanged and next time starts where it did today.',
+	/**
+	 * §17's progression offer. Bound by §17.5: no claim that the body has adapted,
+	 * no plateau, no cross-exercise comparison, and no number the app did not
+	 * measure. What it can say is what it saw — the sets that were logged.
+	 */
+	progress: {
+		title: 'Ready for more?',
+		clearedTwice: (name: string, target: string) =>
+			`${name}: every set at ${target}, two sessions running.`,
+		addRep: (target: string) => `Move up to ${target}`,
+		nextRung: (next: string) => `Move on to ${next}`,
+		nextRungWhy: (next: string) =>
+			`${next} is the next rung on the same movement, and it starts easier than this one finished.`,
+		/**
+		 * About the catalog, never about the user (§17.1). The app has run out of
+		 * variants; it knows nothing about anybody's limit.
+		 */
+		ladderEnd: (name: string) =>
+			`That is as far as this app can take ${name} — it knows no harder version of the movement.`,
+		notNow: 'Not now',
+		ok: 'Got it',
+		appliedTarget: (name: string, target: string) => `${name} is now ${target}.`,
+		appliedRung: (next: string, target: string) => `Swapped in ${next}, starting at ${target}.`,
+		dismissed: 'Not asking again for a couple of weeks.'
+	},
 	notesPlaceholder: 'Session notes (optional)',
 
 	// ----------------------------------------------------------------- working

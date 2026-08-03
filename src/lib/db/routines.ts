@@ -76,6 +76,26 @@ export function newItem(exercise: {
 }
 
 /**
+ * A target on its own — "12 reps", "8–12 reps", "45 s".
+ *
+ * Separate from `describeItem` because §17's offer names a target the routine
+ * does not have yet, so there is no item to describe. Both go through here, so a
+ * suggested target and the target it becomes cannot be worded differently.
+ */
+export function describeTarget(target: Target, t: Messages): string {
+	switch (target.kind) {
+		case 'reps':
+			return t.units.reps(target.reps);
+		case 'reps_range':
+			return t.units.repsRange(target.min, target.max);
+		case 'duration':
+			return t.units.seconds(target.seconds);
+		case 'amrap':
+			return t.units.amrap;
+	}
+}
+
+/**
  * Human-readable target, e.g. "3 × 45 s per side".
  *
  * Built rather than looked up, which is why every piece of it comes from the
@@ -84,21 +104,7 @@ export function newItem(exercise: {
  * message functions rather than slots in one template string.
  */
 export function describeItem(item: RoutineItem, t: Messages): string {
-	let target: string;
-	switch (item.target.kind) {
-		case 'reps':
-			target = t.units.reps(item.target.reps);
-			break;
-		case 'reps_range':
-			target = t.units.repsRange(item.target.min, item.target.max);
-			break;
-		case 'duration':
-			target = t.units.seconds(item.target.seconds);
-			break;
-		case 'amrap':
-			target = t.units.amrap;
-			break;
-	}
+	const target = describeTarget(item.target, t);
 	const sets = t.units.setsPrefix(item.sets);
 	const load = item.loadKg === undefined ? '' : t.units.atLoad(formatKg(item.loadKg, t));
 	return `${sets}${target}${load}${item.perSide ? ` ${t.units.perSide}` : ''}`;

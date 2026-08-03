@@ -20,6 +20,22 @@ export const session = {
 	keptIn: (routine: string) => `Gemt i ${routine}.`,
 	keepIn: (routine: string) => `Gem i ${routine}`,
 	keepHint: 'Ellers er rutinen uændret, og næste gang starter hvor den gjorde i dag.',
+	progress: {
+		title: 'Klar til mere?',
+		clearedTwice: (name: string, target: string) =>
+			`${name}: alle sæt på ${target}, to træninger i træk.`,
+		addRep: (target: string) => `Gå op til ${target}`,
+		nextRung: (next: string) => `Gå videre til ${next}`,
+		nextRungWhy: (next: string) =>
+			`${next} er næste trin i den samme bevægelse, og den starter lettere, end denne sluttede.`,
+		ladderEnd: (name: string) =>
+			`Så langt kan appen følge ${name} — den kender ingen sværere udgave af bevægelsen.`,
+		notNow: 'Ikke nu',
+		ok: 'Forstået',
+		appliedTarget: (name: string, target: string) => `${name} er nu ${target}.`,
+		appliedRung: (next: string, target: string) => `${next} er sat ind, med ${target} til start.`,
+		dismissed: 'Spørger ikke igen de næste par uger.'
+	},
 	notesPlaceholder: 'Noter til træningen (valgfrit)',
 
 	lastTime: (when: string) => `Sidste gang, ${when}:`,

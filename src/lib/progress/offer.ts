@@ -47,17 +47,29 @@ export const DECLINE_DAYS = 14;
 /** At most this many suggestions after one session (§17.3), so it cannot become a wall. */
 export const MAX_OFFERS_PER_SESSION = 2;
 
+/**
+ * Common to all three: which item, which exercise, and **the target that was
+ * cleared**. `cleared` is carried rather than looked up because applying the
+ * offer changes the item's target, and the sentence explaining *why* the app is
+ * asking has to keep saying what actually happened.
+ */
+interface OfferBase {
+	itemId: string;
+	exerciseId: ExerciseId;
+	cleared: Target;
+}
+
 export type Offer =
 	/** Below the ceiling: raise the target by one rep, both ends for a range. */
-	| { kind: 'add_rep'; itemId: string; exerciseId: ExerciseId; target: Target }
+	| (OfferBase & { kind: 'add_rep'; target: Target })
 	/** At the ceiling, with a harder rung the user has the equipment for. */
-	| { kind: 'next_rung'; itemId: string; exerciseId: ExerciseId; to: ExerciseId; target: Target }
+	| (OfferBase & { kind: 'next_rung'; to: ExerciseId; target: Target })
 	/**
 	 * At the ceiling with nowhere to go. Said once and about the catalog rather
 	 * than about the user (§17.1 as amended): *the app knows no harder version of
 	 * this movement*, never *you have reached your limit*.
 	 */
-	| { kind: 'ladder_end'; itemId: string; exerciseId: ExerciseId };
+	| (OfferBase & { kind: 'ladder_end' });
 
 export interface OfferInput {
 	item: RoutineItem;
@@ -162,6 +174,7 @@ export function offerFor(input: OfferInput): Offer | undefined {
 			kind: 'add_rep',
 			itemId: item.id,
 			exerciseId: item.exerciseId,
+			cleared: item.target,
 			target: raised(item.target)
 		};
 	}
@@ -177,12 +190,18 @@ export function offerFor(input: OfferInput): Offer | undefined {
 			kind: 'next_rung',
 			itemId: item.id,
 			exerciseId: item.exerciseId,
+			cleared: item.target,
 			to: next.id,
 			target: STARTING_RANGE
 		};
 	}
 
-	return { kind: 'ladder_end', itemId: item.id, exerciseId: item.exerciseId };
+	return {
+		kind: 'ladder_end',
+		itemId: item.id,
+		exerciseId: item.exerciseId,
+		cleared: item.target
+	};
 }
 
 /**
@@ -209,4 +228,65 @@ export function offersFor(
 	const actionable = all.filter((o) => o.kind !== 'ladder_end');
 	const terminal = all.filter((o) => o.kind === 'ladder_end');
 	return [...actionable, ...terminal].slice(0, MAX_OFFERS_PER_SESSION);
+}
+
+/**
+ * The routine with one offer taken up (§17.3).
+ *
+ * A new routine rather than a mutation, exactly as `applySwaps` returns one:
+ * nothing here decides to save, so a caller that changes its mind has changed
+ * nothing. **It is only ever reached from a tap** — the routine is the user's,
+ * and §17.3's rule is that the app suggests and the user applies.
+ *
+ * A `next_rung` follows `perSide` to the new exercise, because a rung that
+ * crosses the two-limb/one-limb boundary changes what one logged rep means and
+ * the item has to say so. That is the same rule §7's kept swap follows, and for
+ * the same reason.
+ */
+export function applyOffer(
+	routine: Routine,
+	offer: Offer,
+	isUnilateral?: (id: ExerciseId) => boolean
+): Routine {
+	if (offer.kind === 'ladder_end') return declineOffer(routine, offer.itemId, new Date());
+	return mapItem(routine, offer.itemId, (item) =>
+		offer.kind === 'add_rep'
+			? { ...item, target: offer.target, progressDeclinedAt: undefined }
+			: {
+					...item,
+					exerciseId: offer.to,
+					target: offer.target,
+					perSide: isUnilateral ? isUnilateral(offer.to) : item.perSide,
+					progressDeclinedAt: undefined
+				}
+	);
+}
+
+/**
+ * The routine with one offer turned down, remembered for `DECLINE_DAYS` (§17.3).
+ *
+ * On the item rather than in Settings because it is a fact about this exercise
+ * in this routine, and it should travel through backup and restore with it.
+ * Without it the app asks again next session having learned nothing, which is
+ * how a helpful feature becomes nagging.
+ */
+export function declineOffer(routine: Routine, itemId: string, now = new Date()): Routine {
+	return mapItem(routine, itemId, (item) => ({
+		...item,
+		progressDeclinedAt: now.toISOString()
+	}));
+}
+
+function mapItem(
+	routine: Routine,
+	itemId: string,
+	fn: (item: RoutineItem) => RoutineItem
+): Routine {
+	return {
+		...routine,
+		blocks: routine.blocks.map((block) => ({
+			...block,
+			items: block.items.map((item) => (item.id === itemId ? fn(item) : item))
+		}))
+	};
 }

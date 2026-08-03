@@ -30,6 +30,8 @@ export {
 	STARTING_RANGE,
 	STREAK_SESSIONS,
 	applies,
+	applyOffer,
+	declineOffer,
 	offerFor,
 	offersFor,
 	targetTop,

@@ -4,7 +4,10 @@
 	import { page } from '$app/state';
 	import { onMount, onDestroy } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
-	import { getRoutine, putRoutine } from '$lib/db/routines.js';
+	import { describeTarget, getRoutine, putRoutine } from '$lib/db/routines.js';
+	import { getSettings } from '$lib/db/settings.js';
+	import { ownedEquipment } from '$lib/catalog/equipment.js';
+	import { applyOffer, declineOffer, offersFor, type Offer } from '$lib/progress/index.js';
 	import { getSession, listSessions, putSession } from '$lib/db/sessions.js';
 	import { variantName } from '$lib/catalog/ladders.js';
 	import { formatSetList, formatWhen, pickLastPerformance } from '$lib/session/last-time.js';
@@ -192,16 +195,74 @@
 		await goto(`${base}/`, { replaceState: true });
 	}
 
+	/**
+	 * §17's progression suggestions, computed once the session is finished.
+	 *
+	 * Here and nowhere else (§17.3): the finished screen is the calm moment §15
+	 * asks for, it is where the app already asks whether to keep a ladder swap,
+	 * and it is after the work rather than during it. Mid-session this would be a
+	 * decision taken while out of breath.
+	 */
+	let offers = $state<Offer[]>([]);
+	let settled = $state<Record<string, string>>({});
+	/**
+	 * The routine as this screen's own writes have left it. `player.routine` is a
+	 * readonly snapshot taken when the session started, so every write on this
+	 * screen has to build on the previous one — otherwise taking one suggestion
+	 * and then declining a second silently undoes the first, and keeping a ladder
+	 * swap undoes both.
+	 */
+	let edited = $state<Routine | null>(null);
+	const routineNow = $derived(edited ?? player?.routine ?? null);
+
+	$effect(() => {
+		if (player?.phase !== 'finished' || offers.length) return;
+		void (async () => {
+			const [all, saved] = await Promise.all([listSessions(), getSettings()]);
+			// `all` already contains this session: finish() wrote it before the
+			// phase flipped, so today counts towards its own criterion.
+			offers = offersFor(player!.routine, all, ownedEquipment(saved));
+		})();
+	});
+
+	/** Take an offer up. Nothing is written until this runs, and it runs from a tap. */
+	async function takeOffer(offer: Offer) {
+		if (!routineNow) return;
+		const updated = applyOffer(routineNow, offer, (id) => getExercise(id)?.unilateral ?? false);
+		await putRoutine(updated);
+		edited = updated;
+		settled[offer.itemId] =
+			offer.kind === 'next_rung'
+				? t.session.progress.appliedRung(variantName(offer.to), describeTarget(offer.target, t))
+				: offer.kind === 'add_rep'
+					? t.session.progress.appliedTarget(
+							variantName(offer.exerciseId),
+							describeTarget(offer.target, t)
+						)
+					: t.session.progress.dismissed;
+	}
+
+	/** Turn one down, and remember it for a fortnight so the app stops asking. */
+	async function dismissOffer(offer: Offer) {
+		if (!routineNow) return;
+		const updated = declineOffer(routineNow, offer.itemId);
+		await putRoutine(updated);
+		edited = updated;
+		settled[offer.itemId] = t.session.progress.dismissed;
+	}
+
 	/** Fold this session's swaps into the routine, so next time starts here. */
 	async function keepSwaps() {
-		if (!player) return;
-		await putRoutine(
-			applySwaps(
-				player.routine,
-				player.session.swaps ?? {},
-				(id) => getExercise(id)?.unilateral ?? false
-			)
+		if (!player || !routineNow) return;
+		// Built on `routineNow`, not on the player's snapshot, so keeping a swap
+		// does not roll back a progression suggestion taken a moment earlier.
+		const updated = applySwaps(
+			routineNow,
+			player.session.swaps ?? {},
+			(id) => getExercise(id)?.unilateral ?? false
 		);
+		await putRoutine(updated);
+		edited = updated;
 		keptSwaps = true;
 	}
 
@@ -429,6 +490,68 @@
 						{t.session.keepHint}
 					</p>
 				{/if}
+			</div>
+		{/if}
+
+		{#if offers.length}
+			<!-- §17's suggestions. At most two, never applied without a tap, and
+				 worded within §17.5: what the app saw, not what it thinks your body
+				 did. There is no "you have plateaued" and no estimated intensity here
+				 because there is no evidence for either. -->
+			<div class="rounded-2xl border border-zinc-700 bg-zinc-900 p-5">
+				<p class="font-medium">{t.session.progress.title}</p>
+				<ul class="mt-3 flex flex-col gap-4">
+					{#each offers as offer (offer.itemId)}
+						<li class="flex flex-col gap-2">
+							<p class="text-sm text-zinc-400">
+								{t.session.progress.clearedTwice(
+									variantName(offer.exerciseId),
+									describeTarget(offer.cleared, t)
+								)}
+							</p>
+							{#if offer.kind === 'next_rung' && !settled[offer.itemId]}
+								<!-- The pitch goes once the decision is made. `ladder_end` below
+									 stays, because that one is a statement rather than a pitch. -->
+								<p class="text-sm text-zinc-500">
+									{t.session.progress.nextRungWhy(variantName(offer.to))}
+								</p>
+							{:else if offer.kind === 'ladder_end'}
+								<p class="text-sm text-zinc-500">
+									{t.session.progress.ladderEnd(variantName(offer.exerciseId))}
+								</p>
+							{/if}
+
+							{#if settled[offer.itemId]}
+								<p class="text-sm text-zinc-500">{settled[offer.itemId]}</p>
+							{:else if offer.kind === 'ladder_end'}
+								<!-- Nothing to apply, so the only button dismisses. It still takes
+									 a tap: that is what stops the app writing to the routine on its
+									 own just to remember it has spoken. -->
+								<button
+									onclick={() => dismissOffer(offer)}
+									class="min-h-14 w-full rounded-xl border border-zinc-700 font-medium"
+								>
+									{t.session.progress.ok}
+								</button>
+							{:else}
+								<button
+									onclick={() => takeOffer(offer)}
+									class="min-h-14 w-full rounded-xl border border-zinc-700 font-medium"
+								>
+									{offer.kind === 'next_rung'
+										? t.session.progress.nextRung(variantName(offer.to))
+										: t.session.progress.addRep(describeTarget(offer.target, t))}
+								</button>
+								<button
+									onclick={() => dismissOffer(offer)}
+									class="min-h-11 text-sm text-zinc-500"
+								>
+									{t.session.progress.notNow}
+								</button>
+							{/if}
+						</li>
+					{/each}
+				</ul>
 			</div>
 		{/if}
 
