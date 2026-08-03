@@ -2,11 +2,12 @@ import { backupFilename, buildBackup, serializeBackup } from './backup.js';
 import { catalog } from '../catalog/index.js';
 import { loadThumbnails } from '../pdf/images.js';
 import { sheetFonts } from '../pdf/fonts.js';
+import { llmCatalogJson } from '../import/prompt.js';
 import { pack } from '../i18n/locale.svelte.js';
 import { routineSheet, sheetFilename } from '../pdf/routine-sheet.js';
 import { sessionsToCsv } from '../stats/csv.js';
 import { listSessions } from './sessions.js';
-import type { Routine } from '../types.js';
+import type { EquipmentId, Routine } from '../types.js';
 
 /** Base64 for the Filesystem plugin, which is how it takes anything not text. */
 function toBase64(bytes: Uint8Array): string {
@@ -15,7 +16,20 @@ function toBase64(bytes: Uint8Array): string {
 	return btoa(binary);
 }
 
-/** Shared by every export: write it somewhere, then hand it to the system. */
+/**
+ * Shared by every export: write it somewhere, then hand it to the system.
+ *
+ * **Every file the app emits must come through here.** A synthetic
+ * `<a download>` click does nothing at all inside the Android WebView — no
+ * file, no error, no console message — so a screen that builds its own anchor
+ * works in `vite dev` and is dead on the phone. That is what happened to the
+ * import screen's catalog file (fixed 2026-08-03): it was the one download that
+ * did not use this function, and it was the one download that did not work.
+ *
+ * The desktop branch below is the *only* anchor click in the app, and it revokes
+ * the object URL on a timer rather than on the next line: revoking synchronously
+ * after `click()` races the browser's own fetch of the blob.
+ */
 async function deliver(
 	filename: string,
 	contents: string | Uint8Array,
@@ -63,12 +77,24 @@ export async function exportCsvFile(): Promise<{ filename: string; shared: boole
 }
 
 /**
+ * The catalog file that goes with §14's prompt, filtered to what the user owns.
+ *
+ * It is not a backup and it is not data — it is an attachment for a chat with a
+ * model, which on a phone means the share sheet, and which is exactly why it has
+ * to go through `deliver` like everything else.
+ */
+export async function exportCatalogFile(
+	owned: EquipmentId[]
+): Promise<{ filename: string; shared: boolean }> {
+	return deliver('catalog-for-llm.json', llmCatalogJson(owned), 'application/json');
+}
+
+/**
  * Getting the backup off the device.
  *
- * A blob download does not reliably reach the Android download manager from
- * inside a WebView, so on the phone the file is written to app storage and
- * handed to the system share sheet — which is also how it reaches Drive or
- * email rather than sitting on the same device it is meant to protect.
+ * On the phone the file is written to app storage and handed to the system share
+ * sheet — which is also how it reaches Drive or email rather than sitting on the
+ * same device it is meant to protect.
  */
 export async function exportBackupFile(): Promise<{ filename: string; shared: boolean }> {
 	const json = serializeBackup(await buildBackup());

@@ -20,6 +20,11 @@ export const importer = {
 	copyPrompt: 'Copy prompt',
 	copied: 'Copied',
 	catalogFile: 'Catalog file',
+	catalogSaving: 'Saving…',
+	/** On the phone the file leaves through the share sheet; in a browser it downloads. */
+	catalogSaved: (filename: string) => `Saved ${filename} — attach it to the chat.`,
+	catalogSavedLocal: (filename: string) => `Written to app storage as ${filename}`,
+	catalogFailed: (reason: string) => `Could not save the catalog file: ${reason}`,
 	/**
 	 * The prompt itself stays English (§16) — it is an instruction to a model and
 	 * its JSON keys are English — but the routine it writes is the user's, so the

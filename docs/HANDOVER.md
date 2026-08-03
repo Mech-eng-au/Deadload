@@ -43,7 +43,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Language | English and Danish, chosen in Settings or followed from the phone. The interface, the muscle glossary, the equipment table, the nine presets and the printable sheet; the exercise catalog stays English on purpose (added 2026-08-02) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **326 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **401 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -136,6 +136,20 @@ does not exist in the Android System WebView — a Chromium issue open since 201
 implementation is silent in the APK while working perfectly in `vite dev`. This was shipped and
 caught on the phone the same day. The wider rule: *a browser API present in Chromium is not
 necessarily present in the WebView*, and the only place to find out is the device.
+
+**Every file the app emits goes through `deliver()` in `src/lib/db/export-file.ts`.** A synthetic
+`<a download>` click is another API that is fine in Chromium and inert in the WebView. The import
+screen's catalog-file button hand-rolled one and was dead on the phone for two weeks (fixed
+2026-08-03, SPEC §14): the user tried to generate a routine, the file never reached the chat, and
+the model correctly refused to invent exercise ids. Note what did *not* catch it — `npm run check`
+was clean, 370 tests passed, and the button was on a screen I had opened in Chromium, where it
+worked. Note also that the knowledge was not missing: the paragraph above it says exactly this
+about `speechSynthesis`, and `export-file.ts` said it about blob downloads. **The third repeat of a
+lesson is a sign the lesson needed to be executable, not better worded.** It is now
+`tests/webview.test.ts`, which lists one permitted file per absent API and fails on any other file
+that reaches for it — and which also fails if the permitted file stops using it, so the walls
+cannot quietly go stale. Adding a name to one of those lists is a claim that the file handles the
+native path too.
 
 **The spoken language is fixed to English, not `navigator.language`.** Everything the app says is
 English because the catalog is; on a Danish-locale phone the device locale made a Danish voice read
@@ -362,7 +376,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 326 unit tests
+npm test           # 401 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 npm run build:fonts    # re-cuts the PDF's font subsets; run by hand, output committed
