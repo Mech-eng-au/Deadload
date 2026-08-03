@@ -178,16 +178,20 @@
 							</span>
 						</span>
 					</button>
-					<div class="flex shrink-0 items-center gap-1">
-						{@render grip(slot)}
-						<button
-							onclick={() => routine.blocks[slot.section].items.splice(slot.index, 1)}
-							aria-label={t.routine.removeExercise}
-							class="min-h-11 min-w-11 rounded-lg text-zinc-500 hover:text-red-400"
-						>
-							×
-						</button>
-					</div>
+					{@render grip(slot)}
+					<!-- Remove stays on the right whichever edge the handle takes (§12).
+						 It used to share a wrapper with the handle, which would have
+						 dragged it along to the left and put the destructive button under
+						 the thumb that is there to reorder. `order-last` rather than a
+						 later position in the markup, so tabbing still reaches the handle
+						 before the button that deletes what it was about to move. -->
+					<button
+						onclick={() => routine.blocks[slot.section].items.splice(slot.index, 1)}
+						aria-label={t.routine.removeExercise}
+						class="order-last min-h-11 min-w-11 shrink-0 rounded-lg text-zinc-500 hover:text-red-400"
+					>
+						×
+					</button>
 				</div>
 
 				<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3 text-sm">

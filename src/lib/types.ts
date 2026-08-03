@@ -235,4 +235,16 @@ export interface Settings {
 	 * There is a test named after this.
 	 */
 	language?: Locale;
+
+	/**
+	 * Which edge the drag handle sits on (§12). **Two-valued, not three**, and
+	 * that is the difference from the two fields above: a phone will tell you
+	 * what language it is set to, and it will not tell you which hand is holding
+	 * it. There is no device answer to defer to, so `undefined` means nothing
+	 * more than "never chosen" and `?? 'left'` loses nothing.
+	 */
+	handleSide?: HandleSide;
 }
+
+/** The edge a drag handle sits on. Named for the screen, not for a hand. */
+export type HandleSide = 'left' | 'right';

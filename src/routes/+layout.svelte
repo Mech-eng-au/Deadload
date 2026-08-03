@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { isTabRoot, pushBackGuard, registerBackHandler } from '$lib/nav/back.js';
+	import { adoptHandleSide } from '$lib/handle-side.svelte.js';
 	import { adoptSaved, t } from '$lib/i18n/locale.svelte.js';
 	import { getSettings } from '$lib/db/settings.js';
 
@@ -87,7 +88,12 @@
 	 * who chose a language other than their phone's.
 	 */
 	onMount(async () => {
-		adoptSaved((await getSettings()).language);
+		// One read, two preferences: both are global, both are wanted before any
+		// screen has finished loading its own data, and neither is worth a second
+		// trip to IndexedDB for.
+		const settings = await getSettings();
+		adoptSaved(settings.language);
+		adoptHandleSide(settings.handleSide);
 	});
 
 	onMount(() => {

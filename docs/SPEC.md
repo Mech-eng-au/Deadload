@@ -1211,6 +1211,33 @@ The handle is a `<button>`, and **Arrow Up / Arrow Down on it move the exercise*
 way to reorder without a pointer, and it is what the two removed buttons did; focus follows the card
 to its new position so a second press moves the same exercise again.
 
+**Which edge the handle sits on is a setting, and it defaults to the left. Added 2026-08-03.** It was
+on the right because that is where the card ran out of room, which is not a reason. The position is
+a real question and the app cannot answer it: the right edge is the easy reach for a right thumb and
+the far corner for a left one, there is no `navigator.handedness`, and there is not going to be one.
+
+Two things follow from that being genuinely unknowable:
+
+- **The setting is named for the edge, not for a hand.** *Reorder handle: Left / Right*, not
+  *Left-handed*. Naming it after a hand would be the app asserting a mapping it cannot check, and it
+  would make someone who wants the handle on the left for a different reason — it is next to the
+  photo, it is away from the tap target that opens the exercise — agree to a claim about themselves
+  to get it.
+- **It is two-valued, unlike the language (§16) and the equipment (§5.1).** Both of those are
+  three-valued because a phone will tell you what it is set to, so "never answered" has somewhere to
+  defer to. Nothing will tell you which hand is holding it, so here `undefined` means only "never
+  chosen" and the default is not hiding a second question.
+
+**Only the handle moves.** In the editor, Remove stays on the right whichever side the handle takes.
+They used to share a wrapper, which would have carried the destructive button along with the handle
+and put the two under the same thumb. They are now siblings ordered by CSS, which also keeps the
+handle ahead of Remove in the tab order.
+
+The handle moves with `order`, not by being rendered somewhere else. **The DOM order stays the
+reading order**, so a screen reader still meets the exercise before the control that moves it,
+whichever way the setting points — and the caller renders the handle in one place regardless, which
+is what stops the two screens from disagreeing.
+
 #### Reading about an exercise from a routine
 
 Added 2026-07-30. Tapping an exercise in a routine — viewing one or editing one — opens what the

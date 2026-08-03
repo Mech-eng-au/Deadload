@@ -17,6 +17,14 @@ export const settings = {
 	spokenStaysEnglish:
 		'Oplæsningen bliver på engelsk uanset hvad du vælger her: øvelsesnavnene der læses op er engelske, og en dansk stemme der læser engelske ord op er værre end en engelsk.',
 
+	handleSide: 'Flyttegreb',
+	handleSideIntro:
+		'Hvilken side af en øvelse grebet sidder på, når du sætter en rutine i rækkefølge. Sæt det der hvor din tommelfinger allerede er.',
+	handleLeft: 'Venstre',
+	handleRight: 'Højre',
+	handleSideHint:
+		'Det flytter kun grebet. Fjern-knappen bliver i højre side, så de to aldrig er under den samme tommelfinger.',
+
 	whatYouOwn: 'Hvad du har',
 	whatYouOwnIntro:
 		'Sæt kryds ved det du har. Udstyr uden kryds bliver holdt ude af kataloget og ude af øvelsesvælgeren, så du kun bliver tilbudt det du faktisk kan lave.',
