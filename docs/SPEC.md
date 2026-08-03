@@ -1303,6 +1303,22 @@ kettlebell exercise in the catalog and the routine that came back was unusable. 
 `catalog.json` at the moment the user taps download, filtered to what they own, with an `equipment`
 field per entry so the model can see why an exercise is there.
 
+**Amended 2026-08-03. The catalog file leaves through the share sheet, not through a link.** The
+download button did nothing on the phone. It built an `<a download>` and clicked it, which is a
+file in `vite dev` and is *nothing at all* in the Android WebView — no file, no error, no console
+message. The first real attempt to generate a routine therefore reached the chat with no catalog
+attached, and the model did what this appendix tells it to do: it refused to invent exercise ids.
+
+It now goes through `deliver()` in `src/lib/db/export-file.ts`, the same Filesystem-plus-Share path
+the backup, the CSV and the PDF have always used, and the button reports where the file went —
+because a download that says nothing cannot be told from one that failed, which is precisely how
+this survived to the phone.
+
+This is the same failure as §8's print dialog and §7's `speechSynthesis`, for the third time, and
+all three were already written down. Prose in a specification cannot fail a build, so the rule is
+now a test: `tests/webview.test.ts` names one file per absent API and fails on any other file that
+reaches for it. **Every file the app emits must come through `deliver()`.**
+
 The prompt's `Constraints:` line is generated from the same source rather than left as a blank to
 fill in: `Equipment available: dumbbells, jumping rope`, or `Equipment available: none — floor,
 wall and chair only`. A model told what is available in a sentence produces better routines than one

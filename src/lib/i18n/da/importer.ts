@@ -21,6 +21,10 @@ export const importer = {
 	copyPrompt: 'Kopiér prompt',
 	copied: 'Kopieret',
 	catalogFile: 'Katalogfil',
+	catalogSaving: 'Gemmer…',
+	catalogSaved: (filename: string) => `Gemte ${filename} — vedhæft den i chatten.`,
+	catalogSavedLocal: (filename: string) => `Skrevet til appens lager som ${filename}`,
+	catalogFailed: (reason: string) => `Kunne ikke gemme katalogfilen: ${reason}`,
 	promptLanguageLine: (language: string) =>
 		`Write the routine's name, goal, description and notes in ${language}. Leave every field name and every exercise id exactly as they are.`,
 

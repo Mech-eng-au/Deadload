@@ -7,7 +7,8 @@
 	import { describeItem } from '$lib/db/routines.js';
 	import { ImportError, toRoutineItem, type ReviewItem, type ReviewModel } from '$lib/import/index.js';
 	import { commitReview, itemCount, outstanding, reviewFromText } from '$lib/import/runner.svelte.js';
-	import { buildPrompt, equipmentSentence, llmCatalogJson } from '$lib/import/prompt.js';
+	import { buildPrompt, equipmentSentence } from '$lib/import/prompt.js';
+	import { exportCatalogFile } from '$lib/db/export-file.js';
 	import {
 		equipmentLabel,
 		isLoadable,
@@ -28,6 +29,8 @@
 	let pickingFor = $state<ReviewItem | null>(null);
 	let saving = $state(false);
 	let copied = $state(false);
+	let downloading = $state(false);
+	let catalogSaved = $state<string | null>(null);
 	let settings = $state<Settings | null>(null);
 
 	onMount(async () => {
@@ -57,16 +60,26 @@
 	 * The catalog file is built here rather than shipped as a static asset (§14,
 	 * amended 2026-07-30): a build-time file cannot know what the user owns, and
 	 * one that lists exercises they cannot do produces a routine they cannot run.
+	 *
+	 * **Amended 2026-08-03: it goes through `deliver` like every other export.**
+	 * This button used to build its own `<a download>`, which does nothing
+	 * whatsoever inside the Android WebView — so on the phone the button was
+	 * inert, no file reached the chat, and the model quite rightly refused to
+	 * invent exercise ids. The result label is here for the same reason: a
+	 * download that reports nothing cannot be told from one that failed.
 	 */
-	function downloadCatalog() {
-		const url = URL.createObjectURL(
-			new Blob([llmCatalogJson(owned)], { type: 'application/json' })
-		);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'catalog-for-llm.json';
-		a.click();
-		URL.revokeObjectURL(url);
+	async function downloadCatalog() {
+		downloading = true;
+		try {
+			const { filename, shared } = await exportCatalogFile(owned);
+			catalogSaved = shared
+				? t.importer.catalogSaved(filename)
+				: t.importer.catalogSavedLocal(filename);
+		} catch (e) {
+			catalogSaved = t.importer.catalogFailed(e instanceof Error ? e.message : String(e));
+		} finally {
+			downloading = false;
+		}
 	}
 
 	const remaining = $derived(review ? outstanding(review) : 0);
@@ -217,11 +230,15 @@
 				</button>
 				<button
 					onclick={downloadCatalog}
-					class="flex min-h-12 flex-1 items-center justify-center rounded-xl border border-zinc-700 px-4 text-center text-sm"
+					disabled={downloading}
+					class="flex min-h-12 flex-1 items-center justify-center rounded-xl border border-zinc-700 px-4 text-center text-sm disabled:text-zinc-500"
 				>
-					{t.importer.catalogFile}
+					{downloading ? t.importer.catalogSaving : t.importer.catalogFile}
 				</button>
 			</div>
+			{#if catalogSaved}
+				<p class="mt-2 text-xs break-words text-zinc-400">{catalogSaved}</p>
+			{/if}
 			<pre
 				class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs whitespace-pre-wrap text-zinc-400">{prompt}</pre>
 		</details>
