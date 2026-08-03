@@ -1166,8 +1166,41 @@ Four decisions, all in `$lib/reorder.ts` and `SortableList.svelte` rather than i
 3. **Page coordinates, and the list scrolls near the edges.** A routine is taller than the screen, so
    a drag that cannot leave the viewport cannot reorder it. Measuring in page space rather than
    client space is what lets the page move under the finger without the arithmetic going wrong.
-4. **Within one section only** — exactly as far as the arrow buttons reached. Moving an exercise from
-   Warm-up into Main is a different edit, and the editor is where it belongs.
+4. ~~**Within one section only** — exactly as far as the arrow buttons reached. Moving an exercise from
+   Warm-up into Main is a different edit, and the editor is where it belongs.~~
+   **Amended 2026-08-03: a drag crosses sections, on both screens.**
+
+   The old rule was a description of the implementation, not a decision about the user: the drag was
+   mounted once per section, so no instance could see another's cards and a drop had nowhere else to
+   land. Reading it back as "Warm-up to Main is a different edit" made a limitation sound like a
+   principle.
+
+   In the editor it replaces the one edit the drag could not do at all. Moving an exercise between
+   sections meant removing it and adding it again, which **loses its sets, its target, its rest and
+   its notes** — that is not reordering, it is retyping, and it is worst for exactly the items worth
+   keeping. On the routine screen it is allowed too, and confining it to the editor would have put
+   the *more* awkward edit on the screen less suited to it: the routine screen has the small cards,
+   which is the whole argument for the drag living there.
+
+   Three things fall out, all in `$lib/reorder.ts` and unit-tested:
+
+   - **Which section a card lands in is decided by the section's top**, not by whether the card is
+     inside its box. Sections are separated by their own chrome, so a card in that gap is inside no
+     section at all and "nearest" would flip back and forth across the midpoint. "The last section I
+     have been carried past the top of" is monotonic: drag steadily downwards and the target only
+     ever advances. There is a property test for exactly that.
+   - **An empty section can be dragged into**, because it still has a top. That is new capability
+     rather than a side effect — before this, a section with nothing in it could only be filled from
+     the picker. It is outlined while a card is over it, which is the only cue a section with no
+     cards can give.
+   - **Only the destination opens a gap.** Closing the hole in the source at the same time is the
+     obvious symmetric thing and it looks wrong: in the editor each section is a bordered card, so
+     cards sliding up inside the section they are leaving cross that border. The gap that matters is
+     the one being aimed at.
+
+   Unchanged: a drop on the routine screen saves at once, and in the editor it stages until Save, so
+   Cancel still discards a drag. Within one section the gesture behaves exactly as it did — there is
+   a test asserting the new arithmetic agrees with the old on that case.
 
 **On the routine screen a drop saves immediately.** That screen has no Save button, and inventing one
 for a gesture would be worse than the gesture: the drop *is* the decision, it is visible, and

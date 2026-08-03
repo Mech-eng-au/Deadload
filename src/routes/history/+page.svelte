@@ -31,7 +31,7 @@
 </script>
 
 <svelte:head>
-	<title>History · Deadload</title>
+	<title>{t.history.title} · Deadload</title>
 </svelte:head>
 
 <a href="{base}/stats/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.common.backStatistics}</a>

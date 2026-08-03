@@ -40,6 +40,7 @@ export const about = {
 	publicDomain: 'Public domain',
 	by: (author: string) => `· af ${author}`,
 	exerciseCount: (n: number) => f.plural(n, { one: '1 øvelse', other: `${f.num(n)} øvelser` }),
+	origin: 'kilde',
 	shareAlike:
 		'Delt under samme licens, med ændringer: farvet om og forenklet, med vores egne markeringer tegnet ovenpå.',
 	notMedicalAdvice:

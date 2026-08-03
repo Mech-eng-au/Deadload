@@ -5,6 +5,7 @@
 	import { getSettings } from '$lib/db/settings.js';
 	import ExerciseDetail from './ExerciseDetail.svelte';
 	import type { Settings } from '$lib/types.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 
 	/**
 	 * "What is this exercise?", answered over the routine rather than away from it
@@ -47,7 +48,7 @@
 <div
 	role="dialog"
 	aria-modal="true"
-	aria-label={exercise?.name ?? 'Exercise'}
+	aria-label={exercise?.name ?? t.importer.pickerTitle}
 	class="fixed inset-0 z-50 flex flex-col bg-zinc-950"
 >
 	<div
@@ -60,7 +61,7 @@
 			onclick={onclose}
 			class="mt-1 min-h-14 min-w-14 shrink-0 rounded-xl text-sm text-zinc-400 hover:text-zinc-100"
 		>
-			Close
+			{t.common.close}
 		</button>
 	</div>
 
@@ -68,7 +69,7 @@
 		{#if exercise}
 			<ExerciseDetail {exercise} owned={ownedEquipment(settings)} embedded onexercise={show} />
 		{:else}
-			<p class="text-zinc-400">That exercise is not in the catalog.</p>
+			<p class="text-zinc-400">{t.exercise.notFound}</p>
 		{/if}
 	</div>
 </div>

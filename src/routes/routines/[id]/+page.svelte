@@ -19,7 +19,7 @@
 	import { getSettings } from '$lib/db/settings.js';
 	import ExerciseSheet from '$lib/components/ExerciseSheet.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
-	import { moveItem } from '$lib/reorder.js';
+	import { moveAcross, type Slot } from '$lib/reorder.js';
 	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Block, Routine, RoutineItem, Settings } from '$lib/types.js';
 
@@ -90,24 +90,53 @@
 
 	/**
 	 * Dragging saves at once (§12). There is no Save button on this screen and
-	 * inventing one for a gesture would be worse than the gesture: the drop *is* the
-	 * decision, it is visible, and dragging the card back undoes it.
+	 * inventing one for a gesture would be worse than the gesture: the drop *is*
+	 * the decision, it is visible, and dragging the card back undoes it.
 	 *
-	 * Within one section only, exactly as far as the arrow buttons used to reach.
-	 * Moving an exercise from Warm-up into Main is a different edit, and the editor
-	 * is where it belongs.
+	 * **Across sections since 2026-08-03.** The old rule was "within one section
+	 * only, exactly as far as the arrow buttons reached", and the reason was that
+	 * the drag could not see more than one list — not a view about what the user
+	 * should be allowed to do. Now that it can, restricting it to the editor
+	 * would put the *more* awkward edit on the screen less suited to it: this one
+	 * has the small cards, which is the whole argument for the drag being here.
 	 */
-	async function reorder(block: Block, from: number, to: number) {
+	async function onreorder(from: Slot, to: Slot) {
 		if (!routine) return;
+		const order = shown.map((s) => s.blockIndex);
+		const moved = moveAcross(
+			order.map((b) => routine!.blocks[b].items),
+			from,
+			to
+		);
 		const next: Routine = {
 			...routine,
-			blocks: routine.blocks.map((b) =>
-				b.id === block.id ? { ...b, items: moveItem(b.items, from, to) } : b
-			)
+			blocks: routine.blocks.map((b) => {
+				const at = order.indexOf(routine!.blocks.indexOf(b));
+				return at === -1 ? { ...b } : { ...b, items: moved[at] };
+			})
 		};
 		routine = next; // moved under the finger, before the write settles
 		routine = await putRoutine(next);
 	}
+
+	/**
+	 * The sections this screen puts on the page, and where each came from.
+	 *
+	 * A block with neither a name nor an exercise in it is not rendered, exactly
+	 * as before — but that means the list handed to the drag is not the routine's
+	 * own list, so the mapping back has to be explicit. Passing a filtered array
+	 * and assuming the indices still line up is the sort of thing that silently
+	 * moves an exercise into the wrong section.
+	 *
+	 * A *named* empty section is shown, which it was not before. It has to be, or
+	 * it cannot be dragged into — and a named section with nothing in it is
+	 * something the user made on purpose.
+	 */
+	const shown = $derived(
+		(routine?.blocks ?? [])
+			.map((block, blockIndex) => ({ ...block, blockIndex }))
+			.filter((block) => block.items.length > 0 || !!block.label)
+	);
 </script>
 
 <svelte:head>
@@ -152,10 +181,15 @@
 			{/if}
 		</header>
 
-		{#each routine.blocks as block (block.id)}
-			{#if block.items.length}
-				{@const rounds = Math.max(1, ...block.items.map((i) => Math.max(1, i.sets)))}
-				<section>
+		<SortableList
+			sections={shown}
+			{onreorder}
+			describe={exerciseName}
+			itemClass="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3"
+		>
+			{#snippet section(block, _s, list)}
+				{@const rounds = Math.max(1, ...block.items.map((i) => Math.max(1, i.sets)), 1)}
+				<section class="mb-6">
 					{#if block.label || block.mode === 'circuit'}
 						<h2 class="mb-2 text-sm font-semibold tracking-wide text-zinc-400 uppercase">
 							{block.label || t.routine.circuit}
@@ -166,64 +200,59 @@
 							{/if}
 						</h2>
 					{/if}
-					<SortableList
-						items={block.items}
-						onreorder={(from, to) => reorder(block, from, to)}
-						describe={exerciseName}
-						itemClass="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3"
-					>
-						{#snippet row(item, _i, grip)}
-							{@const exercise = getExercise(item.exerciseId)}
-							<!-- The card opens the exercise, the handle moves it (§12). Two
-								 gestures on one row, told apart by where the finger lands rather than
-								 by how long it stays — a long press is invisible until it has already
-								 gone wrong. -->
-							<button
-								onclick={() => (sheetFor = item.exerciseId)}
-								class="flex min-w-0 flex-1 items-center gap-4 text-left"
-							>
-								{#if exercise}
-									<img
-										src="{base}{exercise.media[0].path}"
-										alt=""
-										width={exercise.media[0].width}
-										height={exercise.media[0].height}
-										loading="lazy"
-										class="h-16 w-20 shrink-0 rounded-lg bg-white object-cover"
-									/>
-								{/if}
-								<span class="min-w-0">
-									<span class="block truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
-									<span class="mt-0.5 block text-sm text-zinc-400">{describeItem(item, t)}</span>
-									<!-- A routine keeps every exercise in it (§5.1). Equipment the user has
-										 not ticked earns a chip here, never a removal. -->
-									{#if exercise?.equipment.length}
-										<span class="mt-1 flex flex-wrap gap-1.5 text-xs">
-											{#each exercise.equipment as id (id)}
-												<span
-													class="rounded-full px-2 py-0.5 {missingEquipment(exercise, owned).includes(id)
-														? 'bg-amber-950/60 text-amber-200'
-														: 'bg-zinc-800 text-zinc-400'}"
-												>
-													{equipmentLabel(id, t)}
-												</span>
-											{/each}
-										</span>
-									{/if}
-									{#if item.restSeconds > 0}
-										<span class="block text-xs text-zinc-500">{t.units.restAfter(item.restSeconds)}</span>
-									{/if}
-									{#if item.notes}
-										<span class="mt-1 block text-xs text-zinc-500">{item.notes}</span>
-									{/if}
-								</span>
-							</button>
-							{@render grip(_i)}
-						{/snippet}
-					</SortableList>
+					{@render list()}
 				</section>
-			{/if}
-		{/each}
+			{/snippet}
+
+			{#snippet row(item, slot, grip)}
+				{@const exercise = getExercise(item.exerciseId)}
+				<!-- The card opens the exercise, the handle moves it (§12). Two
+					 gestures on one row, told apart by where the finger lands rather than
+					 by how long it stays — a long press is invisible until it has already
+					 gone wrong. -->
+				<button
+					onclick={() => (sheetFor = item.exerciseId)}
+					class="flex min-w-0 flex-1 items-center gap-4 text-left"
+				>
+					{#if exercise}
+						<img
+							src="{base}{exercise.media[0].path}"
+							alt=""
+							width={exercise.media[0].width}
+							height={exercise.media[0].height}
+							loading="lazy"
+							class="h-16 w-20 shrink-0 rounded-lg bg-white object-cover"
+						/>
+					{/if}
+					<span class="min-w-0">
+						<span class="block truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
+						<span class="mt-0.5 block text-sm text-zinc-400">{describeItem(item, t)}</span>
+						<!-- A routine keeps every exercise in it (§5.1). Equipment the user has
+							 not ticked earns a chip here, never a removal. -->
+						{#if exercise?.equipment.length}
+							<span class="mt-1 flex flex-wrap gap-1.5 text-xs">
+								{#each exercise.equipment as id (id)}
+									<span
+										class="rounded-full px-2 py-0.5 {missingEquipment(exercise, owned).includes(id)
+											? 'bg-amber-950/60 text-amber-200'
+											: 'bg-zinc-800 text-zinc-400'}"
+									>
+										{equipmentLabel(id, t)}
+									</span>
+								{/each}
+							</span>
+						{/if}
+						{#if item.restSeconds > 0}
+							<span class="block text-xs text-zinc-500">{t.units.restAfter(item.restSeconds)}</span>
+						{/if}
+						{#if item.notes}
+							<span class="mt-1 block text-xs text-zinc-500">{item.notes}</span>
+						{/if}
+					</span>
+				</button>
+				{@render grip(slot)}
+			{/snippet}
+		</SortableList>
 
 		<div class="flex flex-col gap-3 border-t border-zinc-800 pt-6">
 			{#if countItems(routine) > 0}

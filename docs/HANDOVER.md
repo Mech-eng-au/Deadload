@@ -420,11 +420,11 @@ first, because it also decides whether the app starts speaking Danish, and that 
 may not be installed. Instructions are a separate and much larger question: 577 steps, ~14,400 words,
 and no test that can check a translation is any good.
 
-**Dragging an exercise between sections.** The drag added 2026-07-30 reorders within one section
-only, exactly as far as the arrow buttons it replaced could reach. Moving an exercise from Warm-up
-into Main still means removing and re-adding it in the editor. Worth doing if it turns out to be a
-thing the user actually wants; it needs the drag to know about more than one list, which is why it
-was left out of the first version rather than half-done.
+~~**Dragging an exercise between sections.**~~ **Built 2026-08-03** (SPEC §12). `SortableList` now
+owns every section rather than being mounted once per section, which is what made a drop in another
+section expressible at all. The reason it was worth doing turned out to be sharper than "a thing the
+user wants": moving an exercise between sections previously meant removing and re-adding it, which
+loses its sets, target, rest and notes. The gesture replaces retyping, not clicking.
 
 **Double progression.** Now unblocked: hit the top of the rep range on every set, and the app
 suggests raising the target. A simple rule over data that already exists. Deliberately left out of

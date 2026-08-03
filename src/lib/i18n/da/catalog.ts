@@ -28,13 +28,9 @@ export const exercise = {
 	howToDoIt: 'Sådan gør du',
 	instructionsInEnglish: 'Trin for trin-anvisningerne er på engelsk, fra øvelseskataloget.',
 	progression: 'Progression',
-	easier: 'Lettere',
-	harder: 'Sværere',
-	currentRung: 'du er her',
 	needsEquipment: (equipment: string) =>
 		`Kræver ${equipment}, som du ikke har sat kryds ved.`,
 	tickInSettings: 'Sæt kryds i Indstillinger',
-	perSide: 'Noteres én side ad gangen',
 	swapPhoto: 'Skift billede, dobbelttryk for at afspille',
 	playing: 'afspiller · dobbelttryk for at stoppe',
 	frameOf: (n: number, total: number) => `${n}/${total} · dobbelttryk for at afspille`,

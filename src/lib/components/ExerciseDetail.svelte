@@ -190,7 +190,7 @@
 		<p class="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
 			Source: {attribution.source} ({attribution.license})
 			{#if attribution.sourceUrl && !embedded}
-				· <a href={attribution.sourceUrl} class="underline hover:text-zinc-300">origin</a>
+				· <a href={attribution.sourceUrl} class="underline hover:text-zinc-300">{t.about.origin}</a>
 			{/if}
 		</p>
 	{/if}
