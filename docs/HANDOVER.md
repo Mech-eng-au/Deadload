@@ -426,9 +426,17 @@ section expressible at all. The reason it was worth doing turned out to be sharp
 user wants": moving an exercise between sections previously meant removing and re-adding it, which
 loses its sets, target, rest and notes. The gesture replaces retyping, not clicking.
 
-**Double progression.** Now unblocked: hit the top of the rep range on every set, and the app
-suggests raising the target. A simple rule over data that already exists. Deliberately left out of
-the ladders change so it can be argued on its own.
+**Progression, and the ladder audit that blocks it.** Specified 2026-08-03 as SPEC §17, not yet
+built. The evidence was checked first and is committed as `docs/exercise-variation.md`; it killed the
+version of this feature that rotated exercises to prevent the muscles "adapting" — that has been
+tested twice and found null both times — and it collapsed double progression and the ladder swap into
+one rule, because in a leverage system progressing *is* changing the exercise.
+
+**The audit comes first.** §17.6: once the app steers a routine with a ladder, the ladder stops being
+a suggestion and becomes the mechanism, and two of the eight chains do not survive that promotion —
+the squat chain ends in a jump squat (power, not strength) and the push-up chain ends on a step that
+roughly doubles the load. `tests/ladders.test.ts` only asserts that `level` never falls, which is a
+much weaker claim than "each rung is the next step".
 
 ~~**Editing a past session.**~~ **Built 2026-07-30** (SPEC §4.3 amendment, `src/lib/session/edit.ts`,
 the History detail page). Tap a set, change reps/seconds, load, RPE or skipped, save; remove a set and
