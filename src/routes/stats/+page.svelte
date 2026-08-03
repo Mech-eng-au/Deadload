@@ -18,6 +18,7 @@
 		type ExerciseProgress
 	} from '$lib/stats/compute.js';
 	import { formatKg } from '$lib/catalog/load.js';
+	import { calibrationWindow } from '$lib/progress/index.js';
 	import { muscleLabel } from '$lib/catalog/muscles.js';
 	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Session } from '$lib/types.js';
@@ -40,7 +41,9 @@
 	const best = $derived(longestStreak(sessions));
 	const muscles = $derived(volumeByMuscle(sessions, byId));
 	const peakMuscle = $derived(Math.max(1, ...muscles.map((m) => m.sets)));
-	const progress = $derived(exerciseProgress(sessions));
+	// The level only widens §17.2's calibration window for `advanced` work; passing
+	// it as a function keeps `compute.ts` free of any catalog dependency.
+	const progress = $derived(exerciseProgress(sessions, (id) => getExercise(id)?.level));
 	const routines = $derived(routineUsage(sessions));
 	const calendar = $derived(activityCalendar(sessions, 16));
 	const busiestDay = $derived(
@@ -66,13 +69,34 @@
 
 	const minutes = (seconds: number) => t.stats.duration(seconds);
 
-	/** Sparkline over an exercise's best set per day. */
-	function spark(row: ExerciseProgress): string {
-		const points = row.history.map((h) => h.bestReps || h.bestSeconds);
-		if (points.length < 2) return '';
-		const max = Math.max(...points, 1);
-		const step = 100 / (points.length - 1);
-		return points.map((p, i) => `${i * step},${24 - (p / max) * 22}`).join(' ');
+	/**
+	 * Sparkline over an exercise's best set per day.
+	 *
+	 * **The calibration sessions are drawn but not joined** (§17.2). Performance
+	 * on a new movement improves from practising the movement, so the first
+	 * sessions on one are substantially motor learning — plotting them into the
+	 * trend draws that as progress, which is the thing §17 refuses to do and
+	 * would have made this screen contradict the finished screen.
+	 *
+	 * Drawn rather than dropped: the user did the work, and hiding it would be
+	 * its own dishonesty. They are pale dots before the line starts.
+	 */
+	function spark(row: ExerciseProgress): { x: number; y: number; calibrating: boolean }[] {
+		const values = row.history.map((h) => h.bestReps || h.bestSeconds);
+		if (values.length < 2) return [];
+		const max = Math.max(...values, 1);
+		const step = 100 / (values.length - 1);
+		return row.history.map((h, i) => ({
+			x: i * step,
+			y: 24 - (values[i] / max) * 22,
+			calibrating: h.calibrating
+		}));
+	}
+
+	/** The trend itself, over the points the app is willing to stand behind. */
+	function trend(row: ExerciseProgress): string {
+		const trusted = spark(row).filter((p) => !p.calibrating);
+		return trusted.length < 2 ? '' : trusted.map((p) => `${p.x},${p.y}`).join(' ');
 	}
 </script>
 
@@ -294,16 +318,35 @@
 									)}
 								</span>
 							</span>
-							{#if spark(row)}
-								<svg viewBox="0 0 100 24" class="h-6 w-16 shrink-0" preserveAspectRatio="none">
-									<polyline
-										points={spark(row)}
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										vector-effect="non-scaling-stroke"
-										class="text-zinc-400"
-									/>
+							{#if spark(row).length}
+								<!-- The viewBox is inset by the dot radius: a calibration dot sits at
+									 x=0 and would otherwise be sliced in half by the edge. -->
+								<svg
+									viewBox="-3 -1 106 26"
+									class="h-6 w-16 shrink-0"
+									preserveAspectRatio="none"
+								>
+									{#if trend(row)}
+										<polyline
+											points={trend(row)}
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											vector-effect="non-scaling-stroke"
+											class="text-zinc-400"
+										/>
+									{/if}
+									<!-- The calibration sessions: recorded, shown, and left out of
+										 the line above (§17.2). -->
+									{#each spark(row).filter((p) => p.calibrating) as p, i (i)}
+										<circle
+											cx={p.x}
+											cy={p.y}
+											r="2"
+											vector-effect="non-scaling-stroke"
+											class="fill-zinc-700"
+										/>
+									{/each}
 								</svg>
 							{/if}
 						</button>
@@ -339,6 +382,15 @@
 									<dd class="inline">{t.units.date(row.lastPerformed, {})}</dd>
 								</div>
 							</dl>
+							<!-- Only where there is a pale dot to explain, and worded about the
+								 measurement rather than about the user (§17.2, §17.5). -->
+							{#if row.history.some((h) => h.calibrating)}
+								<p class="mt-2 text-xs text-zinc-600">
+									{t.stats.calibrating(
+										calibrationWindow(getExercise(row.exerciseId)?.level)
+									)}
+								</p>
+							{/if}
 						{/if}
 					</li>
 				{/each}

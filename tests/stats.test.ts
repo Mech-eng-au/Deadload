@@ -147,6 +147,74 @@ describe('exercise progression', () => {
 		]);
 		expect(rows.map((r) => r.exerciseId)).toEqual(['pushups', 'plank']);
 	});
+
+	describe('the calibration window (§17.2)', () => {
+		// The bug this fixes: the sparkline plotted every session, so the first
+		// weeks of a new exercise — which are substantially motor learning — were
+		// drawn as progress. It made this screen contradict the finished screen,
+		// which refuses to act on exactly those sessions.
+		const six = Array.from({ length: 6 }, (_, d) => session(d, [entry({ reps: 8 + d })]));
+
+		it('marks the first three history points and no more', () => {
+			const [row] = exerciseProgress(six);
+			expect(row.history.map((h) => h.calibrating)).toEqual([
+				true,
+				true,
+				true,
+				false,
+				false,
+				false
+			]);
+		});
+
+		it('gives an advanced exercise five', () => {
+			const hard = Array.from({ length: 6 }, (_, d) =>
+				session(d, [entry({ exerciseId: 'hanging_pike', reps: 5 })])
+			);
+			const [row] = exerciseProgress(hard, () => 'advanced');
+			expect(row.history.map((h) => h.calibrating)).toEqual([
+				true,
+				true,
+				true,
+				true,
+				true,
+				false
+			]);
+		});
+
+		it('still records everything it excludes', () => {
+			// Recorded and excluded, never discarded — the user did the work.
+			const [row] = exerciseProgress(six);
+			expect(row.history).toHaveLength(6);
+			expect(row.sets).toBe(6);
+			expect(row.totalReps).toBe(8 + 9 + 10 + 11 + 12 + 13);
+		});
+
+		it('does not spend a calibration session on a day that was entirely skipped', () => {
+			const sessions = [
+				session(0, [entry({ reps: 10, skipped: true })]),
+				...Array.from({ length: 3 }, (_, d) => session(d + 1, [entry({ reps: 10 })]))
+			];
+			const [row] = exerciseProgress(sessions);
+			// The skipped day contributes no history point at all, and the three
+			// real sessions after it are the window.
+			expect(row.history.map((h) => h.calibrating)).toEqual([true, true, true]);
+		});
+
+		it('treats a day holding two sessions as calibration only while both are', () => {
+			// History is per day; the window is counted in sessions. A day stops
+			// being calibration as soon as a trusted session lands in it.
+			const sameDay = [
+				session(0, [entry({ reps: 8 })]),
+				session(0, [entry({ reps: 9 })]),
+				session(1, [entry({ reps: 10 })]),
+				session(1, [entry({ reps: 11 })])
+			];
+			const [row] = exerciseProgress(sameDay);
+			expect(row.history).toHaveLength(2);
+			expect(row.history.map((h) => h.calibrating)).toEqual([true, false]);
+		});
+	});
 });
 
 describe('streaks', () => {

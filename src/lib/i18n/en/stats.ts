@@ -57,6 +57,14 @@ export const stats = {
 	heaviest: 'Heaviest:',
 	kgReps: 'Kg·reps:',
 	sessionCount: 'Sessions:',
+	/**
+	 * §17.2 requires this to be labelled for what it is: a data-quality heuristic
+	 * inferred from the 1RM familiarisation literature, not a measured fact about
+	 * bodyweight reps. "So the numbers settle" is true; "to maximise adaptation"
+	 * would not be.
+	 */
+	calibrating: (n: number) =>
+		`The first ${n} sessions on a new exercise are shown pale and left out of the trend, so the numbers settle.`,
 	last: 'Last:',
 
 	routinesUsed: 'Routines used',

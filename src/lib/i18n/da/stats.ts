@@ -53,6 +53,8 @@ export const stats = {
 	heaviest: 'Tungeste:',
 	kgReps: 'Kg·reps:',
 	sessionCount: 'Træninger:',
+	calibrating: (n: number) =>
+		`De første ${n} træninger med en ny øvelse vises blegt og tælles ikke med i kurven, så tallene kan falde til ro.`,
 	last: 'Sidst:',
 
 	routinesUsed: 'Rutiner brugt',

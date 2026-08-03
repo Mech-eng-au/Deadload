@@ -108,6 +108,16 @@ export interface RoutineItem {
 	 * this existed stays valid.
 	 */
 	loadKg?: number;
+	/**
+	 * When the user last said no to a progression suggestion for this item
+	 * (§17.3). Suppresses it for 14 days.
+	 *
+	 * On the item rather than in Settings because it is a fact about *this
+	 * exercise in this routine*, and it should travel through backup and restore
+	 * with it. Without it the app asks again next session having learned nothing,
+	 * which is how a helpful feature becomes nagging.
+	 */
+	progressDeclinedAt?: string;
 }
 
 export type Target =

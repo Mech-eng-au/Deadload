@@ -284,6 +284,7 @@ interface RoutineItem {
   tempo?: string;                     // e.g. "3-1-1-0", free text, display only
   notes?: string;
   loadKg?: number;                    // mass of the implement, planned — see §4.5
+  progressDeclinedAt?: string;        // ISO 8601; suppresses §17's suggestion for 14 days
 }
 
 type Target =
@@ -1734,6 +1735,21 @@ them.
 **Consequence for §10.** The per-exercise sparkline currently plots every session,
 including the calibration ones, so it draws motor learning as progress. It has to exclude
 them too, or the app contradicts itself between two screens.
+
+*Built 2026-08-03, and one word narrower than that.* They are excluded **from the trend
+line, not from the chart**: a calibration session is a pale dot, and the line starts after
+them. "Exclude" was written against the contradiction — §17 refusing to act on those sessions
+while §10 drew them as progress — and a dot that is visibly not on the line resolves that just
+as completely. Deleting them would have been its own dishonesty, since the user did the work,
+and it would have left anyone three sessions into a new exercise looking at an empty chart.
+`exercise-variation.md` §8.3 asks for exactly this: *"record them, display them greyed,
+exclude them from trend fitting."* The line shown beside them is required to be about the
+measurement rather than about the user — *"so the numbers settle"*, never *"so your body
+adapts"*.
+
+What is deliberately **not** excluded is `bestReps`. That is a record of a set somebody
+performed, not a claim about adaptation, and §4.3's rule that the log says what happened
+outranks the tidiness of filtering it.
 
 ### 17.3 Where the offer appears
 

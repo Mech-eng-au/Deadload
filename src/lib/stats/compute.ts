@@ -1,4 +1,5 @@
-import type { Exercise, ExerciseId, Session, SetEntry } from '../types.js';
+import type { Exercise, ExerciseId, Level, Session, SetEntry } from '../types.js';
+import { calibratingSessions } from '../progress/calibration.js';
 
 /**
  * Statistics (docs/SPEC.md §10). Derived entirely from the session log: no
@@ -317,11 +318,38 @@ export interface ExerciseProgress {
 		sets: number;
 		bestKg: number;
 		kgReps: number;
+		/**
+		 * Inside §17.2's calibration window: the exercise was new enough that this
+		 * point is substantially motor learning. Still drawn — the user did the
+		 * work — but not joined into the trend line, and not counted as progress.
+		 */
+		calibrating: boolean;
 	}[];
 }
 
-export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
+/**
+ * Per-exercise progress, and which of its points are still calibration (§17.2).
+ *
+ * `levelOf` is a parameter rather than a catalog import so this module keeps
+ * having no dependency on the catalog — the calibration window is wider for an
+ * `advanced` exercise, and that is the only thing the level is used for here.
+ * Omitting it treats everything as ordinary, which is the narrower window and
+ * therefore the one that trusts the data soonest.
+ */
+export function exerciseProgress(
+	sessions: Session[],
+	levelOf: (id: ExerciseId) => Level | undefined = () => undefined
+): ExerciseProgress[] {
 	const byExercise = new Map<ExerciseId, ExerciseProgress>();
+	const calibrating = new Map<ExerciseId, Set<string>>();
+	const windowFor = (id: ExerciseId) => {
+		let set = calibrating.get(id);
+		if (!set) {
+			set = calibratingSessions(sessions, id, levelOf(id));
+			calibrating.set(id, set);
+		}
+		return set;
+	};
 
 	for (const session of completed(sessions)) {
 		const day = dayKey(session.startedAt);
@@ -351,6 +379,7 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 			row.kgReps += kgRepsOf(entry);
 			if (session.startedAt > row.lastPerformed) row.lastPerformed = session.startedAt;
 
+			const isCalibration = windowFor(entry.exerciseId).has(session.id);
 			const point = row.history.find((h) => h.date === day);
 			if (point) {
 				point.sets += 1;
@@ -358,6 +387,10 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 				point.bestSeconds = Math.max(point.bestSeconds, entry.seconds ?? 0);
 				point.bestKg = Math.max(point.bestKg, entry.loadKg ?? 0);
 				point.kgReps += kgRepsOf(entry);
+				// History is per day and the window is counted in sessions, so a day
+				// holding two sessions is only calibration if both of them were. The
+				// day stops being calibration as soon as a trusted session lands in it.
+				point.calibrating = point.calibrating && isCalibration;
 			} else {
 				row.history.push({
 					date: day,
@@ -365,7 +398,8 @@ export function exerciseProgress(sessions: Session[]): ExerciseProgress[] {
 					bestReps: entry.reps ?? 0,
 					bestSeconds: entry.seconds ?? 0,
 					bestKg: entry.loadKg ?? 0,
-					kgReps: kgRepsOf(entry)
+					kgReps: kgRepsOf(entry),
+					calibrating: isCalibration
 				});
 			}
 
