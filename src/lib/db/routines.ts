@@ -107,3 +107,16 @@ export function describeItem(item: RoutineItem, t: Messages): string {
 export function countItems(routine: Routine): number {
 	return routine.blocks.reduce((n, b) => n + b.items.length, 0);
 }
+
+/**
+ * Whether reordering is possible at all (§12). One exercise has nowhere to go,
+ * however many sections there are to put it in.
+ *
+ * Here rather than inline on the routine screen because two things have to agree
+ * about it: `SortableList` disables the handle, and the screen hides the toggle
+ * that reveals the handle. Out of step, the toggle opens a mode in which every
+ * control is dead.
+ */
+export function canReorder(routine: Routine): boolean {
+	return countItems(routine) > 1;
+}

@@ -120,5 +120,7 @@ export const routine = {
 		amrap: 'As many as possible'
 	},
 	saveRoutine: 'Save routine',
+	reorderExercises: 'Reorder exercises',
+	reorderDone: 'Done',
 	dragHandle: (name: string) => `Reorder ${name}`
 };

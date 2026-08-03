@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteDB } from 'idb';
 import {
+	canReorder,
 	countItems,
 	deleteRoutine,
 	describeItem,
@@ -15,6 +16,7 @@ import {
 import { ensureStoragePersisted, getSettings, putSettings } from '../src/lib/db/settings.js';
 import { closeDb, DB_NAME, getDb } from '../src/lib/db/schema.js';
 import { en } from '../src/lib/i18n/en/index.js';
+import type { Routine } from '../src/lib/types.js';
 
 beforeEach(async () => {
 	await closeDb();
@@ -168,6 +170,41 @@ describe('item defaults', () => {
 		expect(describeItem({ ...base, perSide: true, target: { kind: 'amrap' } }, en)).toBe(
 			'as many as possible per side'
 		);
+	});
+});
+
+describe('whether a routine can be reordered at all (§12)', () => {
+	// Two things have to agree about this: SortableList disables the handle below
+	// two items, and the routine screen hides the toggle that reveals the handle.
+	// Out of step, the toggle opens a mode in which every control is dead — which
+	// is why the condition is a named function rather than `> 1` written twice.
+	const withItems = (...counts: number[]): Routine => ({
+		...emptyRoutine(),
+		blocks: counts.map((n, b) => ({
+			...emptyBlock(),
+			id: `b${b}`,
+			items: Array.from({ length: n }, (_, i) =>
+				newItem({ id: `e${b}${i}`, unilateral: false, defaultMetric: 'reps', category: 'strength' })
+			)
+		}))
+	});
+
+	it('needs two exercises, not two sections', () => {
+		expect(canReorder(withItems())).toBe(false);
+		expect(canReorder(withItems(0, 0, 0))).toBe(false);
+		expect(canReorder(withItems(1))).toBe(false);
+		// One exercise has nowhere to go however many sections are waiting for it.
+		expect(canReorder(withItems(1, 0, 0))).toBe(false);
+		expect(canReorder(withItems(2))).toBe(true);
+		// ...and two exercises can swap sections even one at a time.
+		expect(canReorder(withItems(1, 1))).toBe(true);
+	});
+
+	it('agrees with the count the handle is disabled by', () => {
+		for (const shape of [[], [0], [1], [1, 0], [1, 1], [3, 2]]) {
+			const routine = withItems(...shape);
+			expect(canReorder(routine), JSON.stringify(shape)).toBe(countItems(routine) >= 2);
+		}
 	});
 });
 

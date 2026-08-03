@@ -1226,6 +1226,38 @@ Four decisions, all in `$lib/reorder.ts` and `SortableList.svelte` rather than i
    Cancel still discards a drag. Within one section the gesture behaves exactly as it did — there is
    a test asserting the new arithmetic agrees with the old on that case.
 
+**On the routine screen the handles are behind a toggle. Added 2026-08-03.** Asked for directly: the
+handles took up too much room. They do — measured at 360×808 on the production build, the grip is
+44 px plus a 12 px gap, **56 px of a 328 px card, 17% of every row**, and it was coming out of the
+exercise name: the routine screen rendered *"Dips - Triceps Ver…"* where the full name now fits.
+
+A grip glyph above the list reveals them and becomes **Done**; the toggle sits on the edge
+`handleSide` points at, so the control is where the handles it reveals will appear.
+
+Four things about it, in decreasing order of how easy they are to undo by accident:
+
+1. **It is a mode, and that is not the long press decision 1 rejected.** The reason a long press was
+   refused is that *"it is invisible until it has already done the wrong thing, and its timeout is a
+   guess about the user."* A mode is neither: it is visible, it is entered on purpose, and it is
+   reversible before anything moves. Decision 1's *mechanism* changes here; its reasoning is what
+   chose this over the alternatives.
+2. **The keyboard route must survive being hidden.** The handle is the only way to reorder without a
+   pointer (below), so the toggle is a real `<button>` in the tab order, and entering the mode moves
+   focus onto the first handle — otherwise the arrow keys are behind an icon nobody can reach.
+3. **A drop still saves at once, and the toggle is not a Save button.** Leaving the mode confirms
+   nothing and discards nothing; it only stops showing the handles. Anything that makes Done mean
+   "commit" contradicts the paragraph below, and would be the Save button that paragraph refuses.
+4. **The toggle is not shown at all when the routine has fewer than two exercises**, because the
+   handles would all be disabled — the same `canReorder()` the handles themselves use. A mode whose
+   controls are all dead is worse than no mode.
+
+**Not a pencil, and the editor keeps its handles.** A pencil would have collided with *Edit routine*,
+which is on the same screen and opens the full editor — two different edits wearing one icon. And the
+editor is already a dedicated editing mode, so a mode inside it would read oddly; keeping the handles
+permanently visible on one screen also keeps the gesture discoverable somewhere. The width is worth
+more on the routine screen anyway, which is decision-list item 0 of this whole section: its cards are
+small, and that is the argument for the drag living there.
+
 **On the routine screen a drop saves immediately.** That screen has no Save button, and inventing one
 for a gesture would be worse than the gesture: the drop *is* the decision, it is visible, and
 dragging the card back undoes it. In the editor a drop changes nothing on disk until Save, like every

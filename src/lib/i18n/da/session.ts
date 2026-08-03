@@ -114,5 +114,7 @@ export const routine = {
 		amrap: 'Så mange som muligt'
 	},
 	saveRoutine: 'Gem rutine',
+	reorderExercises: 'Flyt rundt på øvelserne',
+	reorderDone: 'Færdig',
 	dragHandle: (name: string) => `Flyt ${name}`
 };

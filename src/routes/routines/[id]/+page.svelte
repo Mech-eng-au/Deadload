@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { getExercise } from '$lib/catalog/index.js';
 	import {
+		canReorder,
 		countItems,
 		deleteRoutine,
 		describeItem,
@@ -20,6 +21,7 @@
 	import ExerciseSheet from '$lib/components/ExerciseSheet.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
 	import { moveAcross, type Slot } from '$lib/reorder.js';
+	import { handleSide } from '$lib/handle-side.svelte.js';
 	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Block, Routine, RoutineItem, Settings } from '$lib/types.js';
 
@@ -29,6 +31,31 @@
 	const owned = $derived(ownedEquipment(settings));
 	let confirmingDelete = $state(false);
 	let starting = $state(false);
+
+	/**
+	 * Whether the drag handles are showing (§12). They are 44 px plus a gap — 17%
+	 * of a card at 360 px, and it was coming out of the exercise name — so on this
+	 * screen they are behind a toggle rather than always on.
+	 *
+	 * A mode rather than the long press §12 rejected: what was wrong with a long
+	 * press is that it is invisible until it has already done the wrong thing, and
+	 * a mode is entered on purpose and reversible before anything moves.
+	 *
+	 * It confirms nothing. A drop still saves at once, exactly as it did when the
+	 * handles were always visible — leaving the mode only stops showing them.
+	 */
+	let reordering = $state(false);
+
+	function toggleReorder() {
+		reordering = !reordering;
+		if (!reordering) return;
+		// The handle is the only way to reorder without a pointer (§12), so hiding
+		// it puts the arrow keys behind an icon. Entering the mode hands focus to
+		// the first one, which is where a keyboard user was going anyway.
+		requestAnimationFrame(() => {
+			document.querySelector<HTMLElement>('[data-dl-grip]')?.focus();
+		});
+	}
 
 	async function startSession() {
 		if (!routine) return;
@@ -181,6 +208,39 @@
 			{/if}
 		</header>
 
+		{#if canReorder(routine)}
+			<!-- The grip glyph the handles use, so the button says what it reveals,
+				 and on the edge `handleSide` points at, so it is where they will
+				 appear. Hidden entirely below two exercises (§12): the handles would
+				 all be disabled, and a mode whose controls are dead is worse than no
+				 mode. Not a pencil — *Edit routine* is on this screen already. -->
+			<div class="mt-4 mb-1 flex {handleSide() === 'left' ? 'justify-start' : 'justify-end'}">
+				<button
+					onclick={toggleReorder}
+					aria-pressed={reordering}
+					class="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-3 text-sm {reordering
+						? 'bg-zinc-800 text-zinc-100'
+						: 'border border-zinc-800 text-zinc-500'}"
+				>
+					{#if reordering}
+						{t.routine.reorderDone}
+					{:else}
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.75"
+							aria-hidden="true"
+							class="h-5 w-5"
+						>
+							<path d="M6 9h12M6 15h12" stroke-linecap="round" />
+						</svg>
+						<span class="sr-only">{t.routine.reorderExercises}</span>
+					{/if}
+				</button>
+			</div>
+		{/if}
+
 		<SortableList
 			sections={shown}
 			{onreorder}
@@ -250,7 +310,10 @@
 						{/if}
 					</span>
 				</button>
-				{@render grip(slot)}
+				<!-- Rendered last and as a direct child of the card's flex row, which
+					 is what lets `handleSide` move it with `order` while the DOM order
+					 stays the reading order. An `{#if}` emits no wrapper, so that holds. -->
+				{#if reordering}{@render grip(slot)}{/if}
 			{/snippet}
 		</SortableList>
 

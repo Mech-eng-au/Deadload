@@ -303,6 +303,28 @@ than becoming two.
 press would have avoided the handle, and was rejected: it is invisible until it has already done the
 wrong thing, and its timeout is a guess about how fast this user moves.
 
+**On the routine screen the handles are now behind a toggle** (2026-08-03, asked for directly). They
+cost 44 px plus a 12 px gap — **17% of a 328 px card at 360 px**, and it was coming out of the
+exercise name: that screen rendered *"Dips - Triceps Ver…"* where the full name now fits. A grip
+glyph above the list reveals them and becomes *Done*, on whichever edge `handleSide` points at.
+Three things about it are load-bearing:
+
+- **A mode is not the long press the paragraph above rejects.** What was wrong with a long press is
+  that it is invisible until it has already acted; a mode is entered on purpose and reversible before
+  anything moves. The mechanism changed, the reasoning is what chose it.
+- **It confirms nothing.** A drop still saves immediately, and *Done* only stops showing the handles.
+  Anything that makes it mean "commit" is the Save button SPEC §12 refuses to put on that screen.
+- **The keyboard route has to survive being hidden.** The handle is the only way to reorder without a
+  pointer, so the toggle is a real button and entering the mode moves focus onto the first handle.
+  Verified in Chromium: Arrow Down there moves an exercise across a section boundary and focus
+  follows the card.
+
+**The editor keeps its handles**, because it is already a dedicated editing mode and a mode inside a
+mode reads oddly — and because leaving them permanently visible on one screen keeps the gesture
+discoverable somewhere. A *pencil* was the obvious icon and was not used: *Edit routine* is on the
+same screen and opens the full editor, so a pencil meaning "reorder" would be two different edits
+wearing one icon.
+
 Three things about the drag are load-bearing, and all three are in `$lib/reorder.ts` and
 `SortableList.svelte` rather than in the screens:
 
