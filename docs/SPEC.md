@@ -1083,7 +1083,7 @@ together or drawn on one axis.
 - `display: "standalone"`, portrait orientation, dark theme color, maskable icons at 192 and 512 px.
 - Workbox precaches the app shell **and all catalog media**. The media set is the bulk of the payload; keep it under about 25 MB by respecting the WebP conversion and the 120-exercise cap. Amended 2026-08-02: the glob includes `ttf` for §16.4's embedded font, which is otherwise the one asset the service worker does not hold — the PDF button would then work everywhere except offline, and the APK registers no service worker at all, so nobody would ever have found it on the phone. Currently **23.09 MB**.
 - Verify offline behaviour explicitly: install, enable airplane mode, complete a full session.
-- Do not add a service worker update prompt in M1. Add it once the app is in daily use, because a silently stale app is confusing.
+- ~~Do not add a service worker update prompt in M1. Add it once the app is in daily use, because a silently stale app is confusing.~~ **Superseded 2026-08-02.** The instinct was right and the mechanism is wrong: the app is delivered as an APK, which registers no service worker at all (see below), so there is no update prompt to add. The question it was really asking — *is the app in front of me the one I just installed?* — is answered instead by the build stamp under Settings → Data, added 2026-07-28 for exactly that reason.
 
 ### Delivery to the phone: sideloaded APK
 
@@ -1246,7 +1246,14 @@ The riskiest part, so it goes first. ~~If media sourcing fails, the whole projec
 
 ### M6 - Polish
 
-- Service worker update flow, icons, empty states, whatever daily use has revealed as annoying.
+- ~~Service worker update flow~~ — **closed 2026-08-02, by a decision made elsewhere rather than by
+  being built.** §11's amendment of 2026-07-25 moved delivery to a sideloaded APK, and the APK build
+  does not register a service worker, so there is no stale cache to prompt about: an update is a
+  re-download of the APK. What this item was actually worried about — a user looking at a screen and
+  not knowing whether it is the new version — is real, and is covered by the build stamp
+  (`0.1.<run> · <sha> · <date>`) shown under Settings → Data since 2026-07-28. Recorded as closed
+  rather than deleted, so nobody re-derives it from the PWA config that is still in the repo.
+- Icons, empty states, whatever daily use has revealed as annoying.
 - ~~Session edit~~ — done 2026-07-30, see §4.3.
 
 ---
