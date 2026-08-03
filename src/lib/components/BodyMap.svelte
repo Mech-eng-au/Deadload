@@ -105,15 +105,15 @@
 	{#if legend && (primary.length || secondary.length)}
 		<ul class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-zinc-400">
 			<li class="flex items-center gap-1.5">
-				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-works)"></span>works
+				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-works)"></span>{t.muscles.legendWorks}
 			</li>
 			{#if secondary.length}
 				<li class="flex items-center gap-1.5">
-					<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-assist)"></span>assists
+					<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-assist)"></span>{t.muscles.legendAssists}
 				</li>
 			{/if}
 			<li class="flex items-center gap-1.5">
-				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-body)"></span>not used
+				<span class="h-2.5 w-2.5 rounded-sm" style="background:var(--dl-body)"></span>{t.muscles.legendUnused}
 			</li>
 		</ul>
 	{/if}

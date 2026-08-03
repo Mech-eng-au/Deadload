@@ -10,6 +10,9 @@ export const muscles = {
 	onTheFigure: (approximation: string) => `På figuren ${approximation}.`,
 	works: 'Arbejder',
 	assists: 'Hjælper til',
+	legendWorks: 'arbejder',
+	legendAssists: 'hjælper til',
+	legendUnused: 'ikke brugt',
 	withHint: (label: string, short: string) => `${label.toLowerCase()} (${short})`,
 
 	names: {

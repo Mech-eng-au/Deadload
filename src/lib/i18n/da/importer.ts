@@ -50,6 +50,5 @@ export const importer = {
 			other: `Match eller drop de ${f.num(n)} fremhævede øvelser først.`
 		}),
 	pickerTitle: 'Vælg en øvelse',
-	pickerSearch: 'Søg i kataloget…',
-	pickerNothing: 'Ingenting passer på det.'
+	pickerSearch: (n: number) => `Søg blandt ${f.num(n)} øvelser…`
 };

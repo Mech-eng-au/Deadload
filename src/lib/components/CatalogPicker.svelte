@@ -37,26 +37,26 @@
 <div
 	role="dialog"
 	aria-modal="true"
-	aria-label="Add an exercise"
+	aria-label={t.importer.pickerTitle}
 	class="fixed inset-0 z-50 flex flex-col bg-zinc-950"
 >
 	<div
 		class="flex flex-col gap-3 border-b border-zinc-800 px-4 pt-[env(safe-area-inset-top)] pb-3"
 	>
 		<div class="flex items-center justify-between pt-3">
-			<h2 class="font-display text-lg font-bold">Add an exercise</h2>
+			<h2 class="font-display text-lg font-bold">{t.importer.pickerTitle}</h2>
 			<button
 				onclick={onclose}
 				class="min-h-14 min-w-14 rounded-xl text-sm text-zinc-400 hover:text-zinc-100"
 			>
-				Cancel
+				{t.common.cancel}
 			</button>
 		</div>
 
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			type="search"
-			placeholder="Search {available.length} exercises…"
+			placeholder={t.importer.pickerSearch(available.length)}
 			bind:value={query}
 			autofocus
 			class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-base placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
@@ -110,7 +110,7 @@
 			</li>
 		{:else}
 			<li class="py-8 text-center text-zinc-500">
-				Nothing matches. Try a different name, or clear the category filter.
+				{t.catalog.nothingMatches}
 			</li>
 		{/each}
 		{#if hidden > 0 && filtered.length > 0}

@@ -24,6 +24,9 @@ export const muscles = {
 	onTheFigure: (approximation: string) => `On the figure this ${approximation}.`,
 	works: 'Works',
 	assists: 'Assists',
+	legendWorks: 'works',
+	legendAssists: 'assists',
+	legendUnused: 'not used',
 	/** "quadriceps (front of thigh)" — the inline form, for lists of muscles. */
 	withHint: (label: string, short: string) => `${label.toLowerCase()} (${short})`,
 

@@ -32,12 +32,8 @@ export const exercise = {
 	 */
 	instructionsInEnglish: 'The step-by-step cues are in English, from the exercise catalog.',
 	progression: 'Progression',
-	easier: 'Easier',
-	harder: 'Harder',
-	currentRung: 'you are here',
 	needsEquipment: (equipment: string) => `Needs ${equipment}, which you have not ticked.`,
 	tickInSettings: 'Tick it in Settings',
-	perSide: 'Logged one side at a time',
 	swapPhoto: 'Swap photo, double tap to play',
 	playing: 'playing · double tap to stop',
 	frameOf: (n: number, total: number) => `${n}/${total} · double tap to play`,

@@ -13,12 +13,9 @@ const f = formatters('en-GB');
  */
 export const units = {
 	seconds: (n: number) => `${f.num(n)} s`,
-	spelledSeconds: (n: number) => f.plural(n, { one: '1 second', other: `${f.num(n)} seconds` }),
-	minutes: (n: number) => `${f.num(n)} min`,
 	reps: (n: number) => f.plural(n, { one: '1 rep', other: `${f.num(n)} reps` }),
 	repsRange: (min: number, max: number) => `${f.num(min)}–${f.num(max)} reps`,
 	sets: (n: number) => f.plural(n, { one: '1 set', other: `${f.num(n)} sets` }),
-	rounds: (n: number) => f.plural(n, { one: '1 round', other: `${f.num(n)} rounds` }),
 	exercises: (n: number) => f.plural(n, { one: '1 exercise', other: `${f.num(n)} exercises` }),
 	sessions: (n: number) => f.plural(n, { one: '1 session', other: `${f.num(n)} sessions` }),
 	routines: (n: number) => f.plural(n, { one: '1 routine', other: `${f.num(n)} routines` }),
@@ -29,7 +26,6 @@ export const units = {
 	/** The bare number, for the last-time line where the unit was already said. */
 	kgBare: (n: number) => f.num(Number(n.toFixed(2))),
 	megabytes: (n: number) => `${f.num(n, { maximumFractionDigits: 1 })} MB`,
-	percent: (n: number) => f.num(n / 100, { style: 'percent' }),
 	amrap: 'as many as possible',
 	perSide: 'per side',
 	left: 'left',
@@ -43,6 +39,5 @@ export const units = {
 	date: f.date,
 	dateTime: f.dateTime,
 	num: f.num,
-	list: f.list,
-	plural: f.plural
+	list: f.list
 };

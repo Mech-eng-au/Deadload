@@ -40,6 +40,7 @@ export const about = {
 	publicDomain: 'Public domain',
 	by: (author: string) => `· by ${author}`,
 	exerciseCount: (n: number) => f.plural(n, { one: '1 exercise', other: `${f.num(n)} exercises` }),
+	origin: 'origin',
 	shareAlike:
 		'Shared under the same licence, with changes: recoloured and simplified, with our own highlights drawn over it.',
 	notMedicalAdvice:

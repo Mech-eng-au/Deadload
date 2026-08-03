@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import RoutineEditor from '$lib/components/RoutineEditor.svelte';
 	import { getRoutine, putRoutine } from '$lib/db/routines.js';
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Routine } from '$lib/types.js';
 
 	let routine = $state<Routine | null>(null);
@@ -29,16 +30,16 @@
 </script>
 
 <svelte:head>
-	<title>Edit {routine?.name ?? 'routine'} · Deadload</title>
+	<title>{routine?.name ?? t.routine.fallbackTitle} · Deadload</title>
 </svelte:head>
 
 {#if !loaded}
-	<p class="mt-8 text-zinc-500">Loading…</p>
+	<p class="mt-8 text-zinc-500">{t.common.loading}</p>
 {:else if !routine}
-	<p class="mt-8 text-zinc-300">That routine is no longer here.</p>
-	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">Back to routines</a>
+	<p class="mt-8 text-zinc-300">{t.routine.gone}</p>
+	<a href="{base}/" class="mt-4 inline-block text-sm text-zinc-400 underline">{t.common.backToRoutines}</a>
 {:else}
-	<a href="{base}/routines/{routine.id}/" data-sveltekit-replacestate class="text-sm text-zinc-400">← Cancel</a>
-	<h1 class="mt-2 mb-5 font-display text-2xl font-bold">Edit routine</h1>
+	<a href="{base}/routines/{routine.id}/" data-sveltekit-replacestate class="text-sm text-zinc-400">{t.routine.cancelEdit}</a>
+	<h1 class="mt-2 mb-5 font-display text-2xl font-bold">{t.routine.editTitle}</h1>
 	<RoutineEditor bind:routine={routine as Routine} onsave={save} {saving} />
 {/if}

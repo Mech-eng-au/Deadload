@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n/locale.svelte.js';
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { ownedEquipment } from '$lib/catalog/equipment.js';
@@ -30,7 +31,7 @@
 
 {#snippet heading()}
 	<a href="{base}/catalog/" data-sveltekit-replacestate class="text-sm text-zinc-400 hover:text-zinc-100">
-		← Catalog
+		{t.common.backCatalog}
 	</a>
 	<h1 class="mt-2 font-display text-3xl font-bold">{e.name}</h1>
 {/snippet}

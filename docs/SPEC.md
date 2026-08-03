@@ -825,7 +825,7 @@ Three rules make this safe to do mid-set:
 
 The finished screen then offers, once, to **keep the swap in the routine** — the calm moment, when nothing is urgent, per §15's "fewer taps during a session and more taps during setup". Keeping it takes the sides from the new exercise, the same default an exercise added by hand gets. Declining leaves the routine untouched, and next time starts where today did.
 
-Not built, and worth stating so it is a decision rather than an omission: **double progression** — hitting the top of a rep range on every set and being offered the next rung automatically. It is a rule over data that now exists, and it should be argued on its own rather than smuggled in with the ladders.
+~~Not built, and worth stating so it is a decision rather than an omission: **double progression** — hitting the top of a rep range on every set and being offered the next rung automatically. It is a rule over data that now exists, and it should be argued on its own rather than smuggled in with the ladders.~~ **Argued on its own, 2026-08-03: see §17.** It turned out to be one rule with the ladder swap rather than two features, because in a leverage-based system progressing *is* changing the exercise.
 
 #### Get ready: the preview state
 
@@ -1166,8 +1166,41 @@ Four decisions, all in `$lib/reorder.ts` and `SortableList.svelte` rather than i
 3. **Page coordinates, and the list scrolls near the edges.** A routine is taller than the screen, so
    a drag that cannot leave the viewport cannot reorder it. Measuring in page space rather than
    client space is what lets the page move under the finger without the arithmetic going wrong.
-4. **Within one section only** — exactly as far as the arrow buttons reached. Moving an exercise from
-   Warm-up into Main is a different edit, and the editor is where it belongs.
+4. ~~**Within one section only** — exactly as far as the arrow buttons reached. Moving an exercise from
+   Warm-up into Main is a different edit, and the editor is where it belongs.~~
+   **Amended 2026-08-03: a drag crosses sections, on both screens.**
+
+   The old rule was a description of the implementation, not a decision about the user: the drag was
+   mounted once per section, so no instance could see another's cards and a drop had nowhere else to
+   land. Reading it back as "Warm-up to Main is a different edit" made a limitation sound like a
+   principle.
+
+   In the editor it replaces the one edit the drag could not do at all. Moving an exercise between
+   sections meant removing it and adding it again, which **loses its sets, its target, its rest and
+   its notes** — that is not reordering, it is retyping, and it is worst for exactly the items worth
+   keeping. On the routine screen it is allowed too, and confining it to the editor would have put
+   the *more* awkward edit on the screen less suited to it: the routine screen has the small cards,
+   which is the whole argument for the drag living there.
+
+   Three things fall out, all in `$lib/reorder.ts` and unit-tested:
+
+   - **Which section a card lands in is decided by the section's top**, not by whether the card is
+     inside its box. Sections are separated by their own chrome, so a card in that gap is inside no
+     section at all and "nearest" would flip back and forth across the midpoint. "The last section I
+     have been carried past the top of" is monotonic: drag steadily downwards and the target only
+     ever advances. There is a property test for exactly that.
+   - **An empty section can be dragged into**, because it still has a top. That is new capability
+     rather than a side effect — before this, a section with nothing in it could only be filled from
+     the picker. It is outlined while a card is over it, which is the only cue a section with no
+     cards can give.
+   - **Only the destination opens a gap.** Closing the hole in the source at the same time is the
+     obvious symmetric thing and it looks wrong: in the editor each section is a bordered card, so
+     cards sliding up inside the section they are leaving cross that border. The gap that matters is
+     the one being aimed at.
+
+   Unchanged: a drop on the routine screen saves at once, and in the editor it stages until Save, so
+   Cancel still discards a drag. Within one section the gesture behaves exactly as it did — there is
+   a test asserting the new arithmetic agrees with the old on that case.
 
 **On the routine screen a drop saves immediately.** That screen has no Save button, and inventing one
 for a gesture would be worse than the gesture: the drop *is* the decision, it is visible, and
@@ -1483,3 +1516,167 @@ Declined deliberately rather than forgotten. What it would need:
 None of it is hard. All of it is untestable from here without a reader of the language, and
 §16.4's test would fail on the font before any of it ran — which is the honest place for it
 to stop.
+
+---
+
+## 17. Progression
+
+Added 2026-08-03, from the user: *"I want the user to easily progress on exercises, but
+also to swap exercises in the routine to not just end up with a 100 reps on each
+exercise."* The complaint underneath it is that keeping a routine useful means editing
+it by hand, forever.
+
+**The evidence was checked before this was designed**, and it is in
+[`exercise-variation.md`](./exercise-variation.md) with every claim tagged by how well
+established it is. Three findings from it shape this section, and two of them killed an
+earlier draft:
+
+- **"Muscles adapt to an exercise, so rotate them" is refuted, not merely unsupported.**
+  It has been tested directly twice — Baz-Valle 2019 (21 trained men, exercises *and* rep
+  ranges randomised every session) and Kassiano 2024 (70 women, systematic rotation) — and
+  both found no difference in strength or size against keeping selection fixed. No trial
+  has ever shown a plateau in a fixed-selection group that changing the exercise then
+  broke.
+- **The one measured benefit of variation is motivation**, from a single n=21 trial. Thin,
+  but it is the only place variation won anything, and it is therefore the only honest
+  reason to offer it.
+- **In a leverage-based system, progression *is* variation.** A barbell lets you hold the
+  exercise still and add 1.25 kg; a bodyweight ladder does not, so moving up *is* changing
+  the exercise. **The eight ladders of §4.1 are already this app's variation system**,
+  whether or not they were designed as one. That collapses the user's two requests into a
+  single mechanism rather than two features.
+
+So this section adds no rotation scheduler and no "time to switch" nudge. It makes the
+ladder — which the user can already climb by hand mid-session (§7) — fire on its own.
+
+### 17.1 The rule
+
+One rule, over data the app already has. It lives in `src/lib/progress/`, pure and
+unit-tested per §15, and it reads the session log and the routine and nothing else.
+
+**It applies to an item whose exercise is `category: strength` and whose target is `reps`
+or `reps_range`.** A stretch progresses by duration or not at all, and mobility work is
+not trying to get harder — §7's ladders are strength chains and this follows them.
+
+**The criterion.** Over the last **two finished sessions** in which the item was
+performed: every set reached the top of its range (or its target, for fixed reps), and no
+set was skipped. Any shortfall or skip resets the streak. Two rather than one because a
+single good session is inside the noise; more than two and the app is slower than the
+user.
+
+**What is then offered, in order:**
+
+| State | Offer |
+|---|---|
+| Reps below the ceiling | Raise the target by one rep — for a range, both ends |
+| At the ceiling, and the exercise has a harder rung | **The next rung**, with the target reset to the bottom of a starting range |
+| At the ceiling, no harder rung | One more set. Offered once, then the app stops asking about that item |
+
+**The ceiling is an editorial number, not a physiological one, and must be labelled as
+such wherever it is explained.** It is **20 reps**. Nothing in the literature supports a
+specific value; what supports *having* one is that a set of 40 makes a session long and
+stops being strength work. Two considerations pushed it higher rather than lower, and
+both come from `exercise-variation.md` §5d:
+
+- **Reps are integers, so a rep count is a coarse measurement.** At 8 reps one rep is a
+  12.5% step; at 20 it is 5%. Swapping early lands the user on the *coarsest* channel.
+- **A ladder step is not small.** A rung is a 10–30% change in effective load, and the
+  step from a two-limb to a one-limb variant is roughly a doubling. Arriving at a new rung
+  with a handful of reps in hand is better than arriving at one.
+
+### 17.2 The calibration window
+
+**The first three sessions of any newly introduced exercise do not count.** They are
+recorded, and they are excluded from the progression criterion above, from trend fitting,
+and from any "personal best" or "getting stronger" message.
+
+This is the finding that most changes the app as it stands. Performance on a movement
+improves from *practising the movement*, independently of any adaptation: Ritti-Dias 2011
+saw untrained men's bench 1RM climb 3.8%, 7.4% and 10.1% across sessions 2, 3 and 4 with
+no training in between, and Mattocks 2017 found a group that only ever performed 1RM
+singles gained as much *strength* as a group training to failure — and no size. So the
+first sessions on a new rung measure skill, and letting them satisfy the criterion would
+push the user up a ladder on the strength of having learned the movement.
+
+**A `level: advanced` exercise gets five sessions instead of three**, because the effect
+scales with how much coordination the task demands and those are the single-limb and
+hanging variants. Using `level` rather than a new field is deliberate: it is already in
+the catalog and already means roughly this.
+
+Both numbers are **data-quality heuristics inferred from the 1RM familiarisation
+literature, not measured for bodyweight reps-to-failure** — nobody has studied that. They
+are labelled that way in the code and must be labelled that way in any copy that explains
+them.
+
+**Consequence for §10.** The per-exercise sparkline currently plots every session,
+including the calibration ones, so it draws motor learning as progress. It has to exclude
+them too, or the app contradicts itself between two screens.
+
+### 17.3 Where the offer appears
+
+**On the finished screen, and nowhere else.** That is where the app already asks whether
+to keep a mid-session ladder swap (§7), it is the calm moment §15 asks for, and it is
+after the work rather than during it. **At most two suggestions per session**, so it
+cannot become a wall of prompts after a good workout.
+
+**Nothing is applied without a tap.** §4.3's rule that the app records what happened
+rather than what was intended, and §7's rule that a swap is stored on the session rather
+than written into the routine, both point the same way: the routine is the user's.
+
+**Declining is remembered.** A new optional `RoutineItem.progressDeclinedAt` suppresses
+the suggestion for that item for **14 days**. Without it the app asks again next session,
+having learned nothing — which is how a helpful feature becomes nagging. It is on the item
+rather than in Settings because it is a fact about that exercise in that routine, and it
+should travel through backup and restore with it.
+
+### 17.4 Variation, offered honestly
+
+The user may want to rotate an exercise for its own sake. The app may offer that, on one
+condition: **it says what the evidence actually is.** Something to the effect of *"this
+will not build more muscle, but people who change exercises report enjoying training
+more"* — because that is the whole of what Baz-Valle 2019 found, and dressing an
+adherence feature as a physiological one is the same dishonesty §10 refuses when it
+declines to invent a total-volume number.
+
+It is never automatic, never scheduled, and never presented as a fix for a plateau.
+
+### 17.5 What this app will not claim
+
+Taken from `exercise-variation.md` §9, and binding on copy as much as on code:
+
+1. **"You have plateaued because your body adapted to this exercise."** Never
+   demonstrated, and no signal in a training log distinguishes accommodation from poor
+   sleep, under-eating, a bad week, or noise.
+2. **"Varying your exercises builds more muscle."** Tested twice, null twice.
+3. **Any anatomical targeting finer than "this variant works the muscle at a longer
+   length."** No "hits the upper chest", no percentages. Regional effects are real, coarse,
+   and measured in a handful of n≈20 machine-based studies.
+4. **Any intensity inferred from a bodyweight rep count.** No estimated 1RM, no
+   RM-equivalents, no cross-variant comparison. Nuzzo 2023 covers 269 studies and contains
+   no bodyweight movement at all.
+5. **Any injury or technique claim tied to variation.** There is no controlled injury data
+   comparing variation policies in either direction.
+
+**And the rule that governs the copy generally:** where a choice is made for data quality
+or for the feel of the app, say so. *"Held for three sessions so the numbers settle"* is
+true. *"Held for three sessions to maximise adaptation"* is not.
+
+### 17.6 What this requires of the ladders first
+
+**This section cannot be implemented against the ladders as they stand**, and that is the
+consequence of §17's opening: once the app steers a routine with a chain, the chain stops
+being a suggestion the user can ignore and becomes the mechanism. Two of the eight do not
+survive that promotion:
+
+- `bodyweight_squat → bodyweight_walking_lunge → freehand_jump_squat`. A walking lunge is
+  not a harder squat, it is a different movement; and a jump squat is power rather than
+  strength, so it is the wrong thing to be pushed towards by a strength criterion.
+- `… → push_ups_with_feet_elevated → single_arm_push_up` ends on a cliff. That step is
+  roughly a doubling of load, so a user arriving at 20 elevated push-ups lands on one or
+  two single-arm reps — the coarsest measurement in the app and a months-long skill
+  acquisition, reached by an automatic suggestion.
+
+`tests/ladders.test.ts` enforces that `level` never falls as a ladder rises, which both
+chains satisfy. **"Never gets easier" is a much weaker claim than "each rung is the next
+step",** and only the second is good enough to progress somebody automatically. The audit
+is a separate piece of work and it comes first.

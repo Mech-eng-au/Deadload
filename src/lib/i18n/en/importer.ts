@@ -54,6 +54,5 @@ export const importer = {
 			other: `Match or drop the ${f.num(n)} highlighted exercises first.`
 		}),
 	pickerTitle: 'Pick an exercise',
-	pickerSearch: 'Search the catalog…',
-	pickerNothing: 'Nothing matches that.'
+	pickerSearch: (n: number) => `Search ${f.num(n)} exercises…`
 };
