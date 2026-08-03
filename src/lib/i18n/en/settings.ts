@@ -17,6 +17,15 @@ export const settings = {
 	spokenStaysEnglish:
 		'Announcements stay in English whatever you choose here: the exercise names being read out are English, and a Danish voice reading English words is worse than an English one.',
 
+	// --------------------------------------------------------- drag handle
+	handleSide: 'Reorder handle',
+	handleSideIntro:
+		'Which side of an exercise the drag handle sits on, when you are putting a routine in order. Put it where your thumb already is.',
+	handleLeft: 'Left',
+	handleRight: 'Right',
+	handleSideHint:
+		'It only moves the handle. Remove stays on the right, so the two are never under the same thumb.',
+
 	// ------------------------------------------------------------ equipment
 	whatYouOwn: 'What you own',
 	whatYouOwnIntro:

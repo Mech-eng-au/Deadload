@@ -30,7 +30,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 |---|---|
 | Catalog | 166 exercises, every one with at least one image, generated and committed. 99 need nothing but a floor, a wall and a chair; the rest are behind the equipment gates below |
 | Equipment | Nine independent checkboxes in Settings (pull-up bar, jumping rope, dumbbells, kettlebell, resistance band, foam roller, yoga ball, suspension straps, ab wheel). Unticked equipment is filtered out of catalog browse and the exercise picker and nowhere else (added 2026-07-30; the last three 2026-08-02) |
-| Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes. Exercises are dragged into order by a handle, on the routine screen as well as in the editor, and tapping one opens what the catalog knows about it without leaving the screen (added 2026-07-30) |
+| Routines | Build, edit, delete; sections, per-item sets/target/rest/per-side/notes. Exercises are dragged into order by a handle, on the routine screen as well as in the editor, and tapping one opens what the catalog knows about it without leaving the screen (added 2026-07-30). The handle sits on the left, or on the right if Settings says so (added 2026-08-03) |
 | Session player | Per-set logging, get-ready preview before each set, pause on a timed set, session progress bar, optional auto-start and auto-log of timed sets, countdown on timed sets, rest timer, wake lock, audio cues, crash-resume, undo |
 | Import | JSON and CSV, markdown fence stripping, resolver cascade with learned aliases, review screen |
 | Presets | Nine built-in routines, loaded through the import path. Two of them (*Floor time with the baby*, *Baby in arms*) carry per-item `notes` saying where the baby goes — the only way to express that without extending the catalog (added 2026-07-30) |
@@ -43,7 +43,7 @@ All milestones M0–M5 in SPEC §13 are built, plus work that came out of real u
 | Language | English and Danish, chosen in Settings or followed from the phone. The interface, the muscle glossary, the equipment table, the nine presets and the printable sheet; the exercise catalog stays English on purpose (added 2026-08-02) |
 | Ladders | Eight progression chains; "easier / harder" swap mid-session, kept in the routine on request (added 2026-07-29) |
 
-Verification: **401 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
+Verification: **405 unit tests** (`npm test`) and **eight browser suites** driven with Playwright.
 More on those in §6.
 
 ---
@@ -82,6 +82,7 @@ src/lib/db/                  IndexedDB: schema, routines, sessions, aliases, set
 src/lib/import/              parsers + resolver — pure, no Svelte, no database
 src/lib/pdf/                 hand-rolled PDF writer + the printable routine sheet
 src/lib/reorder.ts           where a dragged card lands — pure, no DOM
+src/lib/handle-side.*        which edge the drag handle sits on; .ts is the rules, .svelte.ts the state
 src/lib/session/             player state machine, steps, audio, speech, wake lock, last-time
 src/lib/stats/               statistics and CSV — pure functions over the session log
 src/routes/                  the screens
@@ -157,6 +158,15 @@ English words. The locale says what interface the user wants, not what can prono
 **Still true with the interface in Danish** (2026-08-02, SPEC §16): the interface language and the
 spoken language are separate questions, and they have different answers because the exercise names
 are English. `tests/i18n.test.ts` fails if `speech.ts` reads `navigator.language` again.
+
+**The drag handle's side is two-valued, and that is not an oversight.** The language and the
+equipment settings are three-valued because "never answered" can defer to the phone. No phone
+reports which hand is holding it, so `Settings.handleSide` has nothing to defer to and `undefined`
+means only "never chosen" — `?? 'left'` loses nothing here, and writing it three-valued to match its
+neighbours would add a state with no distinct meaning. The setting is also named for the *edge*
+rather than for a hand on purpose (SPEC §12): the app cannot check which hand you use, and a user
+who wants the handle on the left for some other reason should not have to agree they are left-handed
+to get it there. `tests/handle-side.test.ts` is named after this.
 
 **A backward link replaces, it does not push.** Every `←`, every sideways hop and every `goto`
 after a commit uses `replaceState`; only drilling into something pushes. Adding a plain
@@ -376,7 +386,7 @@ uninstalling and losing all data on every release. If that key changes, users lo
 
 ```sh
 npm run check      # svelte-check, must be zero errors
-npm test           # 401 unit tests
+npm test           # 405 unit tests
 npm run build      # static build
 npm run build:apk  # needs the Android SDK; CI normally does this
 npm run build:fonts    # re-cuts the PDF's font subsets; run by hand, output committed

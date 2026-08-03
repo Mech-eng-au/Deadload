@@ -36,8 +36,10 @@
 		ownedEquipment
 	} from '$lib/catalog/equipment.js';
 	import { LOCALES, resolveLocale, type Locale } from '$lib/i18n/index.js';
+	import { HANDLE_SIDES } from '$lib/handle-side.js';
+	import { handleSide, setHandleSide } from '$lib/handle-side.svelte.js';
 	import { adoptSaved, locale, setLocale, t } from '$lib/i18n/locale.svelte.js';
-	import type { EquipmentId, Settings } from '$lib/types.js';
+	import type { EquipmentId, HandleSide, Settings } from '$lib/types.js';
 
 	let settings = $state<Settings | null>(null);
 	// Read once on mount rather than during render: it touches window.
@@ -193,6 +195,16 @@
 		resolveLocale(undefined, typeof navigator === 'undefined' ? [] : navigator.languages)
 	);
 
+	/**
+	 * Which edge the drag handle sits on (§12). Not three-valued like the two
+	 * settings above it: a phone reports its language, and no phone reports which
+	 * hand is holding it, so there is no device answer for a third option to
+	 * defer to.
+	 */
+	async function chooseHandleSide(value: HandleSide) {
+		settings = await setHandleSide(value);
+	}
+
 	async function chooseLanguage(value: Locale | null) {
 		if (value === null) {
 			settings = await putSettings({ ...(await getSettings()), language: undefined });
@@ -257,6 +269,47 @@
 			{/each}
 		</ul>
 		<p class="mt-3 text-xs text-zinc-500">{t.settings.spokenStaysEnglish}</p>
+	</div>
+
+	<!-- §12. Two buttons rather than a switch, because "on" and "off" have no
+		 meaning here — neither side is the absence of the other. -->
+	<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+		<h2 class="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+			{t.settings.handleSide}
+		</h2>
+		<p class="mt-2 text-sm text-zinc-400">{t.settings.handleSideIntro}</p>
+		<div class="mt-4 flex gap-2">
+			{#each HANDLE_SIDES as side (side)}
+				{@const chosen = handleSide() === side}
+				<button
+					onclick={() => chooseHandleSide(side)}
+					aria-pressed={chosen}
+					class="flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 {chosen
+						? 'border-zinc-500 bg-zinc-800/60 font-medium'
+						: 'border-zinc-800 text-zinc-400'}"
+				>
+					<!-- The handle's own two bars, on the edge the button is offering,
+						 so the choice can be recognised rather than read. -->
+					<svg
+						viewBox="0 0 32 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.75"
+						aria-hidden="true"
+						class="h-5 w-7 shrink-0"
+					>
+						<rect x="0.9" y="3.9" width="30.2" height="16.2" rx="3" class="text-zinc-600" />
+						{#if side === 'left'}
+							<path d="M5 9h5M5 15h5" stroke-linecap="round" />
+						{:else}
+							<path d="M22 9h5M22 15h5" stroke-linecap="round" />
+						{/if}
+					</svg>
+					{side === 'left' ? t.settings.handleLeft : t.settings.handleRight}
+				</button>
+			{/each}
+		</div>
+		<p class="mt-3 text-xs text-zinc-500">{t.settings.handleSideHint}</p>
 	</div>
 
 	<!-- §5.1. The app assumes a floor, a wall and a chair; everything else is

@@ -7,6 +7,7 @@
 		type SectionSpans,
 		type Slot
 	} from '$lib/reorder.js';
+	import { handleOrderClass } from '$lib/handle-side.svelte.js';
 	import { t } from '$lib/i18n/locale.svelte.js';
 	import type { Snippet } from 'svelte';
 
@@ -56,7 +57,17 @@
 		itemClass?: string;
 		/** The chrome around one section. Must render `list` somewhere inside it. */
 		section: Snippet<[S, number, Snippet]>;
-		/** One card. `grip` must be rendered inside it, or nothing can drag. */
+		/**
+		 * One card. `grip` must be rendered inside it, or nothing can drag.
+		 *
+		 * Render it **last, as a direct child of the card's flex row**, wherever
+		 * the caller would put it on the right. Which edge it actually appears on
+		 * is the user's (§12), and the handle moves itself with `order` — so the
+		 * DOM order stays the reading order, and a screen reader still meets the
+		 * exercise before the control that moves it whichever way the setting is
+		 * pointing. A caller that buries the grip in a sub-wrapper takes that
+		 * choice away from it without the type system noticing.
+		 */
 		row: Snippet<[T, Slot, Snippet<[Slot]>]>;
 	} = $props();
 
@@ -207,7 +218,7 @@
 		onpointerup={end}
 		onpointercancel={end}
 		onkeydown={(e) => key(e, slot)}
-		class="min-h-11 min-w-11 shrink-0 cursor-grab touch-none rounded-lg text-zinc-500 active:cursor-grabbing disabled:opacity-25"
+		class="min-h-11 min-w-11 shrink-0 cursor-grab touch-none rounded-lg text-zinc-500 active:cursor-grabbing disabled:opacity-25 {handleOrderClass()}"
 		disabled={totalItems < 2}
 	>
 		<!-- The two-bar grab handle every reorderable list on a phone uses. -->
