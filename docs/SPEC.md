@@ -211,22 +211,46 @@ interface Attribution {
 
 Added 2026-07-29. Calisthenics progresses by **leverage, not load**: a push-up gets harder by changing the angle, not by adding a plate. Without that, the app can describe a workout but not a training progression — the user is left editing the routine by hand to find out whether they are ready for the next variant.
 
-A ladder is one movement's variants, easiest first:
+A ladder is one movement's variants, easiest first.
+
+**Amended 2026-08-03 by the audit §17.6 required.** The ladders were authored when a rung was a suggestion the user could take or ignore; §17 promotes them to the mechanism the app steers a routine with, and a list of ids cannot carry the reasoning that promotion needs. **Every step now states why it is a step**, in the vocabulary `exercise-variation.md` uses on itself:
 
 ```ts
 // src/lib/catalog/ladders.ts
-const ladders: ExerciseId[][] = [
-  ['incline_push_up', 'pushups', 'push_ups_with_feet_elevated', 'single_arm_push_up'],
-  ['scapular_pull_up', 'inverted_row', 'chin_up', 'pullups'],
-  // ...
-];
+interface Rung {
+  id: ExerciseId;
+  step?: Step;                        // absent on the first rung of a chain
+}
+
+interface Step {
+  /** What makes the rung above harder than the one below. */
+  mechanism:
+    | 'leverage'        // same movement, more of the body's mass on the working limbs
+    | 'range'           // more joints, or a longer path through the same ones
+    | 'lever_length'    // the load moves further from the joint
+    | 'limb_count';     // the same work on half the limbs
+  /** How well supported the claim is. `folklore` is not a permitted value. */
+  evidence: 'well_established' | 'reasonable_inference' | 'contested';
+  /** One sentence, carrying the measurement where one exists. */
+  note: string;
+  /** Required only when the catalog's `level` falls across this step. */
+  levelFalls?: string;
+}
+
+const ladders: Ladder[] = [/* seven of them */];
 ```
 
-**Hand-authored, and deliberately not in `catalog.json`.** The catalog is generated from free-exercise-db, which has no notion of one exercise being a harder version of another; the ordering is editorial and belongs in a file a person is expected to argue with rather than in generated output. `level` cannot stand in for it — it ranks an exercise against the whole catalog, not against its own siblings.
+`ladderFor()`, `easierVariant()` and `harderVariant()` still return plain ids, so nothing outside this file sees the change.
 
-Rules, enforced by `tests/ladders.test.ts` the way the build script enforces `curation.yaml`: every id exists, no exercise is on two ladders, every ladder has at least two rungs and stays inside one category, and `level` never falls as a ladder rises.
+**Hand-authored, and deliberately not in `catalog.json`.** The catalog is generated from free-exercise-db, which has no notion of one exercise being a harder version of another; the ordering is editorial and belongs in a file a person is expected to argue with rather than in generated output. `level` cannot stand in for it — it ranks an exercise against the whole catalog, not against its own siblings, and the audit found a case where it is simply wrong (`push_ups_close_triceps_position` is *intermediate* while the harder `dips_triceps_version` is *beginner*). `level` may therefore be quoted as evidence; it may not order a chain. Where it falls across a step, `levelFalls` has to say why the catalog is wrong — which is the honest replacement for the old assertion that it never falls.
 
-**Eight ladders is what this catalog honestly supports**, covering about half the strength exercises. Where a rung is missing it is left missing: there is no bodyweight pike push-up in the source data, so `handstand_push_ups` is on no ladder rather than sitting one rung above something four rungs easier. A rung the user cannot feel is worse than no rung, so near-duplicates (`push_up_wide` beside `pushups`) are left off too.
+Rules, enforced by `tests/ladders.test.ts` the way the build script enforces `curation.yaml`: every id exists and has instructions, no exercise is on two ladders, every ladder has at least two rungs, one category and one primary muscle throughout, `defaultMetric` never changes, **a chain never adds gated equipment as it rises**, a `limb_count` step is the only kind that may change `unilateral`, and every step carries a mechanism, an evidence tag and a note.
+
+**Two rungs is a chain and one is not.** A two-rung chain states one true thing — there is a harder version of this, and it is that. A single exercise with nothing above it states nothing, and the code has always required two.
+
+**What the test cannot check is written in the test.** No assertion can tell a 16% step from a 100% one, because nothing in the catalog encodes effective load; nor that a chain is complete, nor that an ordering holds for a particular person. Those live in the `note` fields and in [`ladder-audit.md`](./ladder-audit.md), and the test's only power over them is to insist they exist.
+
+**Seven ladders is what this catalog honestly supports**, covering 44% of the strength exercises a fresh install offers. Where a rung is missing it is left missing: there is no bodyweight pike push-up in the source data, so `handstand_push_ups` is on no ladder rather than sitting one rung above something four rungs easier; and after the audit `bodyweight_squat`, `floor_glute_ham_raise` and eight others join it, each for a reason recorded in `ladder-audit.md`. A rung the user cannot feel is worse than no rung, so near-duplicates (`push_up_wide` beside `pushups`, `bent_knee_hip_raise` beside `reverse_crunch`) are left off too. **The count is a finding, not a target** — which is why the old test asserting that ladders covered >40% of the strength catalog is gone: it rewarded adding rungs, and it would have failed on an honest deletion. What replaced it is an explicit list of the strength exercises deliberately left off, so the test fails when somebody quietly ladders one instead.
 
 ### 4.2 Routines (user data)
 
@@ -1597,9 +1621,16 @@ ladder — which the user can already climb by hand mid-session (§7) — fire o
 One rule, over data the app already has. It lives in `src/lib/progress/`, pure and
 unit-tested per §15, and it reads the session log and the routine and nothing else.
 
-**It applies to an item whose exercise is `category: strength` and whose target is `reps`
-or `reps_range`.** A stretch progresses by duration or not at all, and mobility work is
-not trying to get harder — §7's ladders are strength chains and this follows them.
+**It applies to an item whose exercise is `category: strength` or `category: core` and
+whose target is `reps` or `reps_range`.** A stretch progresses by duration or not at all,
+and mobility work is not trying to get harder.
+
+*Amended 2026-08-03.* This said `strength` alone, on the stated ground that "§7's ladders
+are strength chains and this follows them." **That premise was false** — three of the eight
+were `category: core`, and the rule as first written would have left them permanently
+inert. Two of the seven that survive the audit still are. Core was never what the
+exclusion was for: a set of sit-ups is trying to get harder in exactly the way a set of
+push-ups is, and the crunch and hanging-hip-flexion chains exist to make it.
 
 **The criterion.** Over the last **two finished sessions** in which the item was
 performed: every set reached the top of its range (or its target, for fixed reps), and no
@@ -1612,8 +1643,25 @@ user.
 | State | Offer |
 |---|---|
 | Reps below the ceiling | Raise the target by one rep — for a range, both ends |
-| At the ceiling, and the exercise has a harder rung | **The next rung**, with the target reset to the bottom of a starting range |
-| At the ceiling, no harder rung | One more set. Offered once, then the app stops asking about that item |
+| At the ceiling, and the exercise has a harder rung the user has the equipment for | **The next rung**, with the target reset to the bottom of a starting range |
+| At the ceiling, no harder rung available | Nothing to offer, and the app says so once: **this is as far as the catalog goes for this movement** |
+
+**A rung the user cannot perform is not an offer** (amended 2026-08-03). §5.1 gates what the
+app *suggests*, and a progression suggestion is the most emphatic suggestion the app makes —
+so the offer is filtered through `isAvailable()` against `ownedEquipment()`, and a chain whose
+next rung needs a bar the user has not ticked is treated as having no next rung. This was
+found by the audit: the old hip-flexion chain ran floor → floor → hanging → hanging, so the
+rule as first written would have automatically offered a hanging leg raise to somebody with no
+pull-up bar. The chain has been split, but the filter is the thing that stops it recurring.
+
+**Running out is said once, and it is said honestly.** The first draft offered one more set
+at the top of a ladder, which is a real way to progress and also the point at which the app
+starts inventing. Seven chains, four of them two rungs, means many users reach the top — and
+§17.5 forbids implying the app knows more than it does. So the message is about the catalog,
+not about the user: *the app knows no harder version of this movement*, not *you have reached
+the limit*. It is said once per item and then the app is quiet about that item. §17.4's
+variation offer remains available if the user goes looking for it; it is not pushed here,
+because "we have run out of rungs" is not evidence that rotating will help.
 
 **The ceiling is an editorial number, not a physiological one, and must be labelled as
 such wherever it is explained.** It is **20 reps**. Nothing in the literature supports a
@@ -1704,22 +1752,41 @@ Taken from `exercise-variation.md` §9, and binding on copy as much as on code:
 or for the feel of the app, say so. *"Held for three sessions so the numbers settle"* is
 true. *"Held for three sessions to maximise adaptation"* is not.
 
-### 17.6 What this requires of the ladders first
+### 17.6 The ladder audit
 
-**This section cannot be implemented against the ladders as they stand**, and that is the
-consequence of §17's opening: once the app steers a routine with a chain, the chain stops
-being a suggestion the user can ignore and becomes the mechanism. Two of the eight do not
-survive that promotion:
+**Done 2026-08-03, and written up in [`ladder-audit.md`](./ladder-audit.md)** — a verdict per
+chain, with the evidence tagged the way `exercise-variation.md` tags its own. This section
+previously said the work could not start until that audit existed, and named two chains it
+expected to fail. It found four, and one of them was not on the list.
 
-- `bodyweight_squat → bodyweight_walking_lunge → freehand_jump_squat`. A walking lunge is
-  not a harder squat, it is a different movement; and a jump squat is power rather than
-  strength, so it is the wrong thing to be pushed towards by a strength criterion.
-- `… → push_ups_with_feet_elevated → single_arm_push_up` ends on a cliff. That step is
-  roughly a doubling of load, so a user arriving at 20 elevated push-ups lands on one or
-  two single-arm reps — the coarsest measurement in the app and a months-long skill
-  acquisition, reached by an automatic suggestion.
+The reason it had to come first is §17's opening: once the app steers a routine with a chain,
+the chain stops being a suggestion the user can ignore and becomes the mechanism.
+`tests/ladders.test.ts` enforced only that `level` never falls as a ladder rises, and **"never
+gets easier" is a much weaker claim than "each rung is the next step"** — only the second is
+good enough to progress somebody automatically.
 
-`tests/ladders.test.ts` enforces that `level` never falls as a ladder rises, which both
-chains satisfy. **"Never gets easier" is a much weaker claim than "each rung is the next
-step",** and only the second is good enough to progress somebody automatically. The audit
-is a separate piece of work and it comes first.
+What changed, in one line each:
+
+| Chain | Verdict |
+|---|---|
+| `incline_push_up → pushups → push_ups_with_feet_elevated` | Kept; `single_arm_push_up` dropped — a ~2× step |
+| `inverted_row → bodyweight_mid_row` | Split out of the pull chain; `scapular_pull_up` dropped |
+| `chin_up → pullups` | The other half of that split |
+| `bench_dips → push_ups_close_triceps_position → dips_triceps_version` | A rung **inserted** into a cliff that was already shipped |
+| `butt_lift_bridge → single_leg_glute_bridge` | Kept; `floor_glute_ham_raise` dropped — a different joint action |
+| `crunches → sit_up → jackknife_sit_up` | Kept unchanged |
+| `hanging_leg_raise → hanging_pike` | Split off the floor rungs, which were near-duplicates of each other |
+| ~~`bodyweight_squat → bodyweight_walking_lunge → freehand_jump_squat`~~ | **Deleted.** The catalog has no harder bodyweight squat |
+| ~~`plank → side_bridge`~~ | **Deleted.** A different plane, and `side_bridge` has no instructions |
+
+Three things this changed elsewhere in §17, each recorded above where it applies: the rule's
+scope was widened to `core` because its stated reason for excluding it was false; the offer is
+filtered by owned equipment because the old hip-flexion chain proved it had to be; and the top
+of a ladder now says the catalog has run out rather than offering an extra set.
+
+**One finding belongs to the catalog rather than to §17.** Three entries have no instructions
+at all (`side_bridge`, `side_jackknife`, `one_arm_kettlebell_swings`), two describe equipment
+they are not tagged with (`inverted_row` says a rack at waist height, `dips_triceps_version`
+says parallel bars — both are tagged `chair` or `pull_up_bar`), and `split_squats` is a split
+*jump* filed under `mobility`. None of them block §17 now that the ladders avoid them, and all
+of them are worth a curation pass.

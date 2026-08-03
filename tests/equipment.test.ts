@@ -102,7 +102,7 @@ describe('equipment tags (§5.1)', () => {
 		// A ladder the user cannot climb is worse than no ladder: the player offers
 		// "harder" and the exercise behind it would be one they cannot do.
 		for (const chain of ladders) {
-			for (const id of chain) {
+			for (const { id } of chain) {
 				const e = getExercise(id)!;
 				expect(isAvailable(e, DEFAULT_OWNED), `${id} is not available by default`).toBe(true);
 			}
