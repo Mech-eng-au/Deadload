@@ -168,6 +168,28 @@ rather than for a hand on purpose (SPEC §12): the app cannot check which hand y
 who wants the handle on the left for some other reason should not have to agree they are left-handed
 to get it there. `tests/handle-side.test.ts` is named after this.
 
+**A ladder rung states its own reasoning, and the test's job is to insist that it does.** Added
+2026-08-03 with the audit (SPEC §4.1, `docs/ladder-audit.md`). `ladders.ts` was eight arrays of ids
+with the argument in a comment above them, and a comment is not something a test can reach — so the
+strongest claim the suite made about difficulty was that the catalog's `level` never falls as a
+ladder rises. Both chains the audit deleted passed it, and it *rejected* the better ordering in the
+dip chain, where the catalog calls the ~100%-of-bodyweight rung `beginner` and the ~64% one
+`intermediate`. Three things follow, and all three are easy to undo without noticing:
+
+- **`level` may be quoted as evidence and may never order a chain.** Where it falls across a step,
+  `Step.levelFalls` has to say why the catalog is wrong. Reinstating "level never falls" would delete
+  a correct rung and admit two bad ones.
+- **The size of a step is unenforceable and the test says so out loud.** Nothing in the catalog
+  encodes effective load, so no assertion can tell a 16% step from one that doubles it. What the
+  assertions do check is every *mechanical* consequence of a step's declared mechanism — a
+  `limb_count` step must actually flip `unilateral` and no other kind may, a chain may never add
+  gated equipment as it rises, and the primary muscle, category and metric hold the whole way up.
+  Each of those caught a real defect; none of them can catch a rung that is simply too big.
+- **The coverage test is gone on purpose.** It asserted that ladders covered >40% of the strength
+  catalog a fresh install offers, which rewarded adding rungs and would have failed on this audit's
+  honest deletions (59% → 44%). What replaced it is an explicit list of the exercises deliberately
+  left off with a reason each, so the suite fails when somebody quietly ladders one instead.
+
 **A backward link replaces, it does not push.** Every `←`, every sideways hop and every `goto`
 after a commit uses `replaceState`; only drilling into something pushes. Adding a plain
 `<a href>` back to a parent is how the app grew four separate navigation loops (§12), and it is
@@ -456,11 +478,20 @@ version of this feature that rotated exercises to prevent the muscles "adapting"
 tested twice and found null both times — and it collapsed double progression and the ladder swap into
 one rule, because in a leverage system progressing *is* changing the exercise.
 
-**The audit comes first.** §17.6: once the app steers a routine with a ladder, the ladder stops being
-a suggestion and becomes the mechanism, and two of the eight chains do not survive that promotion —
-the squat chain ends in a jump squat (power, not strength) and the push-up chain ends on a step that
-roughly doubles the load. `tests/ladders.test.ts` only asserts that `level` never falls, which is a
-much weaker claim than "each rung is the next step".
+~~**The audit comes first.**~~ **Done 2026-08-03**, and written up as `docs/ladder-audit.md` with a
+verdict per chain and the evidence tagged the way `exercise-variation.md` tags its own. It expected
+two bad chains and found four. **Eight chains became seven and twenty-three rungs became seventeen.**
+The squat chain was deleted outright — the catalog has no harder bodyweight squat, and saying so is
+the answer rather than a failure to find one. `single_arm_push_up` and `floor_glute_ham_raise` were
+dropped for doubling the load; the pull chain was split in two; and the dip chain, which nobody had
+flagged, turned out to contain the same doubling from the day it was written and had a rung inserted
+into it. §17 itself changed in three places as a result: its scope was widened to `core` (its stated
+reason for excluding it was factually wrong), the offer is now filtered by owned equipment, and the
+top of a ladder says the catalog has run out rather than offering another set.
+
+**What is left of §17 to build:** `src/lib/progress/` as a pure module, the finished-screen offer,
+`RoutineItem.progressDeclinedAt`, and §17.2's consequence for §10 — the per-exercise sparkline still
+plots calibration sessions, so it draws motor learning as progress.
 
 ~~**Editing a past session.**~~ **Built 2026-07-30** (SPEC §4.3 amendment, `src/lib/session/edit.ts`,
 the History detail page). Tap a set, change reps/seconds, load, RPE or skipped, save; remove a set and
